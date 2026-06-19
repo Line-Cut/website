@@ -8,9 +8,9 @@ export default async function PrivacyPage({ params }: { params: Promise<{ lang: 
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);
   return (
-    <Container className="prose max-w-3xl py-20">
+    <Container className="max-w-3xl py-20">
       <h1 className="font-display text-3xl font-bold">{dict.legal.privacyTitle}</h1>
-      <p className="mt-4 whitespace-pre-line text-muted">{dict.legal.privacyBody}</p>
+      <p className="mt-4 whitespace-pre-line leading-relaxed text-muted">{dict.legal.privacyBody}</p>
     </Container>
   );
 }

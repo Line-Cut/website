@@ -4,10 +4,9 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { isLocale, locales } from "@/lib/i18n";
 import { getDictionary } from "./dictionaries";
+import { siteConfig } from "@/lib/site-config";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
-
-const SITE_URL = "https://linecut.example"; // TODO(client): production domain
 
 const display = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
@@ -33,11 +32,11 @@ export async function generateMetadata({
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
   return {
-    metadataBase: new URL(SITE_URL),
+    metadataBase: new URL(siteConfig.url),
     title: dict.meta.title,
     description: dict.meta.description,
     alternates: {
-      languages: { he: `${SITE_URL}/he`, en: `${SITE_URL}/en` },
+      languages: { he: `${siteConfig.url}/he`, en: `${siteConfig.url}/en` },
     },
     openGraph: {
       title: dict.meta.title,

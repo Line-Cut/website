@@ -8,9 +8,9 @@ export default async function TermsPage({ params }: { params: Promise<{ lang: st
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);
   return (
-    <Container className="prose max-w-3xl py-20">
+    <Container className="max-w-3xl py-20">
       <h1 className="font-display text-3xl font-bold">{dict.legal.termsTitle}</h1>
-      <p className="mt-4 whitespace-pre-line text-muted">{dict.legal.termsBody}</p>
+      <p className="mt-4 whitespace-pre-line leading-relaxed text-muted">{dict.legal.termsBody}</p>
     </Container>
   );
 }

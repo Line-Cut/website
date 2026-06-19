@@ -1,5 +1,6 @@
 export const siteConfig = {
   name: "Line Cut",
+  url: "https://linecut.example", // TODO(client): production domain
   legalName: "Line Cut Ltd.",
   businessId: "516741998",
   address: {
