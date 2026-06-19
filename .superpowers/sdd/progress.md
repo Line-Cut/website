@@ -5,7 +5,7 @@ Branch: feat/landing-page
 Base commit (before Task 1): 4389da4
 
 ## Tasks
-- [ ] Task 1: Testing harness + cn util
+- [x] Task 1: complete (commits ad49195..5577cfe, review clean)
 - [ ] Task 2: i18n core + bilingual app skeleton
 - [ ] Task 3: Design system (theme, fonts, base)
 - [ ] Task 4: Site config + content structure
