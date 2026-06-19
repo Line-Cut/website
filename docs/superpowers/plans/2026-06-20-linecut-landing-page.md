@@ -14,7 +14,8 @@
 - **Locales:** `he` (default), `en`. Hebrew is the primary voice; `/` must redirect to a locale; `/he` is RTL, `/en` is LTR.
 - **No hard-coded UI copy** — all user-facing strings come from `app/[lang]/dictionaries/{he,en}.json`. `he` and `en` must always have identical key shapes (enforced by a parity test).
 - **RTL-correct by construction** — use Tailwind logical utilities (`ps-`/`pe-`, `ms-`/`me-`, `start-`/`end-`, `text-start`/`text-end`). Never use bare `pl-`/`pr-`/`left-`/`right-`/`text-left` for directional layout.
-- **Palette (from `public/F_LINE_CUT_LOGO.svg`):** accent `#b8281f`, muted `#7e7d7b`, ink `#1c1a17`, paper `#f7f3ec`. Warm light theme only — no dark mode toggle; remove the starter's `prefers-color-scheme` block.
+- **Palette (from `public/F_LINE_CUT_LOGO.svg`):** accent `#b8281f`, ink `#1c1a17`, paper `#f7f3ec`. Secondary/body text uses `muted #5d5851` (darkened from the logo gray for **WCAG AA ≥4.5:1** on paper — the literal logo gray `#7e7d7b` fails contrast for body text and must not be used for text). Warm light theme only — no dark mode toggle; remove the starter's `prefers-color-scheme` block.
+- **Accessibility:** body text ≥4.5:1 contrast; accent is reserved for CTAs and small accents; sticky-header anchor nav requires `scroll-margin-top` on sections; form feedback uses `aria-live`/`role="alert"`; smooth scroll respects `prefers-reduced-motion`.
 - **Fonts:** headings Frank Ruhl Libre, body Assistant, via `next/font/google` with `subsets: ['hebrew','latin']`.
 - **Path alias:** `@/*` → repo root (e.g. `@/lib/utils`, `@/components/ui/button`).
 - **Respect `prefers-reduced-motion`** in all framer-motion usage.
@@ -489,7 +490,7 @@ GIT_CONFIG_GLOBAL=/dev/null git -c user.name="Line Cut Dev" -c user.email="yuval
   --color-paper: #f7f3ec;
   --color-paper-2: #efe9df;
   --color-ink: #1c1a17;
-  --color-muted: #7e7d7b;
+  --color-muted: #5d5851; /* AA ≥4.5:1 on paper; NOT the logo gray #7e7d7b */
   --color-line: #d9d2c5;
   --color-accent: #b8281f;
   --color-accent-600: #9e2019;
@@ -502,9 +503,19 @@ GIT_CONFIG_GLOBAL=/dev/null git -c user.name="Line Cut Dev" -c user.email="yuval
   color-scheme: light;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--color-paper);
   color: var(--color-ink);
+}
+
+/* Offset anchored sections so the sticky header doesn't cover their tops */
+section[id],
+[id] {
+  scroll-margin-top: 5rem;
 }
 
 /* Subtle warm paper grain */
@@ -529,6 +540,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
@@ -2329,10 +2343,10 @@ export function Contact({ dict, lang }: { dict: Dictionary["contact"]; lang: Loc
         {/* Form */}
         <form action={action} className="flex flex-col gap-4 rounded-2xl border border-line bg-paper p-6">
           {state.status === "success" ? (
-            <p className="rounded-md bg-accent/10 p-4 text-accent">{dict.success}</p>
+            <p role="status" aria-live="polite" className="rounded-md bg-accent/10 p-4 text-accent">{dict.success}</p>
           ) : null}
           {state.status === "error" && state.message ? (
-            <p className="rounded-md bg-accent/10 p-4 text-accent">{dict.errorGeneric}</p>
+            <p role="alert" className="rounded-md bg-accent/10 p-4 text-accent">{dict.errorGeneric}</p>
           ) : null}
 
           <label className="flex flex-col gap-1 text-sm">
