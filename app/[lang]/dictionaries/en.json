@@ -8,5 +8,17 @@
   },
   "clients": {
     "heading": "Brands, institutions and teams we've worked with"
+  },
+  "nav": {
+    "services": "Services",
+    "why": "Why us",
+    "process": "Process",
+    "work": "Work",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "cta": "Start a project",
+    "ctaMessage": "Hi, I'd like a quote",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   }
 }

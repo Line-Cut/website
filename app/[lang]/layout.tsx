@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { isLocale, locales } from "@/lib/i18n";
 import { getDictionary } from "./dictionaries";
+import { Header } from "@/components/layout/header";
 
 const display = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
@@ -38,6 +39,7 @@ export default async function RootLayout({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const dir = lang === "he" ? "rtl" : "ltr";
+  const dict = await getDictionary(lang);
   return (
     <html
       lang={lang}
@@ -45,7 +47,8 @@ export default async function RootLayout({
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-paper font-sans text-ink">
-        {children}
+        <Header lang={lang} dict={dict.nav} />
+        <main className="flex-1">{children}</main>
       </body>
     </html>
   );
