@@ -7,6 +7,8 @@ import { getDictionary } from "./dictionaries";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 
+const SITE_URL = "https://linecut.example"; // TODO(client): production domain
+
 const display = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
   weight: ["400", "500", "700", "900"],
@@ -31,10 +33,11 @@ export async function generateMetadata({
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
   return {
+    metadataBase: new URL(SITE_URL),
     title: dict.meta.title,
     description: dict.meta.description,
     alternates: {
-      languages: { he: "/he", en: "/en" },
+      languages: { he: `${SITE_URL}/he`, en: `${SITE_URL}/en` },
     },
     openGraph: {
       title: dict.meta.title,

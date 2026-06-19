@@ -34,3 +34,16 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Deployment (Vercel)
+
+Set these Environment Variables in the Vercel project:
+
+- `RESEND_API_KEY` — from resend.com
+- `CONTACT_EMAIL` — inbox that receives contact-form submissions
+- `CONTACT_FROM` — a verified sender on your Resend domain, e.g. `Line Cut <noreply@yourdomain.com>`
+
+Before launch, fill real values in `lib/site-config.ts` (phone, email, WhatsApp number,
+Instagram, Facebook, hours) and set the production domain in `app/[lang]/layout.tsx` (`SITE_URL`)
+and `app/sitemap.ts`. Replace placeholder images (search `TODO(client)`) with real project
+photos under `/public`.
