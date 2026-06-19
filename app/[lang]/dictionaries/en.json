@@ -4,7 +4,24 @@
     "description": "Digital printing, cutting and finishing — produced accurately from your file. Line Cut, Holon."
   },
   "hero": {
-    "title": "Digital printing, cutting and finishing — produced accurately from your file"
+    "eyebrow": "Line Cut · Holon",
+    "title": "Digital printing, cutting and finishing — produced accurately from your file",
+    "subtitle": "We specialize in digital printing, precise cutting and finishing for signage, stickers, exhibitions and tailored production projects — for designers, institutions, museums, galleries and production teams.",
+    "ctaPrimary": "Message us on WhatsApp",
+    "ctaSecondary": "Get in touch for a quote",
+    "ctaMessage": "Hi, I'd like a quote",
+    "imageAlt": "Line Cut printing and cutting work"
+  },
+  "valueProps": {
+    "items": {
+      "accurate": "Accurate production from your supplied files",
+      "oneRoof": "Printing, cutting and finishing in one place",
+      "review": "Technical file review before production",
+      "custom": "Custom materials, sizes and shapes",
+      "exhibitions": "Deep experience with exhibitions and signage",
+      "fast": "Fast production options based on availability",
+      "audience": "For designers, businesses, institutions and production teams"
+    }
   },
   "clients": {
     "heading": "Brands, institutions and teams we've worked with"
