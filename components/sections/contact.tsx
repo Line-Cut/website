@@ -71,19 +71,19 @@ export function Contact({ dict, lang }: { dict: Dictionary["contact"]; lang: Loc
             <p role="status" aria-live="polite" className="rounded-md bg-accent/10 p-4 text-accent">{dict.success}</p>
           ) : null}
           {state.status === "error" && state.message ? (
-            <p role="alert" className="rounded-md bg-accent/10 p-4 text-accent">{dict.errorGeneric}</p>
+            <p role="alert" aria-live="assertive" className="rounded-md bg-accent/10 p-4 text-accent">{dict.errorGeneric}</p>
           ) : null}
 
           <label className="flex flex-col gap-1 text-sm">
             {dict.fields.name}
             <input name="name" required className="h-11 rounded-md border border-line bg-paper px-3 outline-none focus:border-accent" />
-            {state.errors?.name ? <span className="text-xs text-accent">{dict.fieldErrors.required}</span> : null}
+            {state.errors?.name ? <span aria-live="polite" className="text-xs text-accent">{dict.fieldErrors.required}</span> : null}
           </label>
 
           <label className="flex flex-col gap-1 text-sm">
             {dict.fields.email}
             <input name="email" type="email" required dir="ltr" className="h-11 rounded-md border border-line bg-paper px-3 outline-none focus:border-accent" />
-            {state.errors?.email ? <span className="text-xs text-accent">{dict.fieldErrors.email}</span> : null}
+            {state.errors?.email ? <span aria-live="polite" className="text-xs text-accent">{dict.fieldErrors.email}</span> : null}
           </label>
 
           <label className="flex flex-col gap-1 text-sm">
@@ -94,7 +94,7 @@ export function Contact({ dict, lang }: { dict: Dictionary["contact"]; lang: Loc
           <label className="flex flex-col gap-1 text-sm">
             {dict.fields.message}
             <textarea name="message" required rows={4} className="rounded-md border border-line bg-paper px-3 py-2 outline-none focus:border-accent" />
-            {state.errors?.message ? <span className="text-xs text-accent">{dict.fieldErrors.message}</span> : null}
+            {state.errors?.message ? <span aria-live="polite" className="text-xs text-accent">{dict.fieldErrors.message}</span> : null}
           </label>
 
           <Button type="submit" disabled={pending}>
