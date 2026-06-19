@@ -104,5 +104,15 @@
     "ctaMessage": "Hi, I'd like a quote",
     "openMenu": "Open menu",
     "closeMenu": "Close menu"
+  },
+  "faq": {
+    "heading": "Frequently asked questions",
+    "items": {
+      "formats": { "q": "What file format should I send?", "a": "A print-ready PDF with final dimensions and cut lines where needed. We're happy to review the file before production." },
+      "turnaround": { "q": "How long does production take?", "a": "It depends on the job and material. We offer fast production options based on availability — tell us your deadline." },
+      "materials": { "q": "Which materials do you print on?", "a": "Vinyl, PVC, foam board/Kappa, acrylic/Perspex and more — direct print or print and mount." },
+      "delivery": { "q": "Do you offer pickup, delivery and installation?", "a": "Yes. You can collect from our Holon studio, receive a delivery, or arrange installation." },
+      "minOrder": { "q": "Is there a minimum order?", "a": "We handle short runs and one-off jobs as well as larger orders." }
+    }
   }
 }
