@@ -26,6 +26,49 @@
   "clients": {
     "heading": "Brands, institutions and teams we've worked with"
   },
+  "services": {
+    "heading": "What we produce",
+    "intro": "Printing, cutting and finishing under one roof — from simple jobs to complex projects.",
+    "items": {
+      "stickers": {
+        "title": "Stickers & roll printing",
+        "description": "A wide range of stickers and adhesive products, digitally printed.",
+        "examples": ["Vinyl stickers", "Transparent & white stickers", "Custom-shape cutting", "Window & sandblast stickers", "Product & packaging labels"]
+      },
+      "signage": {
+        "title": "Letter cutting & signage",
+        "description": "Cut letters and signage made to size, material and design.",
+        "examples": ["Custom-cut letters", "Interior & business signage", "Exhibition titles", "PVC cutting", "Directional signs"]
+      },
+      "rigid": {
+        "title": "Printing on rigid materials",
+        "description": "Printing and mounting on rigid materials for display and signage.",
+        "examples": ["PVC", "Foam board / Kappa", "Acrylic / Perspex", "Direct print or print & mount", "Printed signs"]
+      },
+      "exhibitions": {
+        "title": "Exhibitions, museums & galleries",
+        "description": "Signage and graphics produced to architectural or graphic specs.",
+        "examples": ["Wall text stickers", "Exhibition titles", "Printed panels", "Directional signage", "Color matching to a visual guide"]
+      },
+      "custom": {
+        "title": "Custom production work",
+        "description": "Production from your files and project requirements, including complex jobs.",
+        "examples": ["Production from supplied files", "Custom-shape cutting", "Short runs", "One-off projects", "Mixed-material jobs"]
+      }
+    }
+  },
+  "why": {
+    "heading": "Why work with Line Cut",
+    "intro": "A reliable, precise production partner — not a cheap print shop.",
+    "items": [
+      { "title": "Technical file understanding", "body": "We spot and solve file, cutting, size and format issues before production." },
+      { "title": "Everything under one roof", "body": "Printing, cutting and finishing in one place — an organized, transparent process." },
+      { "title": "Experience with complex jobs", "body": "Exhibitions, large stickers, multi-page files and custom dimensions." },
+      { "title": "Fast production", "body": "Fast production solutions when you need them, based on availability." },
+      { "title": "Accuracy & reliability", "body": "Precise manufacturing and a result you can trust, from file to delivery." },
+      { "title": "Hands-on support", "body": "Close support from file preparation to pickup, delivery or installation." }
+    ]
+  },
   "nav": {
     "services": "Services",
     "why": "Why us",
