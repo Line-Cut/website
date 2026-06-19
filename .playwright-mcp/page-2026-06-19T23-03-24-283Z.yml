@@ -1,0 +1,309 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Line Cut" [ref=e4] [cursor=pointer]:
+        - /url: /en
+        - img "Line Cut" [ref=e5]
+      - navigation [ref=e6]:
+        - link "Services" [ref=e7] [cursor=pointer]:
+          - /url: "#services"
+        - link "Why us" [ref=e8] [cursor=pointer]:
+          - /url: "#why"
+        - link "Process" [ref=e9] [cursor=pointer]:
+          - /url: "#process"
+        - link "Work" [ref=e10] [cursor=pointer]:
+          - /url: "#work"
+        - link "FAQ" [ref=e11] [cursor=pointer]:
+          - /url: "#faq"
+        - link "Contact" [ref=e12] [cursor=pointer]:
+          - /url: "#contact"
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - link "עב" [ref=e16] [cursor=pointer]:
+            - /url: /he
+          - generic [ref=e17]:
+            - generic [ref=e18]: /
+            - link "EN" [ref=e19] [cursor=pointer]:
+              - /url: /en
+        - link "Start a project" [ref=e20] [cursor=pointer]:
+          - /url: https://wa.me/972500000000?text=Hi%2C%20I'd%20like%20a%20quote
+  - main [ref=e21]:
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - paragraph [ref=e25]: Line Cut · Holon
+        - heading "Digital printing, cutting and finishing — produced accurately from your file" [level=1] [ref=e26]
+        - paragraph [ref=e27]: We specialize in digital printing, precise cutting and finishing for signage, stickers, exhibitions and tailored production projects — for designers, institutions, museums, galleries and production teams.
+        - generic [ref=e28]:
+          - link "Message us on WhatsApp" [ref=e29] [cursor=pointer]:
+            - /url: https://wa.me/972500000000?text=Hi%2C%20I'd%20like%20a%20quote
+          - link "Get in touch for a quote" [ref=e30] [cursor=pointer]:
+            - /url: "#contact"
+      - img "Line Cut printing and cutting work" [ref=e33]
+    - list [ref=e37]:
+      - listitem [ref=e39]:
+        - img [ref=e40]
+        - generic [ref=e42]: Accurate production from your supplied files
+      - listitem [ref=e44]:
+        - img [ref=e45]
+        - generic [ref=e47]: Printing, cutting and finishing in one place
+      - listitem [ref=e49]:
+        - img [ref=e50]
+        - generic [ref=e52]: Technical file review before production
+      - listitem [ref=e54]:
+        - img [ref=e55]
+        - generic [ref=e57]: Custom materials, sizes and shapes
+      - listitem [ref=e59]:
+        - img [ref=e60]
+        - generic [ref=e62]: Deep experience with exhibitions and signage
+      - listitem [ref=e64]:
+        - img [ref=e65]
+        - generic [ref=e67]: Fast production options based on availability
+      - listitem [ref=e69]:
+        - img [ref=e70]
+        - generic [ref=e72]: For designers, businesses, institutions and production teams
+    - generic [ref=e74]:
+      - generic [ref=e75]:
+        - heading "What we produce" [level=2] [ref=e76]
+        - paragraph [ref=e77]: Printing, cutting and finishing under one roof — from simple jobs to complex projects.
+      - generic [ref=e78]:
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - img [ref=e83]
+            - heading "Stickers & roll printing" [level=3] [ref=e87]
+            - paragraph [ref=e88]: A wide range of stickers and adhesive products, digitally printed.
+          - list [ref=e90]:
+            - listitem [ref=e91]: Vinyl stickers
+            - listitem [ref=e93]: Transparent & white stickers
+            - listitem [ref=e95]: Custom-shape cutting
+            - listitem [ref=e97]: Window & sandblast stickers
+            - listitem [ref=e99]: Product & packaging labels
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - img [ref=e105]
+            - heading "Letter cutting & signage" [level=3] [ref=e111]
+            - paragraph [ref=e112]: Cut letters and signage made to size, material and design.
+          - list [ref=e114]:
+            - listitem [ref=e115]: Custom-cut letters
+            - listitem [ref=e117]: Interior & business signage
+            - listitem [ref=e119]: Exhibition titles
+            - listitem [ref=e121]: PVC cutting
+            - listitem [ref=e123]: Directional signs
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - img [ref=e129]
+            - heading "Printing on rigid materials" [level=3] [ref=e133]
+            - paragraph [ref=e134]: Printing and mounting on rigid materials for display and signage.
+          - list [ref=e136]:
+            - listitem [ref=e137]: PVC
+            - listitem [ref=e139]: Foam board / Kappa
+            - listitem [ref=e141]: Acrylic / Perspex
+            - listitem [ref=e143]: Direct print or print & mount
+            - listitem [ref=e145]: Printed signs
+        - generic [ref=e148]:
+          - generic [ref=e149]:
+            - img [ref=e151]
+            - heading "Exhibitions, museums & galleries" [level=3] [ref=e153]
+            - paragraph [ref=e154]: Signage and graphics produced to architectural or graphic specs.
+          - list [ref=e156]:
+            - listitem [ref=e157]: Wall text stickers
+            - listitem [ref=e159]: Exhibition titles
+            - listitem [ref=e161]: Printed panels
+            - listitem [ref=e163]: Directional signage
+            - listitem [ref=e165]: Color matching to a visual guide
+        - generic [ref=e168]:
+          - generic [ref=e169]:
+            - img [ref=e171]
+            - heading "Custom production work" [level=3] [ref=e173]
+            - paragraph [ref=e174]: Production from your files and project requirements, including complex jobs.
+          - list [ref=e176]:
+            - listitem [ref=e177]: Production from supplied files
+            - listitem [ref=e179]: Custom-shape cutting
+            - listitem [ref=e181]: Short runs
+            - listitem [ref=e183]: One-off projects
+            - listitem [ref=e185]: Mixed-material jobs
+    - generic [ref=e188]:
+      - generic [ref=e189]:
+        - heading "Why work with Line Cut" [level=2] [ref=e190]
+        - paragraph [ref=e191]: A reliable, precise production partner — not a cheap print shop.
+      - generic [ref=e192]:
+        - generic [ref=e194]:
+          - generic [ref=e195]: "01"
+          - heading "Technical file understanding" [level=3] [ref=e196]
+          - paragraph [ref=e197]: We spot and solve file, cutting, size and format issues before production.
+        - generic [ref=e199]:
+          - generic [ref=e200]: "02"
+          - heading "Everything under one roof" [level=3] [ref=e201]
+          - paragraph [ref=e202]: Printing, cutting and finishing in one place — an organized, transparent process.
+        - generic [ref=e204]:
+          - generic [ref=e205]: "03"
+          - heading "Experience with complex jobs" [level=3] [ref=e206]
+          - paragraph [ref=e207]: Exhibitions, large stickers, multi-page files and custom dimensions.
+        - generic [ref=e209]:
+          - generic [ref=e210]: "04"
+          - heading "Fast production" [level=3] [ref=e211]
+          - paragraph [ref=e212]: Fast production solutions when you need them, based on availability.
+        - generic [ref=e214]:
+          - generic [ref=e215]: "05"
+          - heading "Accuracy & reliability" [level=3] [ref=e216]
+          - paragraph [ref=e217]: Precise manufacturing and a result you can trust, from file to delivery.
+        - generic [ref=e219]:
+          - generic [ref=e220]: "06"
+          - heading "Hands-on support" [level=3] [ref=e221]
+          - paragraph [ref=e222]: Close support from file preparation to pickup, delivery or installation.
+    - generic [ref=e224]:
+      - generic [ref=e225]:
+        - heading "How we work" [level=2] [ref=e226]
+        - paragraph [ref=e227]: A clear, organized process — from file to finished result.
+      - list [ref=e228]:
+        - listitem [ref=e230]:
+          - generic [ref=e231]: "1"
+          - heading "Your file" [level=3] [ref=e232]
+          - paragraph [ref=e233]: You send a print-ready file (PDF) with final dimensions.
+        - listitem [ref=e235]:
+          - generic [ref=e236]: "2"
+          - heading "Technical review" [level=3] [ref=e237]
+          - paragraph [ref=e238]: We check the file, cut lines, size and material before production.
+        - listitem [ref=e240]:
+          - generic [ref=e241]: "3"
+          - heading "Production" [level=3] [ref=e242]
+          - paragraph [ref=e243]: Accurate printing and cutting to spec.
+        - listitem [ref=e245]:
+          - generic [ref=e246]: "4"
+          - heading "Finishing" [level=3] [ref=e247]
+          - paragraph [ref=e248]: Mounting, cut-to-size and final finishing.
+        - listitem [ref=e250]:
+          - generic [ref=e251]: "5"
+          - heading "Delivery" [level=3] [ref=e252]
+          - paragraph [ref=e253]: Pickup, delivery or installation — as needed.
+    - generic [ref=e255]:
+      - generic [ref=e256]:
+        - heading "Selected work" [level=2] [ref=e257]
+        - paragraph [ref=e258]: Stickers, signage, exhibitions and rigid-material prints.
+      - generic [ref=e259]:
+        - img "Line Cut project 1" [ref=e262]
+        - img "Line Cut project 2" [ref=e265]
+        - img "Line Cut project 3" [ref=e268]
+        - img "Line Cut project 4" [ref=e271]
+        - img "Line Cut project 5" [ref=e274]
+        - img "Line Cut project 6" [ref=e277]
+    - generic [ref=e279]:
+      - generic [ref=e280]:
+        - paragraph [ref=e281]: From the studio
+        - heading "Products & creations by Line Cut" [level=2] [ref=e282]
+        - paragraph [ref=e283]: From time to time we make our own products — and we can produce them at scale. A product catalog is coming soon.
+        - link "Interested? Talk to us" [ref=e285] [cursor=pointer]:
+          - /url: https://wa.me/972500000000?text=Hi%2C%20I'd%20like%20to%20hear%20about%20your%20products
+      - img "A product made by Line Cut" [ref=e288]
+    - generic [ref=e291]:
+      - heading "Brands, institutions and teams we've worked with" [level=2] [ref=e292]
+      - region [ref=e294]:
+        - generic [ref=e296]:
+          - group [ref=e297]:
+            - img "Client 1" [ref=e299]
+          - group [ref=e300]:
+            - img "Client 2" [ref=e302]
+          - group [ref=e303]:
+            - img "Client 3" [ref=e305]
+          - group [ref=e306]:
+            - img "Client 4" [ref=e308]
+          - group [ref=e309]:
+            - img "Client 5" [ref=e311]
+          - group [ref=e312]:
+            - img "Client 6" [ref=e314]
+          - group [ref=e315]:
+            - img "Client 7" [ref=e317]
+          - group [ref=e318]:
+            - img "Client 8" [ref=e320]
+    - generic [ref=e324]:
+      - heading "Frequently asked questions" [level=2] [ref=e326]
+      - generic [ref=e327]:
+        - heading "What file format should I send?" [level=3] [ref=e329]:
+          - button "What file format should I send?" [ref=e330]:
+            - text: What file format should I send?
+            - img [ref=e331]
+        - heading "How long does production take?" [level=3] [ref=e334]:
+          - button "How long does production take?" [ref=e335]:
+            - text: How long does production take?
+            - img [ref=e336]
+        - heading "Which materials do you print on?" [level=3] [ref=e339]:
+          - button "Which materials do you print on?" [ref=e340]:
+            - text: Which materials do you print on?
+            - img [ref=e341]
+        - heading "Do you offer pickup, delivery and installation?" [level=3] [ref=e344]:
+          - button "Do you offer pickup, delivery and installation?" [ref=e345]:
+            - text: Do you offer pickup, delivery and installation?
+            - img [ref=e346]
+        - heading "Is there a minimum order?" [level=3] [ref=e349]:
+          - button "Is there a minimum order?" [ref=e350]:
+            - text: Is there a minimum order?
+            - img [ref=e351]
+    - generic [ref=e354]:
+      - generic [ref=e355]:
+        - heading "Get in touch" [level=2] [ref=e356]
+        - paragraph [ref=e357]: Tell us about your project — we're happy to review a file and give a quote.
+        - list [ref=e358]:
+          - listitem [ref=e359]:
+            - img [ref=e360]
+            - text: HaSadna 8, Holon
+          - listitem [ref=e363]:
+            - img [ref=e364]
+            - link "+972-00-000-0000" [ref=e366] [cursor=pointer]:
+              - /url: tel:+972-00-000-0000
+          - listitem [ref=e367]:
+            - img [ref=e368]
+            - link "info@example.com" [ref=e371] [cursor=pointer]:
+              - /url: mailto:info@example.com
+          - listitem [ref=e372]:
+            - img [ref=e373]
+            - text: Sun–Thu 9:00–17:00
+        - generic [ref=e376]:
+          - link "WhatsApp" [ref=e377] [cursor=pointer]:
+            - /url: https://wa.me/972500000000?text=Hi%2C%20I'd%20like%20a%20quote
+            - img [ref=e378]
+            - text: WhatsApp
+          - link "Instagram" [ref=e380] [cursor=pointer]:
+            - /url: https://instagram.com/
+            - img [ref=e381]
+          - link "Facebook" [ref=e385] [cursor=pointer]:
+            - /url: https://facebook.com/
+            - img [ref=e386]
+        - paragraph [ref=e388]: "Business ID: 516741998"
+      - generic [ref=e389]:
+        - generic [ref=e390]:
+          - text: Name
+          - textbox "Name" [ref=e391]
+        - generic [ref=e392]:
+          - text: Email
+          - textbox "Email" [ref=e393]
+        - generic [ref=e394]:
+          - text: Phone (optional)
+          - textbox "Phone (optional)" [ref=e395]
+        - generic [ref=e396]:
+          - text: Your message
+          - textbox "Your message" [ref=e397]
+        - button "Send" [ref=e398]
+  - contentinfo [ref=e399]:
+    - generic [ref=e400]:
+      - generic [ref=e401]:
+        - img "Line Cut" [ref=e402]
+        - paragraph [ref=e403]: Digital printing, cutting and finishing — Holon.
+      - generic [ref=e404]:
+        - paragraph [ref=e405]: HaSadna 8, Holon
+        - paragraph [ref=e406]: +972-00-000-0000
+        - paragraph [ref=e407]: info@example.com
+        - paragraph [ref=e408]: "Business ID: 516741998"
+      - navigation [ref=e409]:
+        - link "Terms of Service" [ref=e410] [cursor=pointer]:
+          - /url: /en/terms
+        - link "Privacy Policy" [ref=e411] [cursor=pointer]:
+          - /url: /en/privacy
+      - generic [ref=e412]:
+        - link "Instagram" [ref=e413] [cursor=pointer]:
+          - /url: https://instagram.com/
+          - img [ref=e414]
+        - link "Facebook" [ref=e418] [cursor=pointer]:
+          - /url: https://facebook.com/
+          - img [ref=e419]
+    - generic [ref=e421]: © Line Cut Ltd.
+  - button "Open Next.js Dev Tools" [ref=e427] [cursor=pointer]:
+    - img [ref=e428]

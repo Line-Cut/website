@@ -24,8 +24,8 @@ export function Logos3({
           {heading}
         </h2>
       ) : null}
-      <div className="relative mx-auto flex w-full items-center justify-center lg:max-w-5xl">
-        <Carousel opts={{ loop: true }} plugins={[AutoScroll({ playOnInit: true })]}>
+      <div className="relative mx-auto w-full lg:max-w-5xl">
+        <Carousel className="w-full" opts={{ loop: true }} plugins={[AutoScroll({ playOnInit: true })]}>
           <CarouselContent className="ml-0">
             {logos.map((logo) => (
               <CarouselItem

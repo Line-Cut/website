@@ -1,0 +1,310 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Line Cut" [ref=e4] [cursor=pointer]:
+        - /url: /he
+        - img "Line Cut" [ref=e5]
+      - navigation [ref=e6]:
+        - link "שירותים" [ref=e7] [cursor=pointer]:
+          - /url: "#services"
+        - link "למה אנחנו" [ref=e8] [cursor=pointer]:
+          - /url: "#why"
+        - link "תהליך" [ref=e9] [cursor=pointer]:
+          - /url: "#process"
+        - link "עבודות" [ref=e10] [cursor=pointer]:
+          - /url: "#work"
+        - link "שאלות נפוצות" [ref=e11] [cursor=pointer]:
+          - /url: "#faq"
+        - link "צור קשר" [ref=e12] [cursor=pointer]:
+          - /url: "#contact"
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - link "עב" [ref=e16] [cursor=pointer]:
+            - /url: /he
+          - generic [ref=e17]:
+            - generic [ref=e18]: /
+            - link "EN" [ref=e19] [cursor=pointer]:
+              - /url: /en
+        - link "התחלת פרויקט" [ref=e20] [cursor=pointer]:
+          - /url: https://wa.me/972500000000?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%94%D7%A6%D7%A2%D7%AA%20%D7%9E%D7%97%D7%99%D7%A8
+  - main [ref=e21]:
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - paragraph [ref=e25]: ליין קאט · חולון
+        - heading "הדפסה דיגיטלית, חיתוך וגימור — מיוצר במדויק מהקובץ שלך" [level=1] [ref=e26]
+        - paragraph [ref=e27]: אנחנו מתמחים בהדפסה דיגיטלית, חיתוך מדויק וגימור עבור שילוט, מדבקות, תערוכות ופרויקטי ייצור מותאמים אישית — ממעצבים ומוסדות ועד מוזיאונים, גלריות וצוותי הפקה.
+        - generic [ref=e28]:
+          - link "דברו איתנו בוואטסאפ" [ref=e29] [cursor=pointer]:
+            - /url: https://wa.me/972500000000?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%94%D7%A6%D7%A2%D7%AA%20%D7%9E%D7%97%D7%99%D7%A8
+          - link "לפנייה ולהצעת מחיר" [ref=e30] [cursor=pointer]:
+            - /url: "#contact"
+      - img "עבודת הדפסה וחיתוך של ליין קאט" [ref=e33]
+    - list [ref=e37]:
+      - listitem [ref=e39]:
+        - img [ref=e40]
+        - generic [ref=e42]: ייצור מדויק מתוך הקבצים שסיפקתם
+      - listitem [ref=e44]:
+        - img [ref=e45]
+        - generic [ref=e47]: הדפסה, חיתוך וגימור במקום אחד
+      - listitem [ref=e49]:
+        - img [ref=e50]
+        - generic [ref=e52]: בדיקת קובץ טכנית לפני ההפקה
+      - listitem [ref=e54]:
+        - img [ref=e55]
+        - generic [ref=e57]: חומרים, מידות וצורות מותאמים אישית
+      - listitem [ref=e59]:
+        - img [ref=e60]
+        - generic [ref=e62]: ניסיון רב בתערוכות ובשילוט
+      - listitem [ref=e64]:
+        - img [ref=e65]
+        - generic [ref=e67]: אפשרויות ייצור מהיר בהתאם לזמינות
+      - listitem [ref=e69]:
+        - img [ref=e70]
+        - generic [ref=e72]: מתאים למעצבים, עסקים, מוסדות וצוותי הפקה
+    - generic [ref=e74]:
+      - generic [ref=e75]:
+        - heading "מה אנחנו מייצרים" [level=2] [ref=e76]
+        - paragraph [ref=e77]: הדפסה, חיתוך וגימור תחת קורת גג אחת — מעבודות פשוטות ועד פרויקטים מורכבים.
+      - generic [ref=e78]:
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - img [ref=e83]
+            - heading "מדבקות והדפסת רול" [level=3] [ref=e87]
+            - paragraph [ref=e88]: מגוון רחב של מדבקות ומוצרי הדבקה בהדפסה דיגיטלית.
+          - list [ref=e90]:
+            - listitem [ref=e91]: מדבקות ויניל
+            - listitem [ref=e93]: מדבקות שקופות ולבנות
+            - listitem [ref=e95]: חיתוך בצורה חופשית
+            - listitem [ref=e97]: מדבקות חלון וסנדבלסט
+            - listitem [ref=e99]: תוויות מוצר ואריזה
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - img [ref=e105]
+            - heading "חיתוך אותיות ושילוט" [level=3] [ref=e111]
+            - paragraph [ref=e112]: אותיות חתוכות ושילוט מותאם למידה, חומר ועיצוב.
+          - list [ref=e114]:
+            - listitem [ref=e115]: אותיות חתוכות
+            - listitem [ref=e117]: שילוט פנים ועסקים
+            - listitem [ref=e119]: כותרות לתערוכות
+            - listitem [ref=e121]: חיתוך PVC
+            - listitem [ref=e123]: שילוט הכוונה
+        - generic [ref=e126]:
+          - generic [ref=e127]:
+            - img [ref=e129]
+            - heading "הדפסה על חומרים קשיחים" [level=3] [ref=e133]
+            - paragraph [ref=e134]: הדפסה והרכבה על חומרים קשיחים לתצוגה ולשילוט.
+          - list [ref=e136]:
+            - listitem [ref=e137]: PVC
+            - listitem [ref=e139]: פורמקס / קאפה
+            - listitem [ref=e141]: אקריליק / פרספקס
+            - listitem [ref=e143]: הדפסה ישירה או הדפסה והרכבה
+            - listitem [ref=e145]: שלטים מודפסים
+        - generic [ref=e148]:
+          - generic [ref=e149]:
+            - img [ref=e151]
+            - heading "תערוכות, מוזיאונים וגלריות" [level=3] [ref=e153]
+            - paragraph [ref=e154]: הפקת שילוט וגרפיקה לתערוכות לפי מפרט אדריכלי או גרפי.
+          - list [ref=e156]:
+            - listitem [ref=e157]: טקסטים על קיר
+            - listitem [ref=e159]: כותרות תערוכה
+            - listitem [ref=e161]: פאנלים מודפסים
+            - listitem [ref=e163]: שילוט הכוונה
+            - listitem [ref=e165]: התאמת צבע לפי מדריך חזותי
+        - generic [ref=e168]:
+          - generic [ref=e169]:
+            - img [ref=e171]
+            - heading "עבודות ייצור מותאמות" [level=3] [ref=e173]
+            - paragraph [ref=e174]: ייצור לפי קובץ ודרישות הפרויקט, כולל פתרונות מורכבים.
+          - list [ref=e176]:
+            - listitem [ref=e177]: ייצור מקבצים מסופקים
+            - listitem [ref=e179]: חיתוך בצורה מותאמת
+            - listitem [ref=e181]: סדרות קצרות
+            - listitem [ref=e183]: פרויקטים חד-פעמיים
+            - listitem [ref=e185]: עבודות רב-חומריות
+    - generic [ref=e188]:
+      - generic [ref=e189]:
+        - heading "למה לעבוד עם ליין קאט" [level=2] [ref=e190]
+        - paragraph [ref=e191]: שותף הפקה אמין ומדויק — לא בית דפוס זול.
+      - generic [ref=e192]:
+        - generic [ref=e194]:
+          - generic [ref=e195]: "01"
+          - heading "הבנה טכנית של קבצים" [level=3] [ref=e196]
+          - paragraph [ref=e197]: אנחנו מזהים ופותרים בעיות קובץ, חיתוך, מידה ופורמט לפני ההפקה.
+        - generic [ref=e199]:
+          - generic [ref=e200]: "02"
+          - heading "הכול תחת קורת גג אחת" [level=3] [ref=e201]
+          - paragraph [ref=e202]: הדפסה, חיתוך וגימור באותו מקום — תהליך מסודר ושקוף.
+        - generic [ref=e204]:
+          - generic [ref=e205]: "03"
+          - heading "ניסיון בעבודות מורכבות" [level=3] [ref=e206]
+          - paragraph [ref=e207]: תערוכות, מדבקות גדולות, קבצים מרובי-עמודים ומידות מיוחדות.
+        - generic [ref=e209]:
+          - generic [ref=e210]: "04"
+          - heading "ייצור מהיר" [level=3] [ref=e211]
+          - paragraph [ref=e212]: פתרונות הפקה מהירים כשצריך, בהתאם לזמינות.
+        - generic [ref=e214]:
+          - generic [ref=e215]: "05"
+          - heading "דיוק ואמינות" [level=3] [ref=e216]
+          - paragraph [ref=e217]: ייצור מדויק ותוצאה שאפשר לסמוך עליה, מהקובץ ועד המסירה.
+        - generic [ref=e219]:
+          - generic [ref=e220]: "06"
+          - heading "ליווי אישי" [level=3] [ref=e221]
+          - paragraph [ref=e222]: תמיכה צמודה מהכנת הקובץ ועד האיסוף, המשלוח או ההתקנה.
+    - generic [ref=e224]:
+      - generic [ref=e225]:
+        - heading "איך עובדים איתנו" [level=2] [ref=e226]
+        - paragraph [ref=e227]: תהליך מסודר וברור — מהקובץ ועד התוצאה המוגמרת.
+      - list [ref=e228]:
+        - listitem [ref=e230]:
+          - generic [ref=e231]: "1"
+          - heading "קבלת קובץ" [level=3] [ref=e232]
+          - paragraph [ref=e233]: אתם שולחים קובץ מוכן להדפסה (PDF) עם מידות סופיות.
+        - listitem [ref=e235]:
+          - generic [ref=e236]: "2"
+          - heading "בדיקה טכנית" [level=3] [ref=e237]
+          - paragraph [ref=e238]: אנחנו בודקים קובץ, חיתוך, מידה וחומר לפני ההפקה.
+        - listitem [ref=e240]:
+          - generic [ref=e241]: "3"
+          - heading "ייצור" [level=3] [ref=e242]
+          - paragraph [ref=e243]: הדפסה וחיתוך מדויקים בהתאם למפרט.
+        - listitem [ref=e245]:
+          - generic [ref=e246]: "4"
+          - heading "גימור" [level=3] [ref=e247]
+          - paragraph [ref=e248]: הרכבה, חיתוך למידה וגימור סופי.
+        - listitem [ref=e250]:
+          - generic [ref=e251]: "5"
+          - heading "מסירה" [level=3] [ref=e252]
+          - paragraph [ref=e253]: איסוף, משלוח או התקנה — לפי הצורך.
+    - generic [ref=e255]:
+      - generic [ref=e256]:
+        - heading "עבודות נבחרות" [level=2] [ref=e257]
+        - paragraph [ref=e258]: מדבקות, שילוט, תערוכות והדפסות על חומרים קשיחים.
+      - generic [ref=e259]:
+        - img "עבודה של ליין קאט 1" [ref=e262]
+        - img "עבודה של ליין קאט 2" [ref=e265]
+        - img "עבודה של ליין קאט 3" [ref=e268]
+        - img "עבודה של ליין קאט 4" [ref=e271]
+        - img "עבודה של ליין קאט 5" [ref=e274]
+        - img "עבודה של ליין קאט 6" [ref=e277]
+    - generic [ref=e279]:
+      - generic [ref=e280]:
+        - paragraph [ref=e281]: מהסדנה
+        - heading "מוצרים ויצירות מבית ליין קאט" [level=2] [ref=e282]
+        - paragraph [ref=e283]: מדי פעם אנחנו יוצרים מוצרים משלנו — ויודעים גם לייצר אותם בכמויות. בקרוב כאן יוצג קטלוג המוצרים.
+        - link "מתעניינים? דברו איתנו" [ref=e285] [cursor=pointer]:
+          - /url: https://wa.me/972500000000?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%9C%20%D7%94%D7%9E%D7%95%D7%A6%D7%A8%D7%99%D7%9D%20%D7%A9%D7%9C%D7%9B%D7%9D
+      - img "מוצר מתוצרת ליין קאט" [ref=e288]
+    - generic [ref=e291]:
+      - heading "מותגים, מוסדות וגופים שעבדנו איתם" [level=2] [ref=e292]
+      - region [ref=e294]:
+        - generic [ref=e296]:
+          - group [ref=e297]:
+            - img "Client 1" [ref=e299]
+          - group [ref=e300]:
+            - img "Client 2" [ref=e302]
+          - group [ref=e303]:
+            - img "Client 3" [ref=e305]
+          - group [ref=e306]:
+            - img "Client 4" [ref=e308]
+          - group [ref=e309]:
+            - img "Client 5" [ref=e311]
+          - group [ref=e312]:
+            - img "Client 6" [ref=e314]
+          - group [ref=e315]:
+            - img "Client 7" [ref=e317]
+          - group [ref=e318]:
+            - img "Client 8" [ref=e320]
+    - generic [ref=e324]:
+      - heading "שאלות נפוצות" [level=2] [ref=e326]
+      - generic [ref=e327]:
+        - heading "באיזה פורמט קובץ כדאי לשלוח?" [level=3] [ref=e329]:
+          - button "באיזה פורמט קובץ כדאי לשלוח?" [ref=e330]:
+            - text: באיזה פורמט קובץ כדאי לשלוח?
+            - img [ref=e331]
+        - heading "כמה זמן לוקח ייצור?" [level=3] [ref=e334]:
+          - button "כמה זמן לוקח ייצור?" [ref=e335]:
+            - text: כמה זמן לוקח ייצור?
+            - img [ref=e336]
+        - heading "על אילו חומרים אתם מדפיסים?" [level=3] [ref=e339]:
+          - button "על אילו חומרים אתם מדפיסים?" [ref=e340]:
+            - text: על אילו חומרים אתם מדפיסים?
+            - img [ref=e341]
+        - heading "יש איסוף, משלוח והתקנה?" [level=3] [ref=e344]:
+          - button "יש איסוף, משלוח והתקנה?" [ref=e345]:
+            - text: יש איסוף, משלוח והתקנה?
+            - img [ref=e346]
+        - heading "יש כמות מינימום?" [level=3] [ref=e349]:
+          - button "יש כמות מינימום?" [ref=e350]:
+            - text: יש כמות מינימום?
+            - img [ref=e351]
+    - generic [ref=e354]:
+      - generic [ref=e355]:
+        - heading "צרו קשר" [level=2] [ref=e356]
+        - paragraph [ref=e357]: ספרו לנו על הפרויקט — נשמח לבדוק קובץ ולתת הצעת מחיר.
+        - list [ref=e358]:
+          - listitem [ref=e359]:
+            - img [ref=e360]
+            - text: HaSadna 8, Holon
+          - listitem [ref=e363]:
+            - img [ref=e364]
+            - link "+972-00-000-0000" [ref=e366] [cursor=pointer]:
+              - /url: tel:+972-00-000-0000
+          - listitem [ref=e367]:
+            - img [ref=e368]
+            - link "info@example.com" [ref=e371] [cursor=pointer]:
+              - /url: mailto:info@example.com
+          - listitem [ref=e372]:
+            - img [ref=e373]
+            - text: א׳–ה׳ 9:00–17:00
+        - generic [ref=e376]:
+          - link "וואטסאפ" [ref=e377] [cursor=pointer]:
+            - /url: https://wa.me/972500000000?text=%D7%A9%D7%9C%D7%95%D7%9D%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A7%D7%91%D7%9C%20%D7%94%D7%A6%D7%A2%D7%AA%20%D7%9E%D7%97%D7%99%D7%A8
+            - img [ref=e378]
+            - text: וואטסאפ
+          - link "Instagram" [ref=e380] [cursor=pointer]:
+            - /url: https://instagram.com/
+            - img [ref=e381]
+          - link "Facebook" [ref=e385] [cursor=pointer]:
+            - /url: https://facebook.com/
+            - img [ref=e386]
+        - paragraph [ref=e388]: "ח.פ.: 516741998"
+      - generic [ref=e389]:
+        - generic [ref=e390]:
+          - text: שם
+          - textbox "שם" [ref=e391]
+        - generic [ref=e392]:
+          - text: אימייל
+          - textbox "אימייל" [ref=e393]
+        - generic [ref=e394]:
+          - text: טלפון (לא חובה)
+          - textbox "טלפון (לא חובה)" [ref=e395]
+        - generic [ref=e396]:
+          - text: פרטי הפנייה
+          - textbox "פרטי הפנייה" [ref=e397]
+        - button "שליחה" [ref=e398]
+  - contentinfo [ref=e399]:
+    - generic [ref=e400]:
+      - generic [ref=e401]:
+        - img "Line Cut" [ref=e402]
+        - paragraph [ref=e403]: הדפסה דיגיטלית, חיתוך וגימור — חולון.
+      - generic [ref=e404]:
+        - paragraph [ref=e405]: HaSadna 8, Holon
+        - paragraph [ref=e406]: +972-00-000-0000
+        - paragraph [ref=e407]: info@example.com
+        - paragraph [ref=e408]: "ח.פ.: 516741998"
+      - navigation [ref=e409]:
+        - link "תנאי שימוש" [ref=e410] [cursor=pointer]:
+          - /url: /he/terms
+        - link "מדיניות פרטיות" [ref=e411] [cursor=pointer]:
+          - /url: /he/privacy
+      - generic [ref=e412]:
+        - link "Instagram" [ref=e413] [cursor=pointer]:
+          - /url: https://instagram.com/
+          - img [ref=e414]
+        - link "Facebook" [ref=e418] [cursor=pointer]:
+          - /url: https://facebook.com/
+          - img [ref=e419]
+    - generic [ref=e421]: © Line Cut Ltd.
+  - button "Open Next.js Dev Tools" [ref=e427] [cursor=pointer]:
+    - img [ref=e428]
+  - alert [ref=e433]
