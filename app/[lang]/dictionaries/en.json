@@ -69,6 +69,30 @@
       { "title": "Hands-on support", "body": "Close support from file preparation to pickup, delivery or installation." }
     ]
   },
+  "process": {
+    "heading": "How we work",
+    "intro": "A clear, organized process — from file to finished result.",
+    "steps": {
+      "file": { "title": "Your file", "body": "You send a print-ready file (PDF) with final dimensions." },
+      "review": { "title": "Technical review", "body": "We check the file, cut lines, size and material before production." },
+      "production": { "title": "Production", "body": "Accurate printing and cutting to spec." },
+      "finishing": { "title": "Finishing", "body": "Mounting, cut-to-size and final finishing." },
+      "delivery": { "title": "Delivery", "body": "Pickup, delivery or installation — as needed." }
+    }
+  },
+  "gallery": {
+    "heading": "Selected work",
+    "intro": "Stickers, signage, exhibitions and rigid-material prints.",
+    "imageAltPrefix": "Line Cut project"
+  },
+  "studio": {
+    "eyebrow": "From the studio",
+    "heading": "Products & creations by Line Cut",
+    "body": "From time to time we make our own products — and we can produce them at scale. A product catalog is coming soon.",
+    "cta": "Interested? Talk to us",
+    "ctaMessage": "Hi, I'd like to hear about your products",
+    "imageAlt": "A product made by Line Cut"
+  },
   "nav": {
     "services": "Services",
     "why": "Why us",
