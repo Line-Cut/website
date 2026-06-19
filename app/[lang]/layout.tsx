@@ -5,6 +5,7 @@ import "../globals.css";
 import { isLocale, locales } from "@/lib/i18n";
 import { getDictionary } from "./dictionaries";
 import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 const display = Frank_Ruhl_Libre({
   subsets: ["hebrew", "latin"],
@@ -49,6 +50,7 @@ export default async function RootLayout({
       <body className="flex min-h-full flex-col bg-paper font-sans text-ink">
         <Header lang={lang} dict={dict.nav} />
         <main className="flex-1">{children}</main>
+        <Footer lang={lang} dict={dict.footer} />
       </body>
     </html>
   );

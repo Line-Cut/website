@@ -127,5 +127,17 @@
     "submit": "Send",
     "fields": { "name": "Name", "email": "Email", "phone": "Phone (optional)", "message": "Your message" },
     "fieldErrors": { "required": "Required field", "email": "Invalid email", "message": "At least 10 characters required" }
+  },
+  "footer": {
+    "tagline": "Digital printing, cutting and finishing — Holon.",
+    "businessId": "Business ID",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
+  },
+  "legal": {
+    "termsTitle": "Terms of Service",
+    "termsBody": "Draft — review with a lawyer before launch.\n\nThese terms apply to use of the Line Cut Ltd. website and to ordering printing, cutting and finishing services.",
+    "privacyTitle": "Privacy Policy",
+    "privacyBody": "Draft — review with a lawyer before launch.\n\nThis policy explains what information we collect when you contact us through the site and how we use it."
   }
 }
