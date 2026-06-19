@@ -30,7 +30,19 @@ export async function generateMetadata({
   const { lang } = await params;
   if (!isLocale(lang)) return {};
   const dict = await getDictionary(lang);
-  return { title: dict.meta.title, description: dict.meta.description };
+  return {
+    title: dict.meta.title,
+    description: dict.meta.description,
+    alternates: {
+      languages: { he: "/he", en: "/en" },
+    },
+    openGraph: {
+      title: dict.meta.title,
+      description: dict.meta.description,
+      locale: lang === "he" ? "he_IL" : "en_US",
+      type: "website",
+    },
+  };
 }
 
 export default async function RootLayout({
