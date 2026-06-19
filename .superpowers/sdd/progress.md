@@ -8,7 +8,7 @@ Base commit (before Task 1): 4389da4
 - [x] Task 1: complete (commits ad49195..5577cfe, review clean)
 - [x] Task 2: complete (commits 5577cfe..fdb5d90, review clean)
 - [x] Task 3: complete (commits fdb5d90..5819e6b, review clean)
-- [ ] Task 4: Site config + content structure
+- [x] Task 4: complete (commits 5819e6b..c8bcf1b, review clean)
 - [ ] Task 5: UI primitives + motion + layout
 - [ ] Task 6: Carousel + Clients (Logos3)
 - [ ] Task 7: Header + Language toggle
