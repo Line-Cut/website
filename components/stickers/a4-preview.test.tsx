@@ -91,4 +91,17 @@ describe("A4Preview", () => {
     fireEvent.click(screen.getByRole("button", { name: dict.prev }));
     expect(screen.getByText("Sheet 1 of 2")).toBeInTheDocument();
   });
+
+  it("clamps currentPage when srcs shrinks below the current page", () => {
+    const { rerender } = render(
+      <A4Preview srcs={makeSrcs(perSheet + 1)} dict={dict} locale="en" />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: dict.next }));
+    expect(screen.getByText("Sheet 2 of 2")).toBeInTheDocument();
+
+    // Shrink to a single sticker → totalPages drops to 1; nav disappears, no crash
+    rerender(<A4Preview srcs={makeSrcs(1)} dict={dict} locale="en" />);
+    expect(screen.queryByRole("button", { name: dict.prev })).toBeNull();
+    expect(screen.queryByRole("button", { name: dict.next })).toBeNull();
+  });
 });
