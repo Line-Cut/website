@@ -42,3 +42,7 @@ next-env.d.ts
 
 # superpowers scratch (briefs, reports, diffs, ledger)
 .superpowers/
+
+# local QA artifacts (playwright screenshots / mcp output)
+.playwright-mcp/
+linecut-*.jpeg
