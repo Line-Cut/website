@@ -101,7 +101,7 @@ export async function confirmOrder(
     ship_city: delivery.method === "shipping" ? (delivery.city ?? null) : null,
     ship_postal_code: delivery.method === "shipping" ? (delivery.postalCode ?? null) : null,
     ship_country: delivery.method === "shipping" ? (delivery.country ?? null) : null,
-    notes: delivery.notes ?? null,
+    ship_notes: delivery.notes ?? null,
     payment_status: paymentStatus,
     confirmed_at: nowIso(),
   };

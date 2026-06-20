@@ -16,6 +16,11 @@ const VALID_PICKUP_DELIVERY = {
   email: "dana@example.com",
 };
 
+const VALID_PICKUP_WITH_NOTES = {
+  ...VALID_PICKUP_DELIVERY,
+  notes: "Please ring the bell",
+};
+
 const VALID_SHIPPING_DELIVERY = {
   method: "shipping",
   fullName: "Dana Cohen",
@@ -25,6 +30,11 @@ const VALID_SHIPPING_DELIVERY = {
   city: "Tel Aviv",
   postalCode: "61000",
   country: "Israel",
+};
+
+const VALID_SHIPPING_WITH_NOTES = {
+  ...VALID_SHIPPING_DELIVERY,
+  notes: "Leave at door",
 };
 
 const DRAFT_ORDER = {
@@ -383,5 +393,67 @@ describe("confirmOrder", () => {
 
     expect(result).toEqual({ ok: false, message: "db_error" });
     expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
+  });
+
+  it("shipping with notes: update payload includes ship_notes with the customer note", async () => {
+    const fakeAdmin = makeFakeAdmin();
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+    });
+
+    const result = await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_SHIPPING_WITH_NOTES,
+      },
+      deps,
+    );
+
+    expect(result.ok).toBe(true);
+    const { payload } = fakeAdmin._updates[0];
+    const p = payload as Record<string, unknown>;
+    expect(p.ship_notes).toBe("Leave at door");
+  });
+
+  it("pickup with notes: update payload includes ship_notes with the customer note", async () => {
+    const fakeAdmin = makeFakeAdmin();
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+    });
+
+    const result = await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_WITH_NOTES,
+      },
+      deps,
+    );
+
+    expect(result.ok).toBe(true);
+    const { payload } = fakeAdmin._updates[0];
+    const p = payload as Record<string, unknown>;
+    expect(p.ship_notes).toBe("Please ring the bell");
+  });
+
+  it("delivery without notes: update payload sets ship_notes to null", async () => {
+    const fakeAdmin = makeFakeAdmin();
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+    });
+
+    await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_DELIVERY,
+      },
+      deps,
+    );
+
+    const { payload } = fakeAdmin._updates[0];
+    const p = payload as Record<string, unknown>;
+    expect(p.ship_notes).toBeNull();
   });
 });

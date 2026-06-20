@@ -4,6 +4,7 @@ import { isLocale } from "@/lib/i18n";
 import { getDictionary } from "../../../dictionaries";
 import { getOrderByToken } from "@/lib/orders/order-view";
 import { OrderReceipt } from "@/components/stickers/order-receipt";
+import { StepIndicator } from "@/components/stickers/step-indicator";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +29,16 @@ export default async function TrackPage({
     );
   }
 
+  const steps = [
+    { key: "build", label: dict.stickers.steps.build },
+    { key: "details", label: dict.stickers.steps.details },
+    { key: "confirm", label: dict.stickers.steps.confirm },
+  ];
+
   return (
     <Container>
-      <div className="py-10">
+      <div className="flex flex-col gap-8 py-10">
+        <StepIndicator steps={steps} current={2} />
         <OrderReceipt order={order} dict={dict.stickers} locale={lang} />
       </div>
     </Container>
