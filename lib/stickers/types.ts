@@ -1,6 +1,8 @@
 // Re-export PriceBreakdown from pricing for convenience
 export type { PriceBreakdown } from "@/lib/stickers/pricing";
 
+import type { PriceBreakdown } from "@/lib/stickers/pricing";
+
 /** Result of a successful sticker upload; `key` is the S3 object key. */
 export type UploadedSticker = {
   stickerId: string;
@@ -46,4 +48,16 @@ export type StickerMeta = {
   contentType: string;
   width: number;
   height: number;
+};
+
+/** Shared read-model used by receipt, order history, and tracking pages. */
+export type OrderView = {
+  orderId: string;
+  guestToken?: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  createdAtISO: string;
+  copies: number;
+  breakdown: PriceBreakdown;
+  delivery: DeliveryInput;
 };
