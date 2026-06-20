@@ -10,6 +10,11 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {
-    alias: { "@": resolve(__dirname, ".") },
+    alias: {
+      "@": resolve(__dirname, "."),
+      // Stub Next.js "server-only" sentinel — it's a build-time guard that
+      // isn't installed as a real package; vitest would fail to resolve it.
+      "server-only": resolve(__dirname, "./__mocks__/server-only.ts"),
+    },
   },
 });

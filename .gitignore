@@ -46,3 +46,6 @@ next-env.d.ts
 # local QA artifacts (playwright screenshots / mcp output)
 .playwright-mcp/
 linecut-*.jpeg
+
+# sticker QA screenshots (local)
+stickers-*.jpeg
