@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { OrderView } from "@/lib/stickers/types";
 
 // ---------------------------------------------------------------------------
@@ -136,4 +137,26 @@ export async function getOrderByToken(
   const row = data as OrderRow;
   const stickerCount = await countStickers(admin, row.id);
   return mapRowToOrderView(row, stickerCount);
+}
+
+/**
+ * Fetch all confirmed orders for a logged-in user.
+ * Uses the RLS-scoped server client so only the user's own rows are returned.
+ * Drafts (confirmed_at IS NULL) are excluded.
+ * Returns an empty array if none found.
+ */
+export async function getUserOrders(): Promise<OrderView[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*, order_stickers(order_id)")
+    .not("confirmed_at", "is", null)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return (data as Array<OrderRow & { order_stickers?: StickerCountRow[] }>).map(
+    (row) => mapRowToOrderView(row, row.order_stickers?.length ?? 0),
+  );
 }

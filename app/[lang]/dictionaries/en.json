@@ -140,6 +140,26 @@
     "privacyTitle": "Privacy Policy",
     "privacyBody": "Draft — review with a lawyer before launch.\n\nThis policy explains what information we collect when you contact us through the site and how we use it."
   },
+  "auth": {
+    "login": {
+      "heading": "Sign in to your account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "submit": "Sign in",
+      "googleCta": "Continue with Google",
+      "toSignup": "Don't have an account? Sign up"
+    },
+    "signup": {
+      "heading": "Create an account",
+      "submit": "Sign up",
+      "toLogin": "Already have an account? Sign in"
+    },
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "invalid_credentials": "Invalid email or password."
+    },
+    "accountLink": "My account"
+  },
   "stickers": {
     "meta": {
       "title": "Order Stickers — Line Cut",
