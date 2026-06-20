@@ -57,13 +57,23 @@ Fonts: `font-display` = Frank Ruhl Libre (headings), `font-sans` = Assistant (bo
 4. Mount it in `app/[lang]/page.tsx` in the right order, passing `dict.<name>`.
 5. Verify: `npm test` (parity), `npm run typecheck && npm run build`, and load `/he` + `/en` checking `scrollWidth === clientWidth`.
 
+## Sticker shop (Phase 2 — built)
+
+The `/[lang]/stickers` flow: upload WhatsApp `.webp` stickers → A4 preview + live price → checkout (delivery) → place order (payment deferred) → guest tracking link / account history. Architecture:
+- **Supabase** = Postgres (orders, order_stickers) + Auth (Google + email/password). **AWS S3** = file storage, key scheme `{clientKey}/{orderId}/{stickerId}.webp` (`clientKey` = `u_<userId>` or `g_<guestToken>`).
+- **Uploads go browser→S3 direct** via presigned PUT URLs (Server Actions cap at ~1MB) — never POST files through an action.
+- Pure pricing/packing/validation in `lib/stickers/`; DI cores in `lib/orders/` (`create-draft`, `confirm-order`, `order-view`) with thin `"use server"` wrappers in `app/actions/stickers.ts`. Secrets only in server-only modules (`lib/supabase/admin.ts`, `lib/storage/s3.ts`); browser uses `lib/supabase/client.ts` + presigned URLs.
+- **DB migrations** = Supabase CLI: files in `supabase/migrations/<ts>_name.sql`, `npm run db:push` / `db:new`. Vercel does NOT run migrations — they apply via CI/CLI (see `supabase/migrations/README.md`). The CLI is `npx`-only (not a dep) to keep Vercel installs lean.
+- RLS is default-deny; guest reads go through the admin client filtered by `guest_token` (no anon read policy). Owner files route is gated by `isOwnerEmail` (OWNER_NOTIFY_EMAIL allow-list).
+
 ## Launch Checklist (`TODO(client)`)
 
-Fill `lib/site-config.ts` (phone/email/whatsapp/socials/hours + `url`); set Vercel env (`RESEND_API_KEY`, `CONTACT_EMAIL`, `CONTACT_FROM`); replace placeholder images (hero/gallery/studio + client logos in `/public`) then drop the cloudfront allowlist in `next.config.ts`; have a lawyer review the Terms/Privacy boilerplate.
+- Marketing: fill `lib/site-config.ts` (phone/email/whatsapp/socials/hours + `url`); set Vercel env (`RESEND_API_KEY`, `CONTACT_EMAIL`, `CONTACT_FROM`); replace placeholder images + client logos in `/public` then drop the cloudfront allowlist in `next.config.ts`; lawyer-review Terms/Privacy.
+- Sticker shop: set sticker-shop env (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `AWS_REGION`, `S3_STICKERS_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `OWNER_NOTIFY_EMAIL`); **apply the S3 bucket CORS rule** (PUT/GET from the site origin — see `docs/sticker-shop-setup.md` §3b; the app IAM user can't set it); enable Supabase **Email + Google** auth providers + Site URL/Redirect URLs; fill real pricing in `lib/stickers/sticker-config.ts` (`perSheetRate`/`setupFee` in **agorot** — until set, the UI shows "price confirmed before printing"); apply DB migrations to the project (`npm run db:push`); CONTACT_FROM must use the Resend-verified domain.
 
 ## Roadmap (architected-for, not built)
 
-Supabase auth (Google + email/password); WhatsApp/custom **sticker shop** (build → cart → pay → delivery address → send to print); DB-backed per-user order gallery; owner product shop; per-service deep pages. Keep new data/IO behind `lib/` + Server Actions as the seam.
+Real payment gateway (drop-in behind the `PaymentProvider` interface in `lib/payments/`); admin order dashboard; orphaned-draft cleanup cron (drafts = `confirmed_at IS NULL`); "add as a store product" catalog; owner product shop; per-service deep pages. Keep new data/IO behind `lib/` + Server Actions as the seam.
 
 ## Maintenance — keep this guide current
 
