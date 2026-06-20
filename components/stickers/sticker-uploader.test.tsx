@@ -77,6 +77,8 @@ const dict = {
     submit: "",
     placing: "",
     back: "",
+    noActiveOrder: "",
+    backToBuilder: "",
   },
   fieldErrors: { required: "", invalid_email: "", invalid_phone: "" },
   receipt: {
@@ -87,6 +89,7 @@ const dict = {
     deliveryTo: "",
     saveLink: "",
     viewInAccount: "",
+    notFound: "",
   },
   status: {
     heading: "",

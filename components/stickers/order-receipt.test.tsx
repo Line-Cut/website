@@ -78,6 +78,8 @@ const dict = {
     submit: "Place order",
     placing: "Placing…",
     back: "Back",
+    noActiveOrder: "No active order found.",
+    backToBuilder: "Back to sticker builder",
   },
   fieldErrors: { required: "Required", invalid_email: "Bad email", invalid_phone: "Bad phone" },
   receipt: {
@@ -88,6 +90,7 @@ const dict = {
     deliveryTo: "Shipping to",
     saveLink: "Save this link to track your order.",
     viewInAccount: "View in account",
+    notFound: "Order not found.",
   },
   status: {
     heading: "Order status",

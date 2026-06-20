@@ -221,7 +221,9 @@
       },
       "submit": "שליחת הזמנה",
       "placing": "שולח הזמנה…",
-      "back": "חזרה לעורך"
+      "back": "חזרה לעורך",
+      "noActiveOrder": "לא נמצאה הזמנה פעילה.",
+      "backToBuilder": "חזרה לעורך הסטיקרים"
     },
     "fieldErrors": {
       "required": "שדה חובה",
@@ -235,7 +237,8 @@
       "noPaymentYet": "לא נגבה תשלום עדיין.",
       "deliveryTo": "משלוח אל",
       "saveLink": "שמרו את הקישור הזה למעקב אחר ההזמנה.",
-      "viewInAccount": "צפייה בחשבון"
+      "viewInAccount": "צפייה בחשבון",
+      "notFound": "ההזמנה לא נמצאה."
     },
     "status": {
       "heading": "סטטוס הזמנה",

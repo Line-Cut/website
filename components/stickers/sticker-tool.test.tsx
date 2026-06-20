@@ -108,6 +108,8 @@ const dict = {
     submit: "Place order",
     placing: "Placing…",
     back: "Back",
+    noActiveOrder: "",
+    backToBuilder: "",
   },
   fieldErrors: { required: "", invalid_email: "", invalid_phone: "" },
   receipt: {
@@ -118,6 +120,7 @@ const dict = {
     deliveryTo: "",
     saveLink: "",
     viewInAccount: "",
+    notFound: "",
   },
   status: {
     heading: "",

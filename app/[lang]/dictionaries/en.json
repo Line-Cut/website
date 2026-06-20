@@ -221,7 +221,9 @@
       },
       "submit": "Place order",
       "placing": "Placing order…",
-      "back": "Back to editor"
+      "back": "Back to editor",
+      "noActiveOrder": "No active order found.",
+      "backToBuilder": "Back to sticker builder"
     },
     "fieldErrors": {
       "required": "Required",
@@ -235,7 +237,8 @@
       "noPaymentYet": "No payment has been taken yet.",
       "deliveryTo": "Delivery to",
       "saveLink": "Save this link to track your order.",
-      "viewInAccount": "View in your account"
+      "viewInAccount": "View in your account",
+      "notFound": "Order not found."
     },
     "status": {
       "heading": "Order status",
