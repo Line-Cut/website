@@ -34,6 +34,11 @@ const dict = {
     retry: "",
     empty: "",
     networkOffline: "",
+    serverError: "Something went wrong. Please try again.",
+    notFound: "We couldn't find this order.",
+    uploadsIncomplete: "Some files didn't finish uploading — please go back and try again.",
+    paymentFailed: "Payment could not be processed.",
+    noStickers: "This order has no stickers.",
   },
   thumb: { remove: "Remove", removeLabel: "Remove {name}", failed: "Failed" },
   preview: {
@@ -59,6 +64,7 @@ const dict = {
     total: "",
     pricePending: "",
     continue: "",
+    uploading: "",
   },
   checkout: {
     heading: "",

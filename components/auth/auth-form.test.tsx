@@ -48,6 +48,11 @@ const dict = {
     generic: "Something went wrong. Please try again.",
     invalid_credentials: "Invalid email or password.",
   },
+  or: "or",
+  showPassword: "Show password",
+  hidePassword: "Hide password",
+  submitting: "Submitting…",
+  checkEmail: "Check your email to confirm your account.",
   accountLink: "My account",
 } as const;
 

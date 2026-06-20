@@ -16,6 +16,19 @@ import { uploadFiles } from "@/lib/stickers/upload-client";
 import { StepIndicator } from "@/components/stickers/step-indicator";
 
 // ---------------------------------------------------------------------------
+// Server error code → dict key mapping
+// ---------------------------------------------------------------------------
+
+const SERVER_ERROR_KEY: Record<string, "serverError" | "notFound" | "uploadsIncomplete" | "paymentFailed" | "noStickers"> = {
+  db_error: "serverError",
+  not_found: "notFound",
+  uploads_incomplete: "uploadsIncomplete",
+  payment_failed: "paymentFailed",
+  no_stickers: "noStickers",
+  server_misconfigured: "serverError",
+};
+
+// ---------------------------------------------------------------------------
 // StickerTool — main orchestrator
 // ---------------------------------------------------------------------------
 
@@ -125,7 +138,8 @@ export function StickerTool({ dict, lang }: Props) {
 
     if (!res.ok) {
       setItems((prev) => prev.map((item) => ({ ...item, status: "ready" as const })));
-      setSubmitError(res.message ?? dict.errors.uploadFailed ?? "An error occurred. Please try again.");
+      const errKey = SERVER_ERROR_KEY[res.message ?? ""] ?? "serverError";
+      setSubmitError(dict.errors[errKey]);
       setSubmitting(false);
       return;
     }
@@ -209,7 +223,7 @@ export function StickerTool({ dict, lang }: Props) {
             onClick={handleContinue}
             disabled={items.length === 0 || submitting}
           >
-            {submitting ? "…" : dict.pricing.continue}
+            {submitting ? dict.pricing.uploading : dict.pricing.continue}
           </Button>
         </div>
       )}

@@ -52,6 +52,11 @@ const dict = {
     retry: "",
     empty: "",
     networkOffline: "",
+    serverError: "Something went wrong. Please try again.",
+    notFound: "We couldn't find this order.",
+    uploadsIncomplete: "Some files didn't finish uploading — please go back and try again.",
+    paymentFailed: "Payment could not be processed.",
+    noStickers: "This order has no stickers.",
   },
   thumb: { remove: "", removeLabel: "", failed: "" },
   preview: {
@@ -77,6 +82,7 @@ const dict = {
     total: "",
     pricePending: "",
     continue: "",
+    uploading: "",
   },
   checkout: {
     heading: "Delivery details",
@@ -324,7 +330,40 @@ describe("CheckoutForm", () => {
     });
   });
 
-  it("server ok:false with message → shows generic role=alert banner; no navigation", async () => {
+  it("server ok:false with message 'not_found' → shows localized notFound text, NOT the raw code", async () => {
+    setOrderHandle(VALID_HANDLE);
+
+    mockConfirmOrder.mockResolvedValueOnce({
+      ok: false,
+      message: "not_found",
+    });
+
+    render(<CheckoutForm dict={dict} lang="en" />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(dict.checkout.fields.fullName),
+      ).toBeInTheDocument();
+    });
+
+    fillPickupForm();
+
+    fireEvent.submit(screen.getByRole("button", { name: dict.checkout.submit }).closest("form")!);
+
+    // Localized message is shown
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+      expect(screen.getByText(dict.errors.notFound)).toBeInTheDocument();
+    });
+
+    // Raw server code must NOT be rendered
+    expect(screen.queryByText("not_found")).toBeNull();
+
+    // No navigation
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("server ok:false with message 'payment_failed' → shows localized paymentFailed text, NOT the raw code", async () => {
     setOrderHandle(VALID_HANDLE);
 
     mockConfirmOrder.mockResolvedValueOnce({
@@ -344,15 +383,14 @@ describe("CheckoutForm", () => {
 
     fireEvent.submit(screen.getByRole("button", { name: dict.checkout.submit }).closest("form")!);
 
+    // Localized message is shown
     await waitFor(() => {
-      const alert = screen.getByRole("alert", { hidden: false });
-      // Find the alert that contains the message (may be multiple role=alert elements)
-      const alerts = screen.getAllByRole("alert");
-      const genericAlert = alerts.find((el) =>
-        el.textContent?.includes("payment_failed"),
-      );
-      expect(genericAlert).toBeTruthy();
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+      expect(screen.getByText(dict.errors.paymentFailed)).toBeInTheDocument();
     });
+
+    // Raw server code must NOT be rendered
+    expect(screen.queryByText("payment_failed")).toBeNull();
 
     // No navigation
     expect(mockPush).not.toHaveBeenCalled();

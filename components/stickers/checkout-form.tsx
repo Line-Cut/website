@@ -10,6 +10,19 @@ import { confirmOrder } from "@/app/actions/stickers";
 import { Button } from "@/components/ui/button";
 
 // ---------------------------------------------------------------------------
+// Server error code → dict key mapping
+// ---------------------------------------------------------------------------
+
+const SERVER_ERROR_KEY: Record<string, "serverError" | "notFound" | "uploadsIncomplete" | "paymentFailed" | "noStickers"> = {
+  not_found: "notFound",
+  uploads_incomplete: "uploadsIncomplete",
+  payment_failed: "paymentFailed",
+  db_error: "serverError",
+  no_stickers: "noStickers",
+  server_misconfigured: "serverError",
+};
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -184,7 +197,8 @@ export function CheckoutForm({ dict, lang }: Props) {
         setFieldErrors(result.errors);
         focusFirstInvalid(result.errors);
       } else {
-        setGenericError(result.message ?? "error");
+        const errKey = SERVER_ERROR_KEY[result.message ?? ""] ?? "serverError";
+        setGenericError(dict.errors[errKey]);
       }
     });
   }

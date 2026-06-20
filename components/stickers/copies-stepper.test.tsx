@@ -17,6 +17,7 @@ const dict = {
   total: "Total",
   pricePending: "Final price confirmed before printing.",
   continue: "Continue to checkout",
+  uploading: "Uploading…",
 };
 
 describe("CopiesStepper", () => {

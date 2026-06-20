@@ -64,6 +64,11 @@ const dict = {
     retry: "Retry",
     empty: "No stickers yet.",
     networkOffline: "",
+    serverError: "Something went wrong. Please try again.",
+    notFound: "We couldn't find this order.",
+    uploadsIncomplete: "Some files didn't finish uploading — please go back and try again.",
+    paymentFailed: "Payment could not be processed.",
+    noStickers: "This order has no stickers.",
   },
   thumb: { remove: "Remove", removeLabel: "Remove {name}", failed: "Failed" },
   preview: {
@@ -89,6 +94,7 @@ const dict = {
     total: "Total",
     pricePending: "Price confirmed before printing.",
     continue: "Continue to payment",
+    uploading: "Uploading…",
   },
   checkout: {
     heading: "Delivery details",
@@ -326,14 +332,19 @@ describe("StickerTool", () => {
       .filter((el) => !(el as HTMLButtonElement).disabled);
     fireEvent.click(continueBtns[0]);
 
-    // Error message should appear in an aria-live region
+    // Error message should appear in an aria-live region with the localized text (not the raw code)
     await waitFor(() => {
       // There may be multiple role="alert" elements (e.g. StickerUploader also has one);
-      // find the one that carries the error text.
+      // find the one that carries the localized error text.
       const alerts = screen.getAllByRole("alert");
-      const errorAlert = alerts.find((el) => el.textContent?.includes("db_error"));
+      const errorAlert = alerts.find((el) =>
+        el.textContent?.includes(dict.errors.serverError),
+      );
       expect(errorAlert).toBeTruthy();
     });
+
+    // Raw server code must NOT be rendered
+    expect(screen.queryByText("db_error")).toBeNull();
 
     // router.push must NOT have been called
     expect(mockPush).not.toHaveBeenCalled();

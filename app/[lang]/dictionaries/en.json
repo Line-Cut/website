@@ -158,6 +158,11 @@
       "generic": "Something went wrong. Please try again.",
       "invalid_credentials": "Invalid email or password."
     },
+    "or": "or",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submitting": "Submitting…",
+    "checkEmail": "Check your email to confirm your account.",
     "accountLink": "My account"
   },
   "stickers": {
@@ -193,7 +198,12 @@
       "uploadFailed": "Upload failed for {name}.",
       "retry": "Retry",
       "empty": "No stickers yet — add some to see a preview and price.",
-      "networkOffline": "You appear to be offline. Check your connection and try again."
+      "networkOffline": "You appear to be offline. Check your connection and try again.",
+      "serverError": "Something went wrong. Please try again.",
+      "notFound": "We couldn't find this order.",
+      "uploadsIncomplete": "Some files didn't finish uploading — please go back and try again.",
+      "paymentFailed": "Payment could not be processed.",
+      "noStickers": "This order has no stickers."
     },
     "thumb": {
       "remove": "Remove",
@@ -222,7 +232,8 @@
       "sheetsSubtotal": "Sheets subtotal",
       "total": "Total",
       "pricePending": "Final price is confirmed before printing.",
-      "continue": "Continue to checkout"
+      "continue": "Continue to checkout",
+      "uploading": "Uploading…"
     },
     "checkout": {
       "heading": "Delivery details",

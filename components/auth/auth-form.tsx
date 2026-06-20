@@ -20,6 +20,7 @@ export function AuthForm({ mode: initialMode, lang, dict }: Props) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkEmail, setCheckEmail] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const isLogin = mode === "login";
@@ -68,12 +69,17 @@ export function AuthForm({ mode: initialMode, lang, dict }: Props) {
           return;
         }
       } else {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
         });
         if (signUpError) {
           setError(dict.errors.generic);
+          return;
+        }
+        // Email confirmation is enabled — no session yet; show inline notice.
+        if (!data.session) {
+          setCheckEmail(true);
           return;
         }
       }
@@ -99,6 +105,17 @@ export function AuthForm({ mode: initialMode, lang, dict }: Props) {
         </div>
       )}
 
+      {/* Check-email confirmation notice (signup with email-confirm enabled) */}
+      {checkEmail && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-md border border-line bg-paper-2 px-4 py-3 text-sm text-ink"
+        >
+          {dict.checkEmail}
+        </div>
+      )}
+
       {/* Google sign-in */}
       <Button
         type="button"
@@ -112,7 +129,7 @@ export function AuthForm({ mode: initialMode, lang, dict }: Props) {
 
       <div className="flex items-center gap-3 text-xs text-muted">
         <span className="h-px flex-1 bg-line" />
-        <span>or</span>
+        <span>{dict.or}</span>
         <span className="h-px flex-1 bg-line" />
       </div>
 
@@ -160,7 +177,7 @@ export function AuthForm({ mode: initialMode, lang, dict }: Props) {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute inset-y-0 end-0 flex items-center px-3 text-muted hover:text-ink"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? dict.hidePassword : dict.showPassword}
               tabIndex={-1}
             >
               {showPassword ? (
@@ -208,7 +225,7 @@ export function AuthForm({ mode: initialMode, lang, dict }: Props) {
           className="w-full min-h-[44px]"
         >
           {isPending
-            ? "…"
+            ? dict.submitting
             : isLogin
               ? dict.login.submit
               : dict.signup.submit}
