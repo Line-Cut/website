@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); printf '%s' \"$f\" | grep -Eq '((^|/)lib/(site-config|content|contact-schema)\\.ts|(^|/)app/\\[lang\\]/dictionaries/[^/]*\\.json|(^|/)app/globals\\.css|(^|/)app/actions/contact\\.ts)$' && jq -n '{hookSpecificOutput:{hookEventName:\"PostToolUse\",additionalContext:\"Reminder (linecut-website skill): you edited a Line Cut business-logic/facts file. If business facts, brand voice, design tokens, component conventions, the section recipe, or the roadmap changed, update .claude/skills/linecut-website/SKILL.md in this same change.\"}}' || true",
+            "statusMessage": "Checking linecut-website skill sync"
+          }
+        ]
+      }
+    ]
+  }
+}
