@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sticker } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
 import { LanguageToggle } from "@/components/layout/language-toggle";
@@ -57,6 +57,12 @@ export function Header({
 
         <div className="hidden items-center gap-4 lg:flex">
           <LanguageToggle lang={lang} />
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/${lang}/stickers`}>
+              <Sticker className="size-4" aria-hidden="true" />
+              {dict.stickers}
+            </Link>
+          </Button>
           <Button asChild size="sm">
             <a href={whatsappLink(dict.ctaMessage)} target="_blank" rel="noopener noreferrer">
               {dict.cta}
@@ -85,6 +91,12 @@ export function Header({
               {l.label}
             </a>
           ))}
+          <Button asChild size="sm" variant="outline" className="w-full">
+            <Link href={`/${lang}/stickers`} onClick={() => setOpen(false)}>
+              <Sticker className="size-4" aria-hidden="true" />
+              {dict.stickers}
+            </Link>
+          </Button>
           <div className="flex items-center justify-between pt-2">
             <LanguageToggle lang={lang} />
             <Button asChild size="sm">
