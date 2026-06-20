@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { StickerTool } from "@/components/stickers/sticker-tool";
 
 // ---------------------------------------------------------------------------
@@ -17,6 +17,20 @@ vi.mock("next/image", () => ({
     // eslint-disable-next-line @next/next/no-img-element
     <img alt={alt} src={src} />
   ),
+}));
+
+// Mock the server action
+const mockCreateOrderDraft = vi.fn();
+vi.mock("@/app/actions/stickers", () => ({
+  createOrderDraft: (...args: unknown[]) => mockCreateOrderDraft(...args),
+  confirmOrder: vi.fn(),
+}));
+
+// Mock the upload client
+const mockUploadFiles = vi.fn();
+vi.mock("@/lib/stickers/upload-client", () => ({
+  uploadFiles: (...args: unknown[]) => mockUploadFiles(...args),
+  putToPresignedUrl: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -46,7 +60,7 @@ const dict = {
     notWebp: "Only WebP files are accepted. {name} was skipped.",
     tooMany: "You can upload up to {max} stickers. Extra files were skipped.",
     tooBig: "{name} is larger than {limit} and was skipped.",
-    uploadFailed: "",
+    uploadFailed: "Upload failed. Please try again.",
     retry: "Retry",
     empty: "No stickers yet.",
     networkOffline: "",
@@ -145,14 +159,38 @@ function getFileInput() {
 }
 
 // ---------------------------------------------------------------------------
-// Tests
+// Setup
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
   mockPush.mockClear();
+  mockCreateOrderDraft.mockClear();
+  mockUploadFiles.mockClear();
   vi.mocked(URL.createObjectURL).mockClear();
   vi.mocked(URL.revokeObjectURL).mockClear();
+
+  // Default: successful draft + upload
+  mockCreateOrderDraft.mockResolvedValue({
+    ok: true,
+    orderId: "o1",
+    guestToken: "gt",
+    uploads: [{ stickerId: "s1", key: "k", url: "https://up/1" }],
+  });
+
+  mockUploadFiles.mockImplementation(
+    (
+      _pairs: unknown[],
+      opts?: { onEach?: (i: number, status: "done" | "error") => void },
+    ) => {
+      opts?.onEach?.(0, "done");
+      return Promise.resolve([{ index: 0, ok: true }]);
+    },
+  );
 });
+
+// ---------------------------------------------------------------------------
+// Tests — existing (kept intact)
+// ---------------------------------------------------------------------------
 
 describe("StickerTool", () => {
   it("initial render: uploader visible, no grid/preview, Build step is current", () => {
@@ -220,7 +258,84 @@ describe("StickerTool", () => {
     expect(URL.revokeObjectURL).toHaveBeenCalled();
   });
 
-  it("clicking Continue calls router.push with /{lang}/stickers/checkout", () => {
+  // ---------------------------------------------------------------------------
+  // Tests — upload flow (new for Task 16)
+  // ---------------------------------------------------------------------------
+
+  it("Continue with 1 file: calls createOrderDraft, uploadFiles, sets sessionStorage, pushes to checkout", async () => {
+    render(<StickerTool dict={dict} lang="en" />);
+
+    // Add a file
+    fireEvent.change(getFileInput(), { target: { files: [makeWebp("a.webp")] } });
+
+    // Click Continue (use the desktop panel button — it's always rendered when hasItems)
+    const continueBtns = screen
+      .getAllByText(dict.pricing.continue)
+      .filter((el) => !(el as HTMLButtonElement).disabled);
+    expect(continueBtns.length).toBeGreaterThan(0);
+    fireEvent.click(continueBtns[0]);
+
+    // Wait for the async flow to complete
+    await waitFor(() => {
+      expect(mockCreateOrderDraft).toHaveBeenCalledTimes(1);
+    });
+
+    // createOrderDraft called with stickers.length === 1 and copies === 1
+    const callArg = mockCreateOrderDraft.mock.calls[0][0] as {
+      stickers: { filename: string; bytes: number; contentType: string; width: number; height: number }[];
+      copies: number;
+    };
+    expect(callArg.stickers).toHaveLength(1);
+    expect(callArg.stickers[0].filename).toBe("a.webp");
+    expect(callArg.copies).toBe(1);
+
+    // uploadFiles was called
+    await waitFor(() => {
+      expect(mockUploadFiles).toHaveBeenCalledTimes(1);
+    });
+
+    // sessionStorage was set with the order handle
+    await waitFor(() => {
+      const stored = sessionStorage.getItem("linecut_order");
+      expect(stored).not.toBeNull();
+      const parsed = JSON.parse(stored!);
+      expect(parsed).toEqual({ orderId: "o1", guestToken: "gt" });
+    });
+
+    // router.push called with the checkout URL
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/en/stickers/checkout");
+    });
+  });
+
+  it("createOrderDraft returning ok:false surfaces an error and does NOT navigate", async () => {
+    mockCreateOrderDraft.mockResolvedValueOnce({
+      ok: false,
+      message: "db_error",
+    });
+
+    render(<StickerTool dict={dict} lang="en" />);
+    fireEvent.change(getFileInput(), { target: { files: [makeWebp()] } });
+
+    const continueBtns = screen
+      .getAllByText(dict.pricing.continue)
+      .filter((el) => !(el as HTMLButtonElement).disabled);
+    fireEvent.click(continueBtns[0]);
+
+    // Error message should appear in an aria-live region
+    await waitFor(() => {
+      // There may be multiple role="alert" elements (e.g. StickerUploader also has one);
+      // find the one that carries the error text.
+      const alerts = screen.getAllByRole("alert");
+      const errorAlert = alerts.find((el) => el.textContent?.includes("db_error"));
+      expect(errorAlert).toBeTruthy();
+    });
+
+    // router.push must NOT have been called
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("legacy test: clicking Continue (mocked flow) calls router.push with /{lang}/stickers/checkout", async () => {
     render(<StickerTool dict={dict} lang="en" />);
 
     // Add a file so Continue is enabled
@@ -234,6 +349,8 @@ describe("StickerTool", () => {
     expect(continueBtns.length).toBeGreaterThan(0);
     fireEvent.click(continueBtns[0]);
 
-    expect(mockPush).toHaveBeenCalledWith("/en/stickers/checkout");
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/en/stickers/checkout");
+    });
   });
 });

@@ -12,6 +12,8 @@ export type LocalSticker = {
   bytes: number;
   status: LocalStickerStatus;
   progress?: number;  // 0..1 while uploading
+  width?: number;     // natural image width in px (0 if unknown)
+  height?: number;    // natural image height in px (0 if unknown)
 };
 
 /** Result of a successful sticker upload; `key` is the S3 object key. */

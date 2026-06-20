@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/lib/dictionary";
-import type { LocalSticker } from "@/lib/stickers/types";
+import type { LocalSticker, StickerMeta } from "@/lib/stickers/types";
 import { stickerConfig } from "@/lib/stickers/sticker-config";
 import { interpolate } from "@/lib/stickers/format";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { StickerUploader } from "@/components/stickers/sticker-uploader";
 import { UploadedGrid } from "@/components/stickers/uploaded-grid";
 import { A4Preview } from "@/components/stickers/a4-preview";
 import { OrderSummaryPanel } from "@/components/stickers/order-summary-panel";
+import { createOrderDraft } from "@/app/actions/stickers";
+import { uploadFiles } from "@/lib/stickers/upload-client";
 
 // ---------------------------------------------------------------------------
 // StepIndicator — small inline component; accessible number+label+state
@@ -99,12 +101,17 @@ export function StickerTool({ dict, lang }: Props) {
   const router = useRouter();
   const [items, setItems] = useState<LocalSticker[]>([]);
   const [copies, setCopies] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Keep a ref that always has the latest items for cleanup on unmount.
   const itemsRef = useRef<LocalSticker[]>(items);
   useEffect(() => {
     itemsRef.current = items;
   });
+
+  // Map from sticker id → File (kept out of LocalSticker to avoid complicating state).
+  const filesRef = useRef<Map<string, File>>(new Map());
 
   // Revoke ALL remaining object URLs on unmount.
   useEffect(() => {
@@ -116,13 +123,36 @@ export function StickerTool({ dict, lang }: Props) {
   }, []);
 
   function handleAdd(files: File[]) {
-    const newItems: LocalSticker[] = files.map((file) => ({
-      id: crypto.randomUUID(),
-      name: file.name,
-      objectUrl: URL.createObjectURL(file),
-      bytes: file.size,
-      status: "ready" as const,
-    }));
+    const newItems: LocalSticker[] = files.map((file) => {
+      const id = crypto.randomUUID();
+      const objectUrl = URL.createObjectURL(file);
+
+      // Store the File for later upload
+      filesRef.current.set(id, file);
+
+      // Best-effort dimension capture (informational; use 0 on failure)
+      const img = new Image();
+      img.onload = () => {
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === id
+              ? { ...item, width: img.naturalWidth, height: img.naturalHeight }
+              : item,
+          ),
+        );
+      };
+      img.src = objectUrl;
+
+      return {
+        id,
+        name: file.name,
+        objectUrl,
+        bytes: file.size,
+        status: "ready" as const,
+        width: 0,
+        height: 0,
+      };
+    });
     setItems((prev) => [...prev, ...newItems]);
   }
 
@@ -130,12 +160,82 @@ export function StickerTool({ dict, lang }: Props) {
     setItems((prev) => {
       const item = prev.find((s) => s.id === id);
       if (item) URL.revokeObjectURL(item.objectUrl);
+      filesRef.current.delete(id);
       return prev.filter((s) => s.id !== id);
     });
   }
 
-  function handleContinue() {
+  async function handleContinue() {
+    if (items.length === 0 || submitting) return;
+
+    setSubmitting(true);
+    setSubmitError(null);
+
+    // 1. Mark all items uploading
+    setItems((prev) =>
+      prev.map((item) => ({ ...item, status: "uploading" as const, progress: 0 })),
+    );
+
+    // 2. Build sticker metadata
+    const stickers: StickerMeta[] = items.map((item) => ({
+      filename: item.name,
+      bytes: item.bytes,
+      contentType: "image/webp",
+      width: item.width ?? 0,
+      height: item.height ?? 0,
+    }));
+
+    // 3. Create the order draft on the server
+    let res: Awaited<ReturnType<typeof createOrderDraft>>;
+    try {
+      res = await createOrderDraft({ stickers, copies });
+    } catch {
+      setItems((prev) => prev.map((item) => ({ ...item, status: "ready" as const })));
+      setSubmitError(dict.errors.uploadFailed || "Upload failed. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (!res.ok) {
+      setItems((prev) => prev.map((item) => ({ ...item, status: "ready" as const })));
+      setSubmitError(res.message ?? dict.errors.uploadFailed ?? "An error occurred. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    // 4. Pair presigned URLs with files and upload
+    const pairs = res.uploads.map((upload, i) => ({
+      url: upload.url,
+      file: filesRef.current.get(items[i].id) ?? new File([], items[i].name),
+    }));
+
+    const uploadResults = await uploadFiles(pairs, {
+      onEach: (i, status) => {
+        setItems((prev) =>
+          prev.map((item, idx) =>
+            idx === i
+              ? { ...item, status: status === "done" ? ("ready" as const) : ("failed" as const) }
+              : item,
+          ),
+        );
+      },
+    });
+
+    const anyFailed = uploadResults.some((r) => !r.ok);
+
+    if (anyFailed) {
+      setSubmitError(dict.errors.uploadFailed || "Some files failed to upload. Please retry.");
+      setSubmitting(false);
+      return;
+    }
+
+    // 5. All uploads succeeded — persist order handle and navigate
+    sessionStorage.setItem(
+      "linecut_order",
+      JSON.stringify({ orderId: res.orderId, guestToken: res.guestToken }),
+    );
     router.push(`/${lang}/stickers/checkout`);
+    // Note: don't clear submitting here — navigation is in progress
   }
 
   const steps = [
@@ -159,6 +259,17 @@ export function StickerTool({ dict, lang }: Props) {
         <p className="mt-2 text-base text-muted">{dict.intro.lead}</p>
       </div>
 
+      {/* Submission error (aria-live for screen readers) */}
+      {submitError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-md border border-accent/30 bg-accent/5 px-4 py-3 text-sm text-accent"
+        >
+          {submitError}
+        </div>
+      )}
+
       {/* Mobile: sticky bottom price+CTA bar when there are items */}
       {hasItems && (
         <div className="sticky bottom-0 z-20 flex items-center justify-between border-t border-line bg-paper/95 px-4 py-3 backdrop-blur lg:hidden">
@@ -169,9 +280,9 @@ export function StickerTool({ dict, lang }: Props) {
             variant="primary"
             size="sm"
             onClick={handleContinue}
-            disabled={items.length === 0}
+            disabled={items.length === 0 || submitting}
           >
-            {dict.pricing.continue}
+            {submitting ? "…" : dict.pricing.continue}
           </Button>
         </div>
       )}
@@ -208,6 +319,7 @@ export function StickerTool({ dict, lang }: Props) {
             dict={dict}
             locale={lang}
             onContinue={handleContinue}
+            continueDisabled={items.length === 0 || submitting}
           />
         </aside>
       </div>
@@ -222,6 +334,7 @@ export function StickerTool({ dict, lang }: Props) {
             dict={dict}
             locale={lang}
             onContinue={handleContinue}
+            continueDisabled={items.length === 0 || submitting}
           />
         </div>
       )}
