@@ -337,4 +337,51 @@ describe("confirmOrder", () => {
     expect(p.ship_city).toBeNull();
     expect(p.ship_postal_code).toBeNull();
   });
+
+  it("returns ok:false payment_failed when the provider declines; no DB update, no email", async () => {
+    const fakeAdmin = makeFakeAdmin();
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+      paymentProvider: {
+        createCharge: vi.fn(async () => ({
+          status: "failed" as const,
+          reason: "insufficient funds",
+        })),
+      },
+    });
+
+    const result = await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_DELIVERY,
+      },
+      deps,
+    );
+
+    expect(result).toEqual({ ok: false, message: "payment_failed" });
+    expect(fakeAdmin._updates).toHaveLength(0);
+    expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
+  });
+
+  it("returns ok:false db_error when the order update fails; no email", async () => {
+    const fakeAdmin = makeFakeAdmin({
+      updateError: { message: "constraint violation" },
+    });
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+    });
+
+    const result = await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_DELIVERY,
+      },
+      deps,
+    );
+
+    expect(result).toEqual({ ok: false, message: "db_error" });
+    expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
+  });
 });
