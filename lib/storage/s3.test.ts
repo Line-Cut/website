@@ -83,21 +83,8 @@ import {
   deletePrefix,
 } from "./s3";
 
-// Access the mock send through the S3Client instance
-// The S3Client mock exposes 'send' as a shared vi.fn on the prototype via constructor
-// We need to grab it from the module
-function getMockSend() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (S3Client as any).prototype
-    ? // The mock sets send on the instance; grab from a fresh instance
-      // Actually in our mock, mockSend is defined in the factory closure.
-      // We need to access it differently.
-      null
-    : null;
-}
-
-// Re-get the send mock: since the mock factory creates mockSend as vi.fn() and
-// attaches it as instance.send, we can cast the constructed client
+// The mock factory creates mockSend as vi.fn() and attaches it as instance.send,
+// so we grab it from a freshly-constructed client in beforeEach.
 let mockSend: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {

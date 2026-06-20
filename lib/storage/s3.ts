@@ -46,7 +46,7 @@ export async function presignDownload(
   const Bucket = getBucket();
   const cmd = new GetObjectCommand({ Bucket, Key: key });
   const ttl =
-    opts?.expiresIn ?? Number(process.env.ORDER_FILES_LINK_TTL ?? 604800);
+    opts?.expiresIn ?? (Number(process.env.ORDER_FILES_LINK_TTL) || 604800);
   return getSignedUrl(getClient(), cmd, { expiresIn: ttl });
 }
 
