@@ -185,7 +185,8 @@ describe("StickerTool", () => {
     fireEvent.change(getFileInput(), { target: { files: [file] } });
 
     // Count label from UploadedGrid (may appear in mobile bar too — just check at least one exists)
-    expect(screen.getAllByText(/1 \/ 200 stickers/).length).toBeGreaterThan(0);
+    // Anchored regex guards against the doubled-count regression "1 1 / 200 stickers"
+    expect(screen.getAllByText(/^1 \/ 200 stickers$/).length).toBeGreaterThan(0);
 
     // Preview disclaimer (A4Preview renders when srcs.length > 0)
     expect(screen.getByText(dict.preview.disclaimer)).toBeInTheDocument();
@@ -204,14 +205,15 @@ describe("StickerTool", () => {
     fireEvent.change(getFileInput(), { target: { files: [file] } });
 
     // The grid count label should be present (may appear in multiple places)
-    expect(screen.getAllByText(/1 \/ 200 stickers/).length).toBeGreaterThan(0);
+    // Anchored regex guards against the doubled-count regression "1 1 / 200 stickers"
+    expect(screen.getAllByText(/^1 \/ 200 stickers$/).length).toBeGreaterThan(0);
 
     // Click the remove button for the sticker
     const removeBtn = screen.getByLabelText(/Remove to-remove\.webp/i);
     fireEvent.click(removeBtn);
 
     // Grid and preview are gone
-    expect(screen.queryAllByText(/1 \/ 200 stickers/)).toHaveLength(0);
+    expect(screen.queryAllByText(/^1 \/ 200 stickers$/)).toHaveLength(0);
     expect(screen.queryByText(dict.preview.disclaimer)).not.toBeInTheDocument();
 
     // revokeObjectURL was called

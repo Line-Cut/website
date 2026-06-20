@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import type { Dictionary } from "@/lib/dictionary";
 import type { LocalSticker } from "@/lib/stickers/types";
 import { stickerConfig } from "@/lib/stickers/sticker-config";
+import { interpolate } from "@/lib/stickers/format";
+import { Button } from "@/components/ui/button";
 import { StickerUploader } from "@/components/stickers/sticker-uploader";
 import { UploadedGrid } from "@/components/stickers/uploaded-grid";
 import { A4Preview } from "@/components/stickers/a4-preview";
@@ -145,7 +147,7 @@ export function StickerTool({ dict, lang }: Props) {
   const hasItems = items.length > 0;
 
   return (
-    <div className="flex flex-col gap-8 py-10">
+    <div className="flex flex-col gap-8 py-10 pb-20 lg:pb-10">
       {/* Step indicator */}
       <StepIndicator steps={steps} current={0} />
 
@@ -161,19 +163,16 @@ export function StickerTool({ dict, lang }: Props) {
       {hasItems && (
         <div className="sticky bottom-0 z-20 flex items-center justify-between border-t border-line bg-paper/95 px-4 py-3 backdrop-blur lg:hidden">
           <span className="text-sm text-muted">
-            {items.length}{" "}
-            {dict.upload.countLabel
-              .replace("{count}", String(items.length))
-              .replace("{max}", String(stickerConfig.maxStickers))}
+            {interpolate(dict.upload.countLabel, { count: items.length, max: stickerConfig.maxStickers })}
           </span>
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handleContinue}
             disabled={items.length === 0}
-            className="rounded-md bg-accent px-5 py-2 text-sm font-semibold text-paper hover:bg-[color:var(--color-accent-600)] disabled:pointer-events-none disabled:opacity-50"
           >
             {dict.pricing.continue}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -190,10 +189,7 @@ export function StickerTool({ dict, lang }: Props) {
 
           {hasItems && (
             <>
-              {/* Add bottom padding on mobile so the sticky bar doesn't obscure content */}
-              <div className="pb-20 lg:pb-0">
-                <UploadedGrid items={items} dict={dict} onRemove={handleRemove} />
-              </div>
+              <UploadedGrid items={items} dict={dict} onRemove={handleRemove} />
               <A4Preview
                 srcs={items.map((i) => i.objectUrl)}
                 dict={dict.preview}
