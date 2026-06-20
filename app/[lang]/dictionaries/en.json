@@ -139,5 +139,127 @@
     "termsBody": "Draft — review with a lawyer before launch.\n\nThese terms apply to use of the Line Cut Ltd. website and to ordering printing, cutting and finishing services.",
     "privacyTitle": "Privacy Policy",
     "privacyBody": "Draft — review with a lawyer before launch.\n\nThis policy explains what information we collect when you contact us through the site and how we use it."
+  },
+  "stickers": {
+    "meta": {
+      "title": "Order Stickers — Line Cut",
+      "description": "Build your sticker order, preview the A4 sheet layout and get an instant price — precise production by Line Cut, Holon."
+    },
+    "steps": {
+      "build": "Build",
+      "details": "Details",
+      "confirm": "Confirm"
+    },
+    "intro": {
+      "heading": "Order stickers",
+      "subheading": "Upload your files, choose a quantity, and we'll handle the rest.",
+      "lead": "WebP stickers are printed on A4 sheets and delivered kiss-cut. Upload up to 200 files, preview the layout, and get a price before you confirm."
+    },
+    "upload": {
+      "dropPrompt": "Drag stickers here, or",
+      "browse": "browse files",
+      "mobileHint": "Tap to open your Photos or Files picker",
+      "accepted": "WebP images only",
+      "limitHint": "Up to {max} stickers",
+      "progress": "Uploading {done} of {total}…",
+      "addMore": "Add more",
+      "countLabel": "{count} / {max} stickers",
+      "remaining": "{n} slots left"
+    },
+    "errors": {
+      "notWebp": "Only WebP files are accepted. {name} was skipped.",
+      "tooMany": "You can upload up to {max} stickers. Extra files were skipped.",
+      "tooBig": "{name} is larger than {limit} and was skipped.",
+      "uploadFailed": "Upload failed for {name}.",
+      "retry": "Retry",
+      "empty": "No stickers yet — add some to see a preview and price.",
+      "networkOffline": "You appear to be offline. Check your connection and try again."
+    },
+    "thumb": {
+      "remove": "Remove",
+      "removeLabel": "Remove {name}",
+      "failed": "Failed"
+    },
+    "preview": {
+      "heading": "Sheet preview",
+      "disclaimer": "Preview only — the final page distribution will differ.",
+      "page": "Sheet {current} of {total}",
+      "prev": "Previous sheet",
+      "next": "Next sheet",
+      "perSheet": "{n} stickers per A4 sheet"
+    },
+    "pricing": {
+      "heading": "Your order",
+      "copies": "Copies (full sets)",
+      "copiesHint": "Each copy prints every uploaded sticker once.",
+      "increase": "Increase copies",
+      "decrease": "Decrease copies",
+      "uniqueCount": "Unique stickers",
+      "sheetsPerSet": "Sheets per set",
+      "totalSheets": "Total A4 sheets",
+      "perSheetRate": "Per sheet",
+      "setupFee": "One-time setup",
+      "sheetsSubtotal": "Sheets subtotal",
+      "total": "Total",
+      "pricePending": "Final price is confirmed before printing.",
+      "continue": "Continue to checkout"
+    },
+    "checkout": {
+      "heading": "Delivery details",
+      "paymentNote": "No payment is taken now — we'll confirm your order and arrange payment before printing.",
+      "methodPickup": "Pickup in Holon",
+      "methodShipping": "Ship to my address",
+      "fields": {
+        "fullName": "Full name",
+        "phone": "Phone",
+        "email": "Email",
+        "addressLine1": "Address",
+        "addressLine2": "Apartment, suite, etc. (optional)",
+        "city": "City",
+        "postalCode": "Postal code",
+        "notes": "Order notes (optional)"
+      },
+      "submit": "Place order",
+      "placing": "Placing order…",
+      "back": "Back to editor"
+    },
+    "fieldErrors": {
+      "required": "Required",
+      "invalid_email": "Invalid email",
+      "invalid_phone": "Invalid phone number"
+    },
+    "receipt": {
+      "heading": "Order received",
+      "orderNumber": "Order #{id}",
+      "placedOn": "Placed on {date}",
+      "noPaymentYet": "No payment has been taken yet.",
+      "deliveryTo": "Delivery to",
+      "saveLink": "Save this link to track your order.",
+      "viewInAccount": "View in your account"
+    },
+    "status": {
+      "heading": "Order status",
+      "received": "Received",
+      "in_production": "In production",
+      "ready": "Ready",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled",
+      "current": "Current step"
+    },
+    "account": {
+      "ordersHeading": "Your orders",
+      "empty": "You have no orders yet.",
+      "viewOrder": "View order",
+      "statusLabel": "Status",
+      "totalLabel": "Total"
+    },
+    "email": {
+      "subjectReceived": "Line Cut — we received your sticker order #{id}",
+      "greeting": "Hi {name},",
+      "bodyReceived": "Thanks! We received your order of {sheets} A4 sheets ({copies} copies). We'll confirm and arrange payment before printing.",
+      "trackCta": "Track your order",
+      "signoff": "— Line Cut"
+    }
   }
 }
