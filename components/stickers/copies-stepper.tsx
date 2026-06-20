@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import type { Dictionary } from "@/lib/dictionary";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +18,7 @@ function clamp(raw: string, min: number): number {
 }
 
 export function CopiesStepper({ value, onChange, dict, min = 1 }: Props) {
-  const inputId = "copies-stepper-input";
+  const inputId = `copies-stepper-${useId()}`;
 
   return (
     <div className="flex flex-col gap-2">
