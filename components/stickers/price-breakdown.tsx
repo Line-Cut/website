@@ -1,15 +1,15 @@
-import type { PriceBreakdown as PriceBreakdownData } from "@/lib/stickers/pricing";
+import type { PriceBreakdown } from "@/lib/stickers/pricing";
 import { formatMoney } from "@/lib/stickers/format";
 import type { Dictionary } from "@/lib/dictionary";
 
 type Props = {
-  breakdown: PriceBreakdownData;
+  breakdown: PriceBreakdown;
   dict: Dictionary["stickers"]["pricing"];
   locale: "he" | "en";
 };
 
 /** Pure presentational — no hooks, server-safe. */
-export function PriceBreakdown({ breakdown, dict, locale }: Props) {
+export function PriceBreakdownView({ breakdown, dict, locale }: Props) {
   const isPricePending =
     breakdown.uniqueCount > 0 &&
     breakdown.sheetsSubtotal === 0 &&
@@ -53,10 +53,22 @@ export function PriceBreakdown({ breakdown, dict, locale }: Props) {
           <td className="py-1 text-muted">{dict.perSheetRate}</td>
           <td className="py-1 text-end text-ink">
             <span dir="ltr" className="tabular-nums">
-              {formatMoney(breakdown.perSheet, breakdown.currency, locale)}
+              {formatMoney(breakdown.perSheetRate, breakdown.currency, locale)}
             </span>
           </td>
         </tr>
+
+        {/* Sheets subtotal — only if non-zero */}
+        {breakdown.sheetsSubtotal > 0 && (
+          <tr>
+            <td className="py-1 text-muted">{dict.sheetsSubtotal}</td>
+            <td className="py-1 text-end text-ink">
+              <span dir="ltr" className="tabular-nums">
+                {formatMoney(breakdown.sheetsSubtotal, breakdown.currency, locale)}
+              </span>
+            </td>
+          </tr>
+        )}
 
         {/* Setup fee — only if non-zero */}
         {breakdown.setupFee > 0 && (

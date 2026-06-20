@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { PriceBreakdown } from "@/components/stickers/price-breakdown";
-import type { PriceBreakdown as PriceBreakdownData } from "@/lib/stickers/pricing";
+import { PriceBreakdownView } from "@/components/stickers/price-breakdown";
+import type { PriceBreakdown } from "@/lib/stickers/pricing";
 
 const dict = {
   heading: "Your order",
@@ -20,10 +20,11 @@ const dict = {
   continue: "Continue to checkout",
 };
 
-const nonZeroBreakdown: PriceBreakdownData = {
+const nonZeroBreakdown: PriceBreakdown = {
   uniqueCount: 3,
   copies: 2,
   perSheet: 15,
+  perSheetRate: 1000,     // 10.00 ILS in agorot — distinct from perSheet count
   sheetsPerSet: 1,
   totalSheets: 2,
   sheetsSubtotal: 2000,  // 20.00 ILS in agorot
@@ -32,10 +33,11 @@ const nonZeroBreakdown: PriceBreakdownData = {
   currency: "ILS",
 };
 
-const zeroPricePendingBreakdown: PriceBreakdownData = {
+const zeroPricePendingBreakdown: PriceBreakdown = {
   uniqueCount: 3,
   copies: 1,
   perSheet: 15,
+  perSheetRate: 0,
   sheetsPerSet: 1,
   totalSheets: 1,
   sheetsSubtotal: 0,
@@ -44,9 +46,9 @@ const zeroPricePendingBreakdown: PriceBreakdownData = {
   currency: "ILS",
 };
 
-describe("PriceBreakdown", () => {
+describe("PriceBreakdownView", () => {
   it("renders money total for a nonzero-rate breakdown", () => {
-    render(<PriceBreakdown breakdown={nonZeroBreakdown} dict={dict} locale="en" />);
+    render(<PriceBreakdownView breakdown={nonZeroBreakdown} dict={dict} locale="en" />);
     // Total row should show a formatted currency value, not the pending text
     expect(screen.queryByText(dict.pricePending)).not.toBeInTheDocument();
     // The total "25.00 ILS" or similar should appear somewhere
@@ -59,7 +61,7 @@ describe("PriceBreakdown", () => {
 
   it("renders pricePending text when uniqueCount > 0 but subtotal and setupFee are 0", () => {
     render(
-      <PriceBreakdown breakdown={zeroPricePendingBreakdown} dict={dict} locale="en" />,
+      <PriceBreakdownView breakdown={zeroPricePendingBreakdown} dict={dict} locale="en" />,
     );
     expect(screen.getByText(dict.pricePending)).toBeInTheDocument();
     // Should NOT show a numeric "0" in the total cell
@@ -74,13 +76,43 @@ describe("PriceBreakdown", () => {
   it("shows setup fee row only when setupFee > 0", () => {
     // Without setup fee
     render(
-      <PriceBreakdown breakdown={zeroPricePendingBreakdown} dict={dict} locale="en" />,
+      <PriceBreakdownView breakdown={zeroPricePendingBreakdown} dict={dict} locale="en" />,
     );
     expect(screen.queryByText(dict.setupFee)).not.toBeInTheDocument();
   });
 
   it("shows setup fee row when setupFee > 0", () => {
-    render(<PriceBreakdown breakdown={nonZeroBreakdown} dict={dict} locale="en" />);
+    render(<PriceBreakdownView breakdown={nonZeroBreakdown} dict={dict} locale="en" />);
     expect(screen.getByText(dict.setupFee)).toBeInTheDocument();
+  });
+
+  it("rate row shows the formatted money rate (perSheetRate), not the stickers-per-sheet count", () => {
+    render(<PriceBreakdownView breakdown={nonZeroBreakdown} dict={dict} locale="en" />);
+    const rateRow = screen.getByText(dict.perSheetRate).closest("tr");
+    expect(rateRow).toBeInTheDocument();
+    const tds = rateRow!.querySelectorAll("td");
+    const rateCell = tds[1].textContent ?? "";
+    // perSheetRate = 1000 agorot = 10.00 ILS — should be formatted as money
+    expect(rateCell).toMatch(/\d/);
+    // Must NOT show the raw stickers-per-sheet count (15) without any currency formatting
+    // The cell should look like a currency amount, not just "15"
+    expect(rateCell).not.toBe("15");
+  });
+
+  it("shows sheetsSubtotal row for nonzero breakdown", () => {
+    render(<PriceBreakdownView breakdown={nonZeroBreakdown} dict={dict} locale="en" />);
+    expect(screen.getByText(dict.sheetsSubtotal)).toBeInTheDocument();
+    const subtotalRow = screen.getByText(dict.sheetsSubtotal).closest("tr");
+    expect(subtotalRow).toBeInTheDocument();
+    const tds = subtotalRow!.querySelectorAll("td");
+    // sheetsSubtotal = 2000 agorot = 20.00 ILS
+    expect(tds[1].textContent).toMatch(/\d/);
+  });
+
+  it("hides sheetsSubtotal row when sheetsSubtotal is 0", () => {
+    render(
+      <PriceBreakdownView breakdown={zeroPricePendingBreakdown} dict={dict} locale="en" />,
+    );
+    expect(screen.queryByText(dict.sheetsSubtotal)).not.toBeInTheDocument();
   });
 });

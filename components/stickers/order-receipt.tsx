@@ -1,7 +1,7 @@
 import { interpolate } from "@/lib/stickers/format";
 import type { OrderView } from "@/lib/stickers/types";
 import type { Dictionary } from "@/lib/dictionary";
-import { PriceBreakdown } from "@/components/stickers/price-breakdown";
+import { PriceBreakdownView } from "@/components/stickers/price-breakdown";
 import { OrderStatusTimeline } from "@/components/stickers/order-status-timeline";
 
 type Props = {
@@ -101,7 +101,7 @@ export function OrderReceipt({ order, dict, locale }: Props) {
         <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
           {dict.pricing.heading}
         </h3>
-        <PriceBreakdown
+        <PriceBreakdownView
           breakdown={order.breakdown}
           dict={dict.pricing}
           locale={locale}

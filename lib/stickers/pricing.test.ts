@@ -107,4 +107,11 @@ describe("computePrice", () => {
     expect(result.copies).toBe(2);
     expect(result.uniqueCount).toBe(30);
   });
+
+  it("perSheetRate stored in breakdown matches cfg.perSheetRate", () => {
+    const result = computePrice(15, 1, testCfg);
+    // perSheetRate is the money rate (minor units), not the stickers-per-sheet count
+    expect(result.perSheetRate).toBe(testCfg.perSheetRate); // 500 agorot
+    expect(result.perSheetRate).not.toBe(result.perSheet);  // 500 ≠ 15
+  });
 });

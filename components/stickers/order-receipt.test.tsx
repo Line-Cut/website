@@ -126,6 +126,7 @@ const order: OrderView = {
     uniqueCount: 3,
     copies: 2,
     perSheet: 15,
+    perSheetRate: 1000,
     sheetsPerSet: 1,
     totalSheets: 2,
     sheetsSubtotal: 2000,

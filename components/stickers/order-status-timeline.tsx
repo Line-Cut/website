@@ -75,7 +75,7 @@ export function OrderStatusTimeline({ status, dict }: Props) {
                 state === "upcoming"
                   ? "text-muted opacity-60"
                   : state === "done"
-                    ? "text-muted line-through"
+                    ? "text-muted"
                     : "font-semibold text-ink"
               }
             >

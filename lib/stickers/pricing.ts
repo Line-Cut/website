@@ -6,6 +6,7 @@ export type PriceBreakdown = {
   uniqueCount: number;
   copies: number;
   perSheet: number;
+  perSheetRate: number;
   sheetsPerSet: number;
   totalSheets: number;
   sheetsSubtotal: number;
@@ -47,6 +48,7 @@ export function computePrice(
     uniqueCount,
     copies: safeCopies,
     perSheet,
+    perSheetRate: cfg.perSheetRate,
     sheetsPerSet,
     totalSheets,
     sheetsSubtotal,
