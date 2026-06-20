@@ -1,5 +1,7 @@
+import type { PriceBreakdown } from "@/lib/stickers/pricing";
+
 // Re-export PriceBreakdown from pricing for convenience
-export type { PriceBreakdown } from "@/lib/stickers/pricing";
+export type { PriceBreakdown };
 
 export type LocalStickerStatus = "ready" | "uploading" | "failed";
 
@@ -11,8 +13,6 @@ export type LocalSticker = {
   status: LocalStickerStatus;
   progress?: number;  // 0..1 while uploading
 };
-
-import type { PriceBreakdown } from "@/lib/stickers/pricing";
 
 /** Result of a successful sticker upload; `key` is the S3 object key. */
 export type UploadedSticker = {
