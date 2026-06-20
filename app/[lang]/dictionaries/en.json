@@ -24,7 +24,23 @@
     }
   },
   "clients": {
-    "heading": "Brands, institutions and teams we've worked with"
+    "heading": "Brands, institutions and teams we've worked with",
+    "names": {
+      "artza": "Artza Productions",
+      "anani": "Anani Communications",
+      "teddy": "Teddy Productions",
+      "gil": "Gil Productions",
+      "keshet": "Keshet Broadcasting",
+      "shufra": "Shufra",
+      "story": "Story",
+      "aluf": "Aluf International",
+      "elephant": "Elephant Labs",
+      "taMuseum": "Tel Aviv Museum of Art",
+      "designMuseumHolon": "Design Museum Holon",
+      "rgMuseum": "Ramat Gan Museum of Art",
+      "islamMuseum": "Museum of Islamic Culture, Be'er Sheva",
+      "einHarod": "Mishkan Museum of Art, Ein Harod"
+    }
   },
   "services": {
     "heading": "What we produce",

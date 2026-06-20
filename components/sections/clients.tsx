@@ -1,22 +1,27 @@
 import { Container } from "@/components/layout/container";
 import { Logos3, type Logo } from "@/components/ui/logos3";
-import { SECTION_IDS } from "@/lib/content";
+import { CLIENTS, SECTION_IDS } from "@/lib/content";
 import type { Dictionary } from "@/lib/dictionary";
 
-// Placeholder client logos. TODO(client): replace with real client logos in /public/clients.
-const PLACEHOLDER_LOGOS: Logo[] = Array.from({ length: 8 }, (_, i) => ({
-  id: `client-${i + 1}`,
-  description: `Client ${i + 1}`,
-  image:
-    "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcn-ui-wordmark.svg",
-  className: "h-6 w-auto opacity-60",
-}));
-
 export function Clients({ dict }: { dict: Dictionary["clients"] }) {
+  // Real clients from lib/content.ts, named via the localized dictionary. Each item
+  // shows its logo file from /public/clients, falling back to a text wordmark until
+  // the file is added (see LogoMark in components/ui/logos3.tsx).
+  const logos: Logo[] = CLIENTS.map((client) => {
+    const name = dict.names[client.id as keyof typeof dict.names];
+    return {
+      id: client.id,
+      description: name,
+      label: name,
+      image: client.logo,
+      className: "h-9 w-auto opacity-70",
+    };
+  });
+
   return (
-    <section id={SECTION_IDS.clients} className="border-y border-line bg-paper-2/30 py-16">
+    <section id={SECTION_IDS.clients} className="bg-ink py-16 text-paper">
       <Container>
-        <Logos3 heading={dict.heading} logos={PLACEHOLDER_LOGOS} />
+        <Logos3 heading={dict.heading} logos={logos} tone="dark" />
       </Container>
     </section>
   );
