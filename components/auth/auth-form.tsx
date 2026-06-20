@@ -54,11 +54,12 @@ export function AuthForm({ mode: initialMode, lang, dict }: Props) {
           password,
         });
         if (signInError) {
-          // Map Supabase error codes to dictionary keys
+          // Map known auth failures to a clear message; everything else is generic.
+          const msg = signInError.message?.toLowerCase() ?? "";
           if (
-            signInError.message?.toLowerCase().includes("invalid") ||
-            signInError.message?.toLowerCase().includes("credentials") ||
-            signInError.message?.toLowerCase().includes("email not confirmed") === false
+            msg.includes("invalid") ||
+            msg.includes("credentials") ||
+            msg.includes("email not confirmed")
           ) {
             setError(dict.errors.invalid_credentials);
           } else {

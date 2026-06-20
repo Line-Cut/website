@@ -13,13 +13,21 @@ export async function GET(
   const { searchParams, origin } = request.nextUrl;
 
   const code = searchParams.get("code");
-  const next = searchParams.get("next");
+  // `next` must be a same-origin absolute PATH ("/he/...") — reject anything
+  // that could become an open redirect (full URLs, protocol-relative "//evil").
+  const nextParam = searchParams.get("next");
+  const safeNext =
+    nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+      ? nextParam
+      : null;
 
   // Determine the fallback locale for redirect URLs
   const locale = isLocale(lang) ? lang : "he";
 
   const fallbackUrl = `${origin}/${locale}/login`;
-  const successUrl = next ?? `${origin}/${locale}/account/orders`;
+  const successUrl = safeNext
+    ? `${origin}${safeNext}`
+    : `${origin}/${locale}/account/orders`;
 
   // If no code provided, redirect to login
   if (!code) {
