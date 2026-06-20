@@ -91,6 +91,7 @@ const dict = {
       addressLine2: "Apartment (optional)",
       city: "City",
       postalCode: "Postal code",
+      country: "Country",
       notes: "Order notes (optional)",
     },
     submit: "Place order",
@@ -351,6 +352,37 @@ describe("CheckoutForm", () => {
         el.textContent?.includes("payment_failed"),
       );
       expect(genericAlert).toBeTruthy();
+    });
+
+    // No navigation
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("server ok:false with errors → shows field-level error for the returned field", async () => {
+    setOrderHandle(VALID_HANDLE);
+
+    mockConfirmOrder.mockResolvedValueOnce({
+      ok: false,
+      errors: { fullName: "required" },
+    });
+
+    render(<CheckoutForm dict={dict} lang="en" />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(dict.checkout.fields.fullName),
+      ).toBeInTheDocument();
+    });
+
+    fillPickupForm();
+
+    fireEvent.submit(
+      screen.getByRole("button", { name: dict.checkout.submit }).closest("form")!,
+    );
+
+    // Field-level error for fullName is shown (mapped via fieldErrors dict)
+    await waitFor(() => {
+      expect(screen.getByText(dict.fieldErrors.required)).toBeInTheDocument();
     });
 
     // No navigation

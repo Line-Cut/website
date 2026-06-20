@@ -29,11 +29,11 @@ type OrderRow = {
   ship_city: string | null;
   ship_postal_code: string | null;
   ship_country: string | null;
+  ship_notes: string | null;
 };
 
 type StickerCountRow = {
   order_id: string;
-  count: number;
 };
 
 async function countStickers(
@@ -79,6 +79,7 @@ function mapRowToOrderView(row: OrderRow, stickerCount: number): OrderView {
       city: row.ship_city ?? undefined,
       postalCode: row.ship_postal_code ?? undefined,
       country: row.ship_country ?? undefined,
+      notes: row.ship_notes ?? undefined,
     },
   };
 }

@@ -84,7 +84,6 @@ export function CheckoutForm({ dict, lang }: Props) {
   const [isPending, startTransition] = useTransition();
 
   // Refs for focusing the first invalid field
-  const firstInvalidRef = useRef<HTMLElement | null>(null);
   const fieldRefs = useRef<Record<string, HTMLElement | null>>({});
 
   // On mount: read from sessionStorage
@@ -284,7 +283,6 @@ export function CheckoutForm({ dict, lang }: Props) {
         {fieldErrors.fullName && (
           <span
             id="err-fullName"
-            role="alert"
             aria-live="polite"
             className="text-xs text-accent"
           >
@@ -314,7 +312,6 @@ export function CheckoutForm({ dict, lang }: Props) {
         {fieldErrors.phone && (
           <span
             id="err-phone"
-            role="alert"
             aria-live="polite"
             className="text-xs text-accent"
           >
@@ -344,7 +341,6 @@ export function CheckoutForm({ dict, lang }: Props) {
         {fieldErrors.email && (
           <span
             id="err-email"
-            role="alert"
             aria-live="polite"
             className="text-xs text-accent"
           >
@@ -376,7 +372,6 @@ export function CheckoutForm({ dict, lang }: Props) {
             {fieldErrors.addressLine1 && (
               <span
                 id="err-addressLine1"
-                role="alert"
                 aria-live="polite"
                 className="text-xs text-accent"
               >
@@ -420,7 +415,6 @@ export function CheckoutForm({ dict, lang }: Props) {
             {fieldErrors.city && (
               <span
                 id="err-city"
-                role="alert"
                 aria-live="polite"
                 className="text-xs text-accent"
               >
@@ -450,7 +444,6 @@ export function CheckoutForm({ dict, lang }: Props) {
             {fieldErrors.postalCode && (
               <span
                 id="err-postalCode"
-                role="alert"
                 aria-live="polite"
                 className="text-xs text-accent"
               >
@@ -462,10 +455,7 @@ export function CheckoutForm({ dict, lang }: Props) {
           {/* Country (optional) */}
           <div className="flex flex-col gap-1">
             <label htmlFor="country" className="text-sm font-medium text-ink">
-              {/* no dedicated country label in dict — reuse a neutral label */}
-              {"country" in checkout.fields
-                ? (checkout.fields as Record<string, string>)["country"]
-                : "Country"}
+              {checkout.fields.country}
             </label>
             <input
               id="country"

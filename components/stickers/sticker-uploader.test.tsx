@@ -72,6 +72,7 @@ const dict = {
       addressLine2: "",
       city: "",
       postalCode: "",
+      country: "",
       notes: "",
     },
     submit: "",

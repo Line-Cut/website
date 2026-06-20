@@ -106,6 +106,7 @@ const baseOrderRow = {
   ship_city: null,
   ship_postal_code: null,
   ship_country: null,
+  ship_notes: null,
 };
 
 const stickersData = [
@@ -209,6 +210,28 @@ describe("getOrderByGuestToken", () => {
     expect(result!.delivery.city).toBe("Holon");
     expect(result!.delivery.postalCode).toBe("58100");
     expect(result!.delivery.country).toBe("Israel");
+  });
+
+  it("maps ship_notes to delivery.notes", async () => {
+    fakeAdmin = makeFakeAdmin({
+      orderResult: {
+        data: {
+          ...baseOrderRow,
+          ship_notes: "Please ring the bell",
+        },
+        error: null,
+      },
+      stickersResult: { data: stickersData, error: null },
+    });
+
+    const result = await getOrderByGuestToken("order-abc", "token-xyz");
+    expect(result!.delivery.notes).toBe("Please ring the bell");
+  });
+
+  it("maps null ship_notes to undefined delivery.notes", async () => {
+    // baseOrderRow already has ship_notes: null
+    const result = await getOrderByGuestToken("order-abc", "token-xyz");
+    expect(result!.delivery.notes).toBeUndefined();
   });
 });
 

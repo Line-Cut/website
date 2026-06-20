@@ -73,6 +73,7 @@ const dict = {
       addressLine2: "Apt",
       city: "City",
       postalCode: "Postal code",
+      country: "Country",
       notes: "Notes",
     },
     submit: "Place order",

@@ -217,6 +217,7 @@
         "addressLine2": "Apartment, suite, etc. (optional)",
         "city": "City",
         "postalCode": "Postal code",
+        "country": "Country",
         "notes": "Order notes (optional)"
       },
       "submit": "Place order",
