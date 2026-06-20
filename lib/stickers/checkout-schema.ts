@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { DeliveryInput } from "@/lib/stickers/types";
 
 export const checkoutSchema = z
   .object({
@@ -28,6 +29,11 @@ export const checkoutSchema = z
   });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
+
+// Compile-time guard: keep the checkout schema in sync with the shared DeliveryInput shape.
+type _CheckoutMatchesDeliveryInput = CheckoutInput extends DeliveryInput ? true : never;
+const _checkoutTypeGuard: _CheckoutMatchesDeliveryInput = true;
+void _checkoutTypeGuard;
 
 export function parseCheckout(
   data: unknown,
