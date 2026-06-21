@@ -22,21 +22,25 @@ This repo is the bilingual (**Hebrew-first RTL + English LTR**) marketing site f
 Professional, clear, direct, technically capable, **confident without being salesy**. Position as a **reliable, precise, fast production partner — NOT a cheap print shop.**
 **Avoid:** cheap-pricing language, machine model names, internal systems/workflow tools, operational problems. Main message: *"Digital printing, cutting and finishing — produced accurately from your file."*
 
-## Design System (warm studio / craft)
+## Design System (editorial minimal)
 
 Tokens are defined in `app/globals.css` as Tailwind v4 `@theme` colors. **Use the tokens, never raw Tailwind colors like `green-50` or `gray-600`:**
 
-| Token | Use |
-|---|---|
-| `bg-paper` / `bg-paper-2` | page / alternating section background (warm cream) |
-| `text-ink` | primary text (warm charcoal) |
-| `text-muted` (`#5d5851`) | secondary text — AA-safe on paper; **not** the logo gray `#7e7d7b` |
-| `text-accent` / `bg-accent` (`#b8281f`) | brick-red accent, **CTAs and small accents only** |
-| `accent-600` | accent hover |
-| `border-line` | hairlines |
-| dark sections | `bg-ink text-paper` (with `text-paper/70` for body) |
+| Token | Value | Use |
+|---|---|---|
+| `bg-paper` | `#FFFFFF` | primary page background (white) |
+| `bg-paper-2` | `#FAFAFA` | alternating section background |
+| `text-ink` / `bg-ink` | `#141414` | primary text / light dark sections |
+| `bg-ink-deep` | `#0E0E0E` | deep dark sections (Why + Clients strips) |
+| `text-muted` | `#5B5B5B` | secondary text — AA-safe on paper |
+| `text-accent` / `bg-accent` | `#B8281F` | brick-red accent, **CTAs and small accents only** |
+| `accent-600` | — | accent hover |
+| `border-line` | `#ECECEC` | hairlines |
+| dark sections | `bg-ink-deep text-paper` | Why + Clients; `bg-ink` for lighter dark sections |
 
-Fonts: `font-display` = Frank Ruhl Libre (headings), `font-sans` = Assistant (body) — both Hebrew+Latin, via `next/font`. Logo: `public/F_LINE_CUT_LOGO.svg`.
+Fonts: `font-display` = **Heebo** (headings), `font-sans` = Assistant (body) — both Hebrew+Latin, via `next/font`. Logo: `public/F_LINE_CUT_LOGO.svg`.
+
+**Gallery → Portfolio:** The homepage gallery section is now a **horizontal-scroll Portfolio** strip. Projects are sourced from the `PROJECTS` array in `lib/content.ts` (type `Project`), rendered in `components/sections/portfolio.tsx`.
 
 ## Component Conventions
 
