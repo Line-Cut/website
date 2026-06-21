@@ -59,6 +59,8 @@ Fonts: `font-display` = Frank Ruhl Libre (headings), `font-sans` = Assistant (bo
 
 ## Sticker shop (Phase 2 — built)
 
+**For sticker-shop work, REQUIRED SUB-SKILL: use `sticker-shop`** — it covers the order flow, the action/core seam, schema/RLS, S3 presigning, pricing, and the invariants in depth. The summary below is just orientation.
+
 The `/[lang]/stickers` flow: upload WhatsApp `.webp` stickers → A4 preview + live price → checkout (delivery) → place order (payment deferred) → guest tracking link / account history. Architecture:
 - **Supabase** = Postgres (orders, order_stickers) + Auth (Google + email/password). **AWS S3** = file storage, key scheme `{clientKey}/{orderId}/{stickerId}.webp` (`clientKey` = `u_<userId>` or `g_<guestToken>`).
 - **Uploads go browser→S3 direct** via presigned PUT URLs (Server Actions cap at ~1MB) — never POST files through an action.

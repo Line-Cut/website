@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Line Cut",
-  url: "https://linecut.example", // TODO(client): production domain
+  url: "https://line-cut.com",
   legalName: "Line Cut Ltd.",
   businessId: "516741998",
   address: {
@@ -8,13 +8,12 @@ export const siteConfig = {
     city: "Holon",
     country: "Israel",
   },
-  // TODO(client): replace placeholders below before launch
-  phone: "+972-00-000-0000",
-  email: "info@example.com",
-  whatsapp: "972500000000", // digits only, international format
+  phone: "+972-54-805-1871",
+  email: "linecut1973@gmail.com",
+  whatsapp: "972548051871", // digits only, international format
   social: {
-    instagram: "https://instagram.com/", // TODO(client)
-    facebook: "https://facebook.com/", // TODO(client)
+    instagram: "https://www.instagram.com/line_cut_holon",
+    facebook: "https://www.facebook.com/p/Line-Cut-100066603977255",
   },
   hours: {
     he: "א׳–ה׳ 9:00–17:00",
