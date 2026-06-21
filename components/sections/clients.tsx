@@ -19,7 +19,7 @@ export function Clients({ dict }: { dict: Dictionary["clients"] }) {
   });
 
   return (
-    <section id={SECTION_IDS.clients} className="bg-ink py-16 text-paper">
+    <section id={SECTION_IDS.clients} className="bg-ink-deep py-16 text-paper">
       <Container>
         <Logos3 heading={dict.heading} logos={logos} tone="dark" />
       </Container>

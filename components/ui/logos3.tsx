@@ -61,7 +61,7 @@ export function Logos3({
   logos: Logo[];
   tone?: Tone;
 }) {
-  const fade = tone === "dark" ? "from-ink" : "from-paper";
+  const fade = tone === "dark" ? "from-ink-deep" : "from-paper";
   return (
     <div className="flex flex-col items-center">
       {heading ? (
