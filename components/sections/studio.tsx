@@ -14,7 +14,7 @@ export function Studio({ dict }: { dict: Dictionary["studio"] }) {
           <p className="text-sm font-semibold uppercase tracking-widest text-accent">
             {dict.eyebrow}
           </p>
-          <h2 className="font-display text-3xl font-bold sm:text-4xl">{dict.heading}</h2>
+          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">{dict.heading}</h2>
           <p className="text-lg text-muted">{dict.body}</p>
           <div>
             <Button asChild variant="outline">
@@ -26,7 +26,7 @@ export function Studio({ dict }: { dict: Dictionary["studio"] }) {
         </Reveal>
         <Reveal delay={0.1} className="order-1 lg:order-2">
           {/* TODO(client): replace with photos of the owner's own creations */}
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-line">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-line">
             <Image
               src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1200&q=80"
               alt={dict.imageAlt}

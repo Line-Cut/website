@@ -5,10 +5,10 @@ import type { Dictionary } from "@/lib/dictionary";
 
 export function Why({ dict }: { dict: Dictionary["why"] }) {
   return (
-    <section id={SECTION_IDS.why} className="bg-ink py-20 text-paper">
+    <section id={SECTION_IDS.why} className="bg-ink-deep py-20 text-paper">
       <Container>
         <Reveal className="mb-12 max-w-2xl">
-          <h2 className="font-display text-3xl font-bold sm:text-4xl">{dict.heading}</h2>
+          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">{dict.heading}</h2>
           <p className="mt-4 text-lg text-paper/70">{dict.intro}</p>
         </Reveal>
         <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
