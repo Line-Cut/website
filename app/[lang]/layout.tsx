@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Frank_Ruhl_Libre, Assistant } from "next/font/google";
+import { Heebo, Assistant } from "next/font/google";
 import { notFound } from "next/navigation";
 import "../globals.css";
 import { isLocale, locales } from "@/lib/i18n";
@@ -8,9 +8,9 @@ import { siteConfig } from "@/lib/site-config";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 
-const display = Frank_Ruhl_Libre({
+const display = Heebo({
   subsets: ["hebrew", "latin"],
-  weight: ["400", "500", "700", "900"],
+  weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-frank",
 });
 const sans = Assistant({
