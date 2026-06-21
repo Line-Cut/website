@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-paper: #f7f3ec;
-  --color-paper-2: #efe9df;
-  --color-ink: #1c1a17;
-  --color-muted: #5d5851; /* AA ≥4.5:1 on paper; NOT the logo gray #7e7d7b */
-  --color-line: #d9d2c5;
+  --color-paper: #ffffff;
+  --color-paper-2: #fafafa;
+  --color-ink: #141414;
+  --color-ink-deep: #0e0e0e; /* true-black background for dark sections */
+  --color-muted: #5b5b5b; /* AA ≥4.5:1 on white */
+  --color-line: #ececec;
   --color-accent: #b8281f;
   --color-accent-600: #9e2019;
 
@@ -30,15 +31,6 @@ body {
 section[id],
 [id] {
   scroll-margin-top: 5rem;
-}
-
-/* Subtle warm paper grain */
-.bg-grain {
-  background-image: radial-gradient(
-    rgba(28, 26, 23, 0.035) 1px,
-    transparent 1px
-  );
-  background-size: 4px 4px;
 }
 
 /* Thin "cut line" hairline used as a section accent */
