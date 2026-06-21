@@ -8,7 +8,7 @@ import type { Dictionary } from "@/lib/dictionary";
 
 export function Footer({ lang, dict }: { lang: Locale; dict: Dictionary["footer"] }) {
   return (
-    <footer className="border-t border-line bg-ink text-paper">
+    <footer className="border-t border-line bg-ink-deep text-paper">
       <Container className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex flex-col gap-3">
           <Image src="/F_LINE_CUT_LOGO.svg" alt="Line Cut" width={120} height={44} className="h-9 w-auto" />

@@ -33,17 +33,6 @@ section[id],
   scroll-margin-top: 5rem;
 }
 
-/* Thin "cut line" hairline used as a section accent */
-.cut-rule {
-  height: 1px;
-  background-image: repeating-linear-gradient(
-    to right,
-    var(--color-line) 0,
-    var(--color-line) 6px,
-    transparent 6px,
-    transparent 12px
-  );
-}
 
 @media (prefers-reduced-motion: reduce) {
   html {
