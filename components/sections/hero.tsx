@@ -8,13 +8,13 @@ import type { Dictionary } from "@/lib/dictionary";
 
 export function Hero({ dict }: { dict: Dictionary["hero"] }) {
   return (
-    <section id={SECTION_IDS.hero} className="bg-grain relative overflow-hidden">
+    <section id={SECTION_IDS.hero} className="relative overflow-hidden">
       <Container className="grid items-center gap-12 py-20 lg:grid-cols-2 lg:py-28">
         <Reveal className="flex flex-col gap-6">
-          <p className="text-sm font-semibold uppercase tracking-widest text-accent">
+          <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-accent">
             {dict.eyebrow}
           </p>
-          <h1 className="font-display text-4xl font-bold leading-tight text-balance sm:text-5xl lg:text-6xl">
+          <h1 className="font-display text-5xl font-black leading-[0.96] tracking-tight text-balance sm:text-6xl lg:text-7xl">
             {dict.title}
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-muted">
@@ -26,15 +26,15 @@ export function Hero({ dict }: { dict: Dictionary["hero"] }) {
                 {dict.ctaPrimary}
               </a>
             </Button>
-            <Button asChild size="lg" variant="outline">
-              <a href={`#${SECTION_IDS.contact}`}>{dict.ctaSecondary}</a>
+            <Button asChild size="lg" variant="ghost">
+              <a href={`#${SECTION_IDS.contact}`}>{dict.ctaSecondary} →</a>
             </Button>
           </div>
         </Reveal>
 
         <Reveal delay={0.15} className="relative">
           {/* TODO(client): replace with a real hero photo at /public/hero.jpg */}
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-line">
+          <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-line">
             <Image
               src="https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=1200&q=80"
               alt={dict.imageAlt}
@@ -44,7 +44,6 @@ export function Hero({ dict }: { dict: Dictionary["hero"] }) {
               priority
             />
           </div>
-          <div className="cut-rule absolute -bottom-3 start-6 end-6" />
         </Reveal>
       </Container>
     </section>
