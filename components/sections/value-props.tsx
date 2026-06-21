@@ -1,4 +1,3 @@
-import { Check } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Reveal } from "@/components/motion/reveal";
 import { VALUE_PROP_KEYS } from "@/lib/content";
@@ -6,14 +5,16 @@ import type { Dictionary } from "@/lib/dictionary";
 
 export function ValueProps({ dict }: { dict: Dictionary["valueProps"] }) {
   return (
-    <section className="border-y border-line bg-paper-2/40 py-12">
+    <section className="border-y border-line py-10">
       <Container>
-        <ul className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-x-10 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
           {VALUE_PROP_KEYS.map((key, i) => (
             <Reveal key={key} delay={i * 0.04}>
-              <li className="flex items-start gap-3">
-                <Check className="mt-1 h-5 w-5 shrink-0 text-accent" />
-                <span className="text-ink/90">{dict.items[key]}</span>
+              <li className="flex items-baseline gap-3 border-b border-line/70 pb-3 text-ink/90">
+                <span className="font-display text-sm font-extrabold text-accent">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span>{dict.items[key]}</span>
               </li>
             </Reveal>
           ))}
