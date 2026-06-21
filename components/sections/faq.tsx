@@ -14,7 +14,7 @@ export function Faq({ dict }: { dict: Dictionary["faq"] }) {
     <section id={SECTION_IDS.faq} className="py-20">
       <Container className="max-w-3xl">
         <Reveal className="mb-10">
-          <h2 className="font-display text-3xl font-bold sm:text-4xl">{dict.heading}</h2>
+          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">{dict.heading}</h2>
         </Reveal>
         <Accordion type="single" collapsible className="w-full">
           {FAQ_KEYS.map((key) => (

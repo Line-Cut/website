@@ -21,7 +21,7 @@ export function Contact({ dict, lang }: { dict: Dictionary["contact"]; lang: Loc
       <Container className="grid gap-12 lg:grid-cols-2">
         {/* Details */}
         <div className="flex flex-col gap-6">
-          <h2 className="font-display text-3xl font-bold sm:text-4xl">{dict.heading}</h2>
+          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">{dict.heading}</h2>
           <p className="text-lg text-muted">{dict.intro}</p>
           <ul className="flex flex-col gap-4 text-ink/90">
             <li className="flex items-center gap-3">
@@ -59,7 +59,7 @@ export function Contact({ dict, lang }: { dict: Dictionary["contact"]; lang: Loc
         </div>
 
         {/* Form */}
-        <form action={action} className="flex flex-col gap-4 rounded-2xl border border-line bg-paper p-6">
+        <form action={action} className="flex flex-col gap-4 rounded-lg border border-line bg-paper p-6">
           {state.status === "success" ? (
             <p role="status" aria-live="polite" className="rounded-md bg-accent/10 p-4 text-accent">{dict.success}</p>
           ) : null}
