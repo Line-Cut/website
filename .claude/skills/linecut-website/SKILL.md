@@ -40,7 +40,7 @@ Tokens are defined in `app/globals.css` as Tailwind v4 `@theme` colors. **Use th
 
 Fonts: `font-display` = **Heebo** (headings), `font-sans` = Assistant (body) — both Hebrew+Latin, via `next/font`. Logo: `public/F_LINE_CUT_LOGO.svg`.
 
-**Gallery → Portfolio:** The homepage gallery section is now a **horizontal-scroll Portfolio** strip. Projects are sourced from the `PROJECTS` array in `lib/content.ts` (type `Project`), rendered in `components/sections/portfolio.tsx`.
+**Gallery → Portfolio:** The homepage gallery section is now a **horizontal-scroll Portfolio** strip. Projects are sourced from the `PROJECTS` array in `lib/content.ts` (type `Project`), rendered in `components/sections/gallery.tsx` (the file kept its `gallery` name and the `SECTION_IDS.work` anchor; only the styling changed).
 
 ## Component Conventions
 
