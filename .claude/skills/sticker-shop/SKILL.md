@@ -30,6 +30,8 @@ The sticker shop lets a customer upload WhatsApp `.webp` stickers, see a live **
 5. **Confirm** → server action `confirmOrder({ orderId, guestToken, delivery })`: re-validates, verifies each object exists in S3, then **re-keys** the files into the friendly per-order folder `<orderId>-<firstName>-<lastName>-<phone>/` in the orders bucket and writes a **`metadata.pdf`** (client details, Hebrew-capable) alongside them (the temp `{clientKey}/{orderId}/` prefix is deleted). Calls the payment provider (**mocked → `paid`** today); writes delivery + first/last name + `payment_status`/`payment_reference`/`paid_at` + `storage_prefix` + `confirmed_at`. When paid, runs the **paid pipeline** (`lib/orders/mark-paid.ts`, best-effort): copies the order folder to the **paid bucket** and writes a **`receipt.pdf`** seam. Sends owner email (best-effort). **Idempotent** — a re-confirm of an already-confirmed order returns success without re-doing any of this.
 6. **Track**: guest → `/[lang]/stickers/track/[token]` (by `guest_token`); account → `/[lang]/account/orders` (RLS, own orders). Owner downloads files via `/[lang]/admin/orders/[id]/files` (owner-gated).
 
+**Saved drafts (signed-in only).** A draft = an `orders` row with `confirmed_at IS NULL` + `user_id`. Signed-in users get a **"Save draft"** button in the builder (guests don't) and can edit until checkout: the builder loads a draft via **`/[lang]/stickers?draft=<id>`** (`getDraftForEdit` → remote stickers shown via presigned GET alongside new local ones); saving calls `updateOrderDraft` (diff: delete removed S3+DB, presign+insert added, re-snapshot price) or `createOrderDraft` on first save. "Continue to checkout" also persists, so an abandoned checkout stays resumable. The account page lists drafts (`getUserDrafts`) with **Continue editing / Continue to checkout / Discard** (`discardDraft`). Draft files stay temp-keyed (`u_<userId>/<orderId>/`); the friendly re-key happens only at confirm. Cores: `lib/orders/{update-draft,draft-view,discard-draft}.ts`; actions: `updateOrderDraft`/`getUserDrafts`/`getDraftForEdit`/`discardDraft`. All draft writes are owner+draft guarded (`already_finalized` once confirmed).
+
 ## File Map
 
 | Area | Path | Notes |
@@ -43,7 +45,8 @@ The sticker shop lets a customer upload WhatsApp `.webp` stickers, see a live **
 | **Server actions** | `app/actions/stickers.ts` | `createOrderDraft`, `confirmOrder` — build deps, wrap lib cores |
 | **Pure logic** | `lib/stickers/` | pricing, packing, file-validation, format, schemas, types, config |
 | Upload (browser) | `lib/stickers/upload-client.ts` | browser-safe, no server imports |
-| **IO cores (DI)** | `lib/orders/` | `create-draft`, `confirm-order`, `order-view`, `draft-schema`, `mark-paid` (paid pipeline) |
+| **IO cores (DI)** | `lib/orders/` | `create-draft`, `update-draft`, `draft-view` (list/get drafts), `discard-draft`, `confirm-order`, `order-view`, `draft-schema`, `mark-paid` (paid pipeline) |
+| Drafts UI | `components/stickers/draft-list.tsx` | account "In-progress" list (continue/checkout/discard) |
 | PDF builders | `lib/pdf/order-metadata-pdf.ts`, `lib/pdf/receipt-pdf.ts` | metadata (Hebrew via DejaVuSans + bidi-js) / receipt seam; font in `lib/pdf/fonts/` (traced in `next.config.ts`) |
 | Storage | `lib/storage/keys.ts`, `lib/storage/s3.ts` | key scheme + friendly prefix + presign/exists/delete + `putObject`/`copyObject`/`copyPrefix`; two buckets |
 | Supabase | `lib/supabase/{client,server,admin,proxy}.ts` | browser / RLS / admin / session refresh |
@@ -96,7 +99,7 @@ The sticker shop lets a customer upload WhatsApp `.webp` stickers, see a live **
 
 ## Roadmap seams (architected, not built)
 
-Real payment gateway (behind `PaymentProvider`; drive `markOrderPaid` from its webhook — set payment status/ref, then copy + receipt) and a **real receipt** (today `lib/pdf/receipt-pdf.ts` writes a placeholder); admin order dashboard, orphaned-draft cleanup cron (`confirmed_at IS NULL`), "add as store product" catalog. Keep new data/IO behind `lib/` + Server Actions.
+Real payment gateway (behind `PaymentProvider`; drive `markOrderPaid` from its webhook — set payment status/ref, then copy + receipt) and a **real receipt** (today `lib/pdf/receipt-pdf.ts` writes a placeholder); admin order dashboard, orphaned-draft cleanup cron (target only **guest/abandoned** drafts — signed-in `confirmed_at IS NULL` drafts are now intentional, resumable orders), "add as store product" catalog. Keep new data/IO behind `lib/` + Server Actions.
 
 ## Maintenance
 
