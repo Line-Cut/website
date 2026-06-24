@@ -15,7 +15,7 @@ This repo is the bilingual (**Hebrew-first RTL + English LTR**) marketing site f
 
 - **Name:** Line Cut Ltd. (ליין קאט) · **Address:** HaSadna 8, Holon, Israel · **Business ID:** 516741998
 - **Field:** wide-format digital printing, precision cutting, signage, stickers, exhibition/museum graphics, rigid-material printing, custom production.
-- Contact details, socials, hours, and the production domain live in **`lib/site-config.ts`** (placeholders marked `TODO(client)`) — never hard-code them in components.
+- Contact details, socials, and hours live in **`lib/site-config.ts`** (placeholders marked `TODO(client)`) — never hard-code them in components. The canonical origin `siteConfig.url` is driven by **`NEXT_PUBLIC_SITE_URL`** (falls back to the production domain) and is used for metadata, the sitemap, and the Supabase OAuth redirect.
 
 ## Voice & Tone
 
@@ -74,8 +74,8 @@ The `/[lang]/stickers` flow: upload WhatsApp `.webp` stickers → A4 preview + l
 
 ## Launch Checklist (`TODO(client)`)
 
-- Marketing: fill `lib/site-config.ts` (phone/email/whatsapp/socials/hours + `url`); set Vercel env (`RESEND_API_KEY`, `CONTACT_EMAIL`, `CONTACT_FROM`); replace placeholder images + client logos in `/public` then drop the cloudfront allowlist in `next.config.ts`; lawyer-review Terms/Privacy.
-- Sticker shop: set sticker-shop env (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `AWS_REGION`, `S3_STICKERS_BUCKET`, `S3_STICKERS_PAID_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `OWNER_NOTIFY_EMAIL`); create **both** S3 buckets (same region) with the IAM policy scoped to both; **apply the S3 CORS rule to the orders bucket** (PUT/GET from the site origin — see `docs/sticker-shop-setup.md` §3b; the paid bucket needs no CORS; the app IAM user can't set it); enable Supabase **Email + Google** auth providers + Site URL/Redirect URLs; fill real pricing in `lib/stickers/sticker-config.ts` (`perSheetRate`/`setupFee` in **agorot** — until set, the UI shows "price confirmed before printing"); apply DB migrations to the project (`npm run db:push`); CONTACT_FROM must use the Resend-verified domain.
+- Marketing: fill `lib/site-config.ts` (phone/email/whatsapp/socials/hours); set Vercel env (`NEXT_PUBLIC_SITE_URL` = the canonical origin, `RESEND_API_KEY`, `CONTACT_EMAIL`, `CONTACT_FROM`); replace placeholder images + client logos in `/public` then drop the cloudfront allowlist in `next.config.ts`; lawyer-review Terms/Privacy.
+- Sticker shop: set sticker-shop env (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `AWS_REGION`, `S3_STICKERS_BUCKET`, `S3_STICKERS_PAID_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `OWNER_NOTIFY_EMAIL`); create **both** S3 buckets (same region) with the IAM policy scoped to both; **apply the S3 CORS rule to the orders bucket** (PUT/GET from the site origin — see `docs/sticker-shop-setup.md` §3b; the paid bucket needs no CORS; the app IAM user can't set it); enable Supabase **Email + Google** auth providers + set **Site URL/Redirect URLs** to match `NEXT_PUBLIC_SITE_URL` (add `<origin>/**` to Redirect URLs, else Google sign-in bounces to localhost:3000); fill real pricing in `lib/stickers/sticker-config.ts` (`perSheetRate`/`setupFee` in **agorot** — until set, the UI shows "price confirmed before printing"); apply DB migrations to the project (`npm run db:push`); CONTACT_FROM must use the Resend-verified domain.
 
 ## Roadmap (architected-for, not built)
 

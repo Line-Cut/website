@@ -196,6 +196,11 @@ describe("AuthForm", () => {
       expect(mockSignInWithOAuth).toHaveBeenCalledWith(
         expect.objectContaining({
           provider: "google",
+          options: expect.objectContaining({
+            // NEXT_PUBLIC_SITE_URL is unset in tests → falls back to the live
+            // origin; the locale-scoped callback path must always be present.
+            redirectTo: expect.stringContaining("/en/auth/callback"),
+          }),
         }),
       );
     });

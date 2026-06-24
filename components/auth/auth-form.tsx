@@ -29,10 +29,20 @@ export function AuthForm({ mode: initialMode, lang, dict }: Props) {
     startTransition(async () => {
       setError(null);
       const supabase = createBrowserSupabaseClient();
+      // Prefer the configured canonical origin so Supabase always returns to an
+      // allow-listed URL. Without it, Supabase ignores an un-allow-listed
+      // redirect and falls back to the project Site URL (i.e. localhost:3000).
+      // Fall back to the live origin (not the production domain) so local dev
+      // still works when NEXT_PUBLIC_SITE_URL is unset.
+      const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(
+        /\/+$/,
+        "",
+      );
+      const origin = configured || location.origin;
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${location.origin}/${lang}/auth/callback`,
+          redirectTo: `${origin}/${lang}/auth/callback`,
         },
       });
       if (oauthError) {

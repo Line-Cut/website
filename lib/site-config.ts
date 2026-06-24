@@ -1,6 +1,14 @@
+// Canonical public origin (no trailing slash). Set NEXT_PUBLIC_SITE_URL per
+// environment to the deployment's real origin; falls back to the production
+// domain. Used for metadata, the sitemap, and the Supabase auth redirect — so
+// whatever you set here MUST also be in Supabase's Redirect URLs allow-list.
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || "https://line-cut.com"
+).replace(/\/+$/, "");
+
 export const siteConfig = {
   name: "Line Cut",
-  url: "https://line-cut.com",
+  url: SITE_URL,
   legalName: "Line Cut Ltd.",
   businessId: "516741998",
   address: {
