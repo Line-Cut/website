@@ -30,7 +30,8 @@ type OrderHandle = { orderId: string; guestToken: string };
 
 type FormValues = {
   method: "pickup" | "shipping";
-  fullName: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   email: string;
   addressLine1: string;
@@ -73,7 +74,8 @@ function readOrderHandle(): OrderHandle | null {
 
 const emptyForm: FormValues = {
   method: "pickup",
-  fullName: "",
+  firstName: "",
+  lastName: "",
   phone: "",
   email: "",
   addressLine1: "",
@@ -117,7 +119,8 @@ export function CheckoutForm({ dict, lang }: Props) {
   function getFormData(): Record<string, unknown> {
     const data: Record<string, unknown> = {
       method: values.method,
-      fullName: values.fullName,
+      firstName: values.firstName,
+      lastName: values.lastName,
       phone: values.phone,
       email: values.email,
     };
@@ -136,7 +139,8 @@ export function CheckoutForm({ dict, lang }: Props) {
 
   function focusFirstInvalid(errors: Record<string, string>) {
     const order = [
-      "fullName",
+      "firstName",
+      "lastName",
       "phone",
       "email",
       "addressLine1",
@@ -277,30 +281,58 @@ export function CheckoutForm({ dict, lang }: Props) {
         </label>
       </fieldset>
 
-      {/* Full name */}
+      {/* First name */}
       <div className="flex flex-col gap-1">
-        <label htmlFor="fullName" className="text-sm font-medium text-ink">
-          {checkout.fields.fullName}
+        <label htmlFor="firstName" className="text-sm font-medium text-ink">
+          {checkout.fields.firstName}
         </label>
         <input
-          id="fullName"
+          id="firstName"
           type="text"
-          autoComplete="name"
-          value={values.fullName}
-          onChange={(e) => update("fullName", e.target.value)}
-          onBlur={() => handleBlur("fullName")}
-          ref={setFieldRef("fullName") as React.RefCallback<HTMLInputElement>}
-          aria-describedby={fieldErrors.fullName ? "err-fullName" : undefined}
-          aria-invalid={!!fieldErrors.fullName}
+          autoComplete="given-name"
+          value={values.firstName}
+          onChange={(e) => update("firstName", e.target.value)}
+          onBlur={() => handleBlur("firstName")}
+          ref={setFieldRef("firstName") as React.RefCallback<HTMLInputElement>}
+          aria-describedby={fieldErrors.firstName ? "err-firstName" : undefined}
+          aria-invalid={!!fieldErrors.firstName}
           className="h-11 rounded-md border border-line bg-paper px-3 outline-none focus:border-accent"
         />
-        {fieldErrors.fullName && (
+        {fieldErrors.firstName && (
           <span
-            id="err-fullName"
+            id="err-firstName"
             aria-live="polite"
             className="text-xs text-accent"
           >
-            {fe[fieldErrors.fullName as keyof typeof fe] ?? fieldErrors.fullName}
+            {fe[fieldErrors.firstName as keyof typeof fe] ?? fieldErrors.firstName}
+          </span>
+        )}
+      </div>
+
+      {/* Last name */}
+      <div className="flex flex-col gap-1">
+        <label htmlFor="lastName" className="text-sm font-medium text-ink">
+          {checkout.fields.lastName}
+        </label>
+        <input
+          id="lastName"
+          type="text"
+          autoComplete="family-name"
+          value={values.lastName}
+          onChange={(e) => update("lastName", e.target.value)}
+          onBlur={() => handleBlur("lastName")}
+          ref={setFieldRef("lastName") as React.RefCallback<HTMLInputElement>}
+          aria-describedby={fieldErrors.lastName ? "err-lastName" : undefined}
+          aria-invalid={!!fieldErrors.lastName}
+          className="h-11 rounded-md border border-line bg-paper px-3 outline-none focus:border-accent"
+        />
+        {fieldErrors.lastName && (
+          <span
+            id="err-lastName"
+            aria-live="polite"
+            className="text-xs text-accent"
+          >
+            {fe[fieldErrors.lastName as keyof typeof fe] ?? fieldErrors.lastName}
           </span>
         )}
       </div>

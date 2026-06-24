@@ -180,7 +180,11 @@
     "hidePassword": "הסתרת סיסמה",
     "submitting": "שולח…",
     "checkEmail": "בדקו את האימייל שלכם לאישור החשבון.",
-    "accountLink": "החשבון שלי"
+    "accountLink": "החשבון שלי",
+    "accountMenu": "תפריט חשבון",
+    "ordersLink": "הזמנות",
+    "signOut": "יציאה",
+    "signedInAs": "מחובר כ־"
   },
   "stickers": {
     "meta": {
@@ -258,7 +262,8 @@
       "methodPickup": "איסוף עצמי בחולון",
       "methodShipping": "משלוח לכתובתי",
       "fields": {
-        "fullName": "שם מלא",
+        "firstName": "שם פרטי",
+        "lastName": "שם משפחה",
         "phone": "טלפון",
         "email": "אימייל",
         "addressLine1": "כתובת",

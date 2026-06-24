@@ -3,14 +3,16 @@ import { parseCheckout } from "@/lib/stickers/checkout-schema";
 
 const validPickup = {
   method: "pickup",
-  fullName: "Nir Cohen",
+  firstName: "Nir",
+  lastName: "Cohen",
   phone: "052123456",
   email: "nir@example.com",
 };
 
 const validShipping = {
   method: "shipping",
-  fullName: "Nir Cohen",
+  firstName: "Nir",
+  lastName: "Cohen",
   phone: "052123456",
   email: "nir@example.com",
   addressLine1: "HaSadna 8",
@@ -85,18 +87,27 @@ describe("parseCheckout", () => {
     }
   });
 
-  it("empty fullName → failure errors.fullName", () => {
-    const result = parseCheckout({ ...validPickup, fullName: "" });
+  it("empty firstName → failure errors.firstName", () => {
+    const result = parseCheckout({ ...validPickup, firstName: "" });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.errors.fullName).toBe("required");
+      expect(result.errors.firstName).toBe("required");
+    }
+  });
+
+  it("empty lastName → failure errors.lastName", () => {
+    const result = parseCheckout({ ...validPickup, lastName: "" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.errors.lastName).toBe("required");
     }
   });
 
   it("pickup without address fields → success (address not required)", () => {
     const result = parseCheckout({
       method: "pickup",
-      fullName: "Test User",
+      firstName: "Test",
+      lastName: "User",
       phone: "0501234567",
       email: "test@example.com",
       // no addressLine1, city, postalCode

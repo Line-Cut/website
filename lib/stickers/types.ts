@@ -43,7 +43,8 @@ export type DeliveryMethod = "pickup" | "shipping";
 
 export type DeliveryInput = {
   method: DeliveryMethod;
-  fullName: string;
+  firstName: string;
+  lastName: string;
   phone: string;
   email: string;
   addressLine1?: string;

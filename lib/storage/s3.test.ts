@@ -43,6 +43,13 @@ vi.mock("@aws-sdk/client-s3", () => {
     }
   }
 
+  class CopyObjectCommand {
+    input: unknown;
+    constructor(input: unknown) {
+      this.input = input;
+    }
+  }
+
   class NotFound extends Error {
     name = "NotFound";
   }
@@ -54,6 +61,7 @@ vi.mock("@aws-sdk/client-s3", () => {
     HeadObjectCommand,
     ListObjectsV2Command,
     DeleteObjectsCommand,
+    CopyObjectCommand,
     NotFound,
   };
 });
@@ -65,6 +73,7 @@ vi.mock("@aws-sdk/s3-request-presigner", () => ({
 // Set env before importing module under test
 process.env.AWS_REGION = "us-east-1";
 process.env.S3_STICKERS_BUCKET = "test-stickers-bucket";
+process.env.S3_STICKERS_PAID_BUCKET = "test-paid-bucket";
 process.env.ORDER_FILES_LINK_TTL = "86400";
 
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -75,12 +84,16 @@ import {
   HeadObjectCommand,
   ListObjectsV2Command,
   DeleteObjectsCommand,
+  CopyObjectCommand,
 } from "@aws-sdk/client-s3";
 import {
   presignUpload,
   presignDownload,
   objectExists,
   deletePrefix,
+  putObject,
+  copyObject,
+  copyPrefix,
 } from "./s3";
 
 // The mock factory creates mockSend as vi.fn() and attaches it as instance.send,
@@ -283,5 +296,116 @@ describe("deletePrefix", () => {
     expect(
       (listCmd2 as InstanceType<typeof ListObjectsV2Command>).input
     ).toMatchObject({ ContinuationToken: "token-1" });
+  });
+});
+
+describe("putObject", () => {
+  test("writes a body to the orders bucket with the given content type", async () => {
+    mockSend.mockResolvedValueOnce({});
+    const body = new Uint8Array([1, 2, 3]);
+    await putObject("ord1-a-b-1/metadata.pdf", body, {
+      contentType: "application/pdf",
+    });
+
+    const cmd = mockSend.mock.calls[0][0];
+    expect(cmd).toBeInstanceOf(PutObjectCommand);
+    expect((cmd as InstanceType<typeof PutObjectCommand>).input).toMatchObject({
+      Bucket: "test-stickers-bucket",
+      Key: "ord1-a-b-1/metadata.pdf",
+      Body: body,
+      ContentType: "application/pdf",
+    });
+  });
+
+  test("targets the paid bucket when bucket: 'paid'", async () => {
+    mockSend.mockResolvedValueOnce({});
+    await putObject("ord1-a-b-1/receipt.pdf", "x", {
+      contentType: "application/pdf",
+      bucket: "paid",
+    });
+    const cmd = mockSend.mock.calls[0][0];
+    expect((cmd as InstanceType<typeof PutObjectCommand>).input).toMatchObject({
+      Bucket: "test-paid-bucket",
+    });
+  });
+});
+
+describe("copyObject", () => {
+  test("copies within the orders bucket with a URL-encoded CopySource", async () => {
+    mockSend.mockResolvedValueOnce({});
+    await copyObject("g_tok/ord1/stk1.webp", "ord1-דוד-כהן-050/stk1.webp");
+
+    const cmd = mockSend.mock.calls[0][0];
+    expect(cmd).toBeInstanceOf(CopyObjectCommand);
+    const input = (cmd as InstanceType<typeof CopyObjectCommand>).input as {
+      Bucket: string;
+      Key: string;
+      CopySource: string;
+    };
+    expect(input.Bucket).toBe("test-stickers-bucket");
+    expect(input.Key).toBe("ord1-דוד-כהן-050/stk1.webp");
+    // CopySource = "<srcBucket>/<encoded key>", slashes preserved
+    expect(input.CopySource).toBe(
+      "test-stickers-bucket/g_tok/ord1/stk1.webp"
+    );
+  });
+
+  test("copies orders→paid when buckets are specified", async () => {
+    mockSend.mockResolvedValueOnce({});
+    await copyObject("ord1-a-b-1/stk1.webp", "ord1-a-b-1/stk1.webp", {
+      srcBucket: "orders",
+      dstBucket: "paid",
+    });
+    const input = (mockSend.mock.calls[0][0] as InstanceType<
+      typeof CopyObjectCommand
+    >).input as { Bucket: string; CopySource: string };
+    expect(input.Bucket).toBe("test-paid-bucket");
+    expect(input.CopySource).toBe("test-stickers-bucket/ord1-a-b-1/stk1.webp");
+  });
+});
+
+describe("copyPrefix", () => {
+  test("lists the source prefix and copies each object rewriting the prefix", async () => {
+    // List → 2 objects, no pagination
+    mockSend.mockResolvedValueOnce({
+      Contents: [
+        { Key: "ord1-a-b-1/stk1.webp" },
+        { Key: "ord1-a-b-1/metadata.pdf" },
+      ],
+      IsTruncated: false,
+    });
+    // Two copies
+    mockSend.mockResolvedValueOnce({});
+    mockSend.mockResolvedValueOnce({});
+
+    await copyPrefix("ord1-a-b-1/", "ord1-a-b-1/", {
+      srcBucket: "orders",
+      dstBucket: "paid",
+    });
+
+    expect(mockSend).toHaveBeenCalledTimes(3); // 1 list + 2 copies
+    const list = mockSend.mock.calls[0][0];
+    expect(list).toBeInstanceOf(ListObjectsV2Command);
+    expect((list as InstanceType<typeof ListObjectsV2Command>).input).toMatchObject({
+      Bucket: "test-stickers-bucket",
+      Prefix: "ord1-a-b-1/",
+    });
+
+    const copy1 = mockSend.mock.calls[1][0] as InstanceType<
+      typeof CopyObjectCommand
+    >;
+    expect(copy1).toBeInstanceOf(CopyObjectCommand);
+    expect((copy1.input as { Bucket: string; Key: string }).Bucket).toBe(
+      "test-paid-bucket"
+    );
+    expect((copy1.input as { Bucket: string; Key: string }).Key).toBe(
+      "ord1-a-b-1/stk1.webp"
+    );
+  });
+
+  test("is a no-op when the source prefix is empty", async () => {
+    mockSend.mockResolvedValueOnce({ Contents: [], IsTruncated: false });
+    await copyPrefix("missing/", "dest/");
+    expect(mockSend).toHaveBeenCalledTimes(1); // only the list
   });
 });

@@ -90,7 +90,8 @@ const dict = {
     methodPickup: "Pickup in Holon",
     methodShipping: "Ship to my address",
     fields: {
-      fullName: "Full name",
+      firstName: "First name",
+      lastName: "Last name",
       phone: "Phone",
       email: "Email",
       addressLine1: "Address",
@@ -162,8 +163,11 @@ function setOrderHandle(value: string | null) {
 }
 
 function fillPickupForm() {
-  fireEvent.change(screen.getByLabelText(dict.checkout.fields.fullName), {
-    target: { value: "Test User" },
+  fireEvent.change(screen.getByLabelText(dict.checkout.fields.firstName), {
+    target: { value: "Test" },
+  });
+  fireEvent.change(screen.getByLabelText(dict.checkout.fields.lastName), {
+    target: { value: "User" },
   });
   fireEvent.change(screen.getByLabelText(dict.checkout.fields.phone), {
     target: { value: "0501234567" },
@@ -208,7 +212,7 @@ describe("CheckoutForm", () => {
     // No form rendered
     expect(
       screen.queryByRole("form") ??
-      screen.queryByLabelText(dict.checkout.fields.fullName),
+      screen.queryByLabelText(dict.checkout.fields.firstName),
     ).toBeNull();
   });
 
@@ -219,7 +223,7 @@ describe("CheckoutForm", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText(dict.checkout.fields.fullName),
+        screen.getByLabelText(dict.checkout.fields.firstName),
       ).toBeInTheDocument();
     });
 
@@ -239,7 +243,7 @@ describe("CheckoutForm", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText(dict.checkout.fields.fullName),
+        screen.getByLabelText(dict.checkout.fields.firstName),
       ).toBeInTheDocument();
     });
 
@@ -247,8 +251,11 @@ describe("CheckoutForm", () => {
     fireEvent.click(screen.getByLabelText(dict.checkout.methodShipping));
 
     // Fill required pickup fields but leave city empty
-    fireEvent.change(screen.getByLabelText(dict.checkout.fields.fullName), {
-      target: { value: "Test User" },
+    fireEvent.change(screen.getByLabelText(dict.checkout.fields.firstName), {
+      target: { value: "Test" },
+    });
+    fireEvent.change(screen.getByLabelText(dict.checkout.fields.lastName), {
+      target: { value: "User" },
     });
     fireEvent.change(screen.getByLabelText(dict.checkout.fields.phone), {
       target: { value: "0501234567" },
@@ -290,7 +297,7 @@ describe("CheckoutForm", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText(dict.checkout.fields.fullName),
+        screen.getByLabelText(dict.checkout.fields.firstName),
       ).toBeInTheDocument();
     });
 
@@ -314,7 +321,8 @@ describe("CheckoutForm", () => {
     expect(callArg.guestToken).toBe("gt-1");
     expect(callArg.delivery).toMatchObject({
       method: "pickup",
-      fullName: "Test User",
+      firstName: "Test",
+      lastName: "User",
       phone: "0501234567",
       email: "test@example.com",
     });
@@ -342,7 +350,7 @@ describe("CheckoutForm", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText(dict.checkout.fields.fullName),
+        screen.getByLabelText(dict.checkout.fields.firstName),
       ).toBeInTheDocument();
     });
 
@@ -375,7 +383,7 @@ describe("CheckoutForm", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText(dict.checkout.fields.fullName),
+        screen.getByLabelText(dict.checkout.fields.firstName),
       ).toBeInTheDocument();
     });
 
@@ -401,14 +409,14 @@ describe("CheckoutForm", () => {
 
     mockConfirmOrder.mockResolvedValueOnce({
       ok: false,
-      errors: { fullName: "required" },
+      errors: { firstName: "required" },
     });
 
     render(<CheckoutForm dict={dict} lang="en" />);
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText(dict.checkout.fields.fullName),
+        screen.getByLabelText(dict.checkout.fields.firstName),
       ).toBeInTheDocument();
     });
 
@@ -418,7 +426,7 @@ describe("CheckoutForm", () => {
       screen.getByRole("button", { name: dict.checkout.submit }).closest("form")!,
     );
 
-    // Field-level error for fullName is shown (mapped via fieldErrors dict)
+    // Field-level error for firstName is shown (mapped via fieldErrors dict)
     await waitFor(() => {
       expect(screen.getByText(dict.fieldErrors.required)).toBeInTheDocument();
     });

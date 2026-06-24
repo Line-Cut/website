@@ -4,7 +4,8 @@ import type { DeliveryInput } from "@/lib/stickers/types";
 export const checkoutSchema = z
   .object({
     method: z.enum(["pickup", "shipping"]),
-    fullName: z.string().trim().min(2, "required"),
+    firstName: z.string().trim().min(1, "required"),
+    lastName: z.string().trim().min(1, "required"),
     phone: z.string().trim().min(6, "invalid_phone"),
     email: z.string().trim().email("invalid_email"),
     addressLine1: z.string().trim().optional(),

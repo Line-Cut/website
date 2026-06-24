@@ -11,7 +11,8 @@ import type { ConfirmOrderDeps } from "@/lib/orders/confirm-order";
 
 const VALID_PICKUP_DELIVERY = {
   method: "pickup",
-  fullName: "Dana Cohen",
+  firstName: "Dana",
+  lastName: "Cohen",
   phone: "+972501234567",
   email: "dana@example.com",
 };
@@ -23,7 +24,8 @@ const VALID_PICKUP_WITH_NOTES = {
 
 const VALID_SHIPPING_DELIVERY = {
   method: "shipping",
-  fullName: "Dana Cohen",
+  firstName: "Dana",
+  lastName: "Cohen",
   phone: "+972501234567",
   email: "dana@example.com",
   addressLine1: "123 Herzl St",
@@ -36,6 +38,9 @@ const VALID_SHIPPING_WITH_NOTES = {
   ...VALID_SHIPPING_DELIVERY,
   notes: "Leave at door",
 };
+
+// Friendly prefix produced for the pickup/shipping fixtures above.
+const FRIENDLY_PREFIX = "order-uuid-Dana-Cohen-972501234567";
 
 const DRAFT_ORDER = {
   id: "order-uuid",
@@ -55,8 +60,8 @@ const CONFIRMED_ORDER = {
 };
 
 const STICKERS = [
-  { storage_key: "g_gt_abc/order-uuid/s1.webp" },
-  { storage_key: "g_gt_abc/order-uuid/s2.webp" },
+  { id: "s1", storage_key: "g_gt_abc/order-uuid/s1.webp" },
+  { id: "s2", storage_key: "g_gt_abc/order-uuid/s2.webp" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -64,18 +69,22 @@ const STICKERS = [
 // ---------------------------------------------------------------------------
 
 type FakeOrder = typeof DRAFT_ORDER | typeof CONFIRMED_ORDER | null;
-type FakeStickers = { storage_key: string }[];
+type FakeStickers = { id: string; storage_key: string }[];
 
 function makeFakeAdmin({
   order = DRAFT_ORDER as FakeOrder,
   stickers = STICKERS as FakeStickers,
   updateError = null as { message: string } | null,
+  stickerUpdateError = null as { message: string } | null,
 } = {}) {
   const updates: { payload: unknown; filter: Record<string, unknown> }[] = [];
+  const stickerUpdates: { payload: unknown; filter: Record<string, unknown> }[] =
+    [];
   const queryFilters: Record<string, unknown>[] = [];
 
   const admin = {
     _updates: updates,
+    _stickerUpdates: stickerUpdates,
     _queryFilters: queryFilters,
     from(table: string) {
       if (table === "orders") {
@@ -114,6 +123,16 @@ function makeFakeAdmin({
               },
             };
           },
+          update(payload: unknown) {
+            const updateFilters: Record<string, unknown> = {};
+            return {
+              eq(col: string, val: unknown) {
+                updateFilters[col] = val;
+                stickerUpdates.push({ payload, filter: updateFilters });
+                return Promise.resolve({ error: stickerUpdateError });
+              },
+            };
+          },
         };
       }
       throw new Error(`Unexpected table: ${table}`);
@@ -131,11 +150,19 @@ function makeDeps(overrides: Partial<ConfirmOrderDeps> = {}): ConfirmOrderDeps {
   const defaultDeps: ConfirmOrderDeps = {
     admin: makeFakeAdmin() as unknown as ConfirmOrderDeps["admin"],
     objectExists: vi.fn(async () => true),
+    copyObject: vi.fn(async () => {}),
+    putObject: vi.fn(async () => {}),
+    deletePrefix: vi.fn(async () => {}),
+    buildMetadataPdf: vi.fn(async () => new Uint8Array([0x25, 0x50, 0x44, 0x46])),
     paymentProvider: {
       createCharge: vi.fn(async () => ({
         status: "awaiting_payment" as const,
       })),
     },
+    markOrderPaid: vi.fn(async () => ({
+      ok: true,
+      receiptStorageKey: `${FRIENDLY_PREFIX}/receipt.pdf`,
+    })),
     sendOwnerEmail: vi.fn(async () => {}),
     ownerFilesUrlFor: (id) =>
       `https://linecut.example/he/admin/orders/${id}/files`,
@@ -150,15 +177,16 @@ function makeDeps(overrides: Partial<ConfirmOrderDeps> = {}): ConfirmOrderDeps {
 
 describe("confirmOrder", () => {
   it("returns ok:false with errors for invalid delivery (missing required fields)", async () => {
-    const deps = makeDeps();
     const fakeAdmin = makeFakeAdmin();
-    deps.admin = fakeAdmin as unknown as ConfirmOrderDeps["admin"];
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+    });
 
     const result = await confirmOrder(
       {
         orderId: "order-uuid",
         guestToken: "gt_abc",
-        delivery: { method: "pickup" }, // missing fullName, email, phone
+        delivery: { method: "pickup" }, // missing names, email, phone
       },
       deps,
     );
@@ -167,8 +195,8 @@ describe("confirmOrder", () => {
     if (!result.ok) {
       expect(result.errors).toBeDefined();
     }
-    // DB should NOT have been updated
     expect(fakeAdmin._updates).toHaveLength(0);
+    expect(deps.copyObject).not.toHaveBeenCalled();
     expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
   });
 
@@ -190,7 +218,7 @@ describe("confirmOrder", () => {
     expect(result).toEqual({ ok: false, message: "not_found" });
   });
 
-  it("returns ok:true (idempotent) when order is already confirmed; does NOT call payment or email", async () => {
+  it("returns ok:true (idempotent) when order is already confirmed; no payment, email, or re-key", async () => {
     const fakeAdmin = makeFakeAdmin({ order: CONFIRMED_ORDER });
     const deps = makeDeps({
       admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
@@ -211,10 +239,12 @@ describe("confirmOrder", () => {
       guestToken: "gt_abc",
     });
     expect(deps.paymentProvider.createCharge).not.toHaveBeenCalled();
+    expect(deps.copyObject).not.toHaveBeenCalled();
+    expect(deps.markOrderPaid).not.toHaveBeenCalled();
     expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
   });
 
-  it("returns ok:false uploads_incomplete when an S3 object is missing; no payment, no update", async () => {
+  it("returns ok:false uploads_incomplete when an S3 object is missing; no re-key, no payment", async () => {
     const fakeAdmin = makeFakeAdmin();
     const objectExists = vi
       .fn()
@@ -235,11 +265,12 @@ describe("confirmOrder", () => {
     );
 
     expect(result).toEqual({ ok: false, message: "uploads_incomplete" });
+    expect(deps.copyObject).not.toHaveBeenCalled();
     expect(deps.paymentProvider.createCharge).not.toHaveBeenCalled();
     expect(fakeAdmin._updates).toHaveLength(0);
   });
 
-  it("happy path (pickup): sets confirmed_at, contact fields, payment_status=awaiting_payment; emails owner once", async () => {
+  it("happy path (pickup, awaiting_payment): re-keys files, writes metadata, sets contact + storage_prefix; no paid pipeline", async () => {
     const fakeAdmin = makeFakeAdmin();
     const deps = makeDeps({
       admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
@@ -260,21 +291,117 @@ describe("confirmOrder", () => {
       guestToken: "gt_abc",
     });
 
-    // One update call
+    // Re-key: each sticker copied to its friendly key + storage_key updated
+    expect(deps.copyObject).toHaveBeenCalledTimes(2);
+    expect(deps.copyObject).toHaveBeenCalledWith(
+      "g_gt_abc/order-uuid/s1.webp",
+      `${FRIENDLY_PREFIX}/s1.webp`,
+    );
+    expect(fakeAdmin._stickerUpdates).toHaveLength(2);
+    expect(fakeAdmin._stickerUpdates[0].payload).toEqual({
+      storage_key: `${FRIENDLY_PREFIX}/s1.webp`,
+    });
+
+    // metadata.pdf written + temp prefix removed
+    expect(deps.buildMetadataPdf).toHaveBeenCalledTimes(1);
+    expect(deps.putObject).toHaveBeenCalledWith(
+      `${FRIENDLY_PREFIX}/metadata.pdf`,
+      expect.any(Uint8Array),
+      { contentType: "application/pdf" },
+    );
+    expect(deps.deletePrefix).toHaveBeenCalledWith("g_gt_abc/order-uuid/");
+
+    // One order update with contact + storage_prefix; payment awaiting
     expect(fakeAdmin._updates).toHaveLength(1);
     const { payload, filter } = fakeAdmin._updates[0];
     const p = payload as Record<string, unknown>;
-
     expect(filter).toEqual({ id: "order-uuid" });
     expect(p.confirmed_at).toBe("2024-06-01T12:00:00.000Z");
     expect(p.contact_name).toBe("Dana Cohen");
+    expect(p.contact_first_name).toBe("Dana");
+    expect(p.contact_last_name).toBe("Cohen");
     expect(p.contact_email).toBe("dana@example.com");
     expect(p.contact_phone).toBe("+972501234567");
+    expect(p.storage_prefix).toBe(FRIENDLY_PREFIX);
     expect(p.payment_status).toBe("awaiting_payment");
+    expect(p.payment_reference).toBeNull();
+    expect(p.paid_at).toBeNull();
     expect(p.delivery_method).toBe("pickup");
+
+    // Awaiting payment → paid pipeline not run
+    expect(deps.markOrderPaid).not.toHaveBeenCalled();
 
     // Owner email sent once
     expect(deps.sendOwnerEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("paid path: records payment ref + paid_at and runs the paid pipeline (copy + receipt)", async () => {
+    const fakeAdmin = makeFakeAdmin();
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+      paymentProvider: {
+        createCharge: vi.fn(async () => ({
+          status: "paid" as const,
+          reference: "MOCK-order-uuid",
+        })),
+      },
+    });
+
+    const result = await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_DELIVERY,
+      },
+      deps,
+    );
+
+    expect(result.ok).toBe(true);
+
+    const { payload } = fakeAdmin._updates[0];
+    const p = payload as Record<string, unknown>;
+    expect(p.payment_status).toBe("paid");
+    expect(p.payment_reference).toBe("MOCK-order-uuid");
+    expect(p.paid_at).toBe("2024-06-01T12:00:00.000Z");
+
+    // Paid pipeline invoked with the order, friendly prefix and receipt context
+    expect(deps.markOrderPaid).toHaveBeenCalledTimes(1);
+    expect(deps.markOrderPaid).toHaveBeenCalledWith({
+      orderId: "order-uuid",
+      storagePrefix: FRIENDLY_PREFIX,
+      receipt: {
+        orderId: "order-uuid",
+        amount: 1200,
+        currency: "ILS",
+        reference: "MOCK-order-uuid",
+        paidAtISO: "2024-06-01T12:00:00.000Z",
+      },
+    });
+  });
+
+  it("does not fail (ok:true) when the paid pipeline throws", async () => {
+    const deps = makeDeps({
+      paymentProvider: {
+        createCharge: vi.fn(async () => ({
+          status: "paid" as const,
+          reference: "MOCK-order-uuid",
+        })),
+      },
+      markOrderPaid: vi.fn(async () => {
+        throw new Error("S3 down");
+      }),
+    });
+
+    const result = await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_DELIVERY,
+      },
+      deps,
+    );
+
+    expect(result.ok).toBe(true);
   });
 
   it("does not fail (ok:true) when sendOwnerEmail throws", async () => {
@@ -348,7 +475,7 @@ describe("confirmOrder", () => {
     expect(p.ship_postal_code).toBeNull();
   });
 
-  it("returns ok:false payment_failed when the provider declines; no DB update, no email", async () => {
+  it("returns ok:false payment_failed when the provider declines; no order update, no email, no paid pipeline", async () => {
     const fakeAdmin = makeFakeAdmin();
     const deps = makeDeps({
       admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
@@ -371,6 +498,7 @@ describe("confirmOrder", () => {
 
     expect(result).toEqual({ ok: false, message: "payment_failed" });
     expect(fakeAdmin._updates).toHaveLength(0);
+    expect(deps.markOrderPaid).not.toHaveBeenCalled();
     expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
   });
 

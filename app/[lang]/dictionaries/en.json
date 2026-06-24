@@ -180,7 +180,11 @@
     "hidePassword": "Hide password",
     "submitting": "Submitting…",
     "checkEmail": "Check your email to confirm your account.",
-    "accountLink": "My account"
+    "accountLink": "My account",
+    "accountMenu": "Account menu",
+    "ordersLink": "Orders",
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as"
   },
   "stickers": {
     "meta": {
@@ -258,7 +262,8 @@
       "methodPickup": "Pickup in Holon",
       "methodShipping": "Ship to my address",
       "fields": {
-        "fullName": "Full name",
+        "firstName": "First name",
+        "lastName": "Last name",
         "phone": "Phone",
         "email": "Email",
         "addressLine1": "Address",

@@ -72,7 +72,8 @@ const dict = {
     methodPickup: "Pickup in Holon",
     methodShipping: "Ship to address",
     fields: {
-      fullName: "Full name",
+      firstName: "First name",
+      lastName: "Last name",
       phone: "Phone",
       email: "Email",
       addressLine1: "Address",
@@ -146,7 +147,8 @@ const order: OrderView = {
   },
   delivery: {
     method: "shipping",
-    fullName: "Test User",
+    firstName: "Test",
+    lastName: "User",
     phone: "0501234567",
     email: "test@example.com",
     addressLine1: "HaSadna 8",

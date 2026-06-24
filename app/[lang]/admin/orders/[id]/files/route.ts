@@ -35,6 +35,17 @@ export async function GET(
 
   // 2. Load the order's stickers via the admin client (bypasses RLS)
   const admin = createAdminSupabaseClient();
+
+  // Paid orders are served from the paid bucket (where the order folder was
+  // copied); everything else from the orders bucket. The friendly storage_key
+  // is identical in both buckets.
+  const { data: order } = await admin
+    .from("orders")
+    .select("paid_at")
+    .eq("id", orderId)
+    .maybeSingle();
+  const bucket = order?.paid_at ? ("paid" as const) : ("orders" as const);
+
   const { data: stickers, error } = await admin
     .from("order_stickers")
     .select("id, storage_key, original_filename")
@@ -51,7 +62,7 @@ export async function GET(
   // 3. Generate presigned download URLs for each sticker
   const files = await Promise.all(
     (stickers as StickerRow[]).map(async (sticker) => {
-      const url = await presignDownload(sticker.storage_key);
+      const url = await presignDownload(sticker.storage_key, { bucket });
       return {
         filename: sticker.original_filename,
         url,

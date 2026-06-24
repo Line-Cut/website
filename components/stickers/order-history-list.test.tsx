@@ -88,7 +88,8 @@ const dict = {
     methodPickup: "",
     methodShipping: "",
     fields: {
-      fullName: "",
+      firstName: "",
+      lastName: "",
       phone: "",
       email: "",
       addressLine1: "",
@@ -166,7 +167,8 @@ const makeOrder = (overrides: Partial<OrderView> = {}): OrderView => ({
   },
   delivery: {
     method: "pickup",
-    fullName: "Test User",
+    firstName: "Test",
+    lastName: "User",
     phone: "0501234567",
     email: "test@example.com",
   },

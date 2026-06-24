@@ -102,7 +102,8 @@ const dict = {
     methodPickup: "Pickup",
     methodShipping: "Shipping",
     fields: {
-      fullName: "Full name",
+      firstName: "First name",
+      lastName: "Last name",
       phone: "Phone",
       email: "Email",
       addressLine1: "Address",

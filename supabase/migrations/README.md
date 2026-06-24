@@ -9,6 +9,12 @@ table, so each migration runs **exactly once** per database — locally and on d
 Current migrations:
 - `<ts>_orders.sql` — `orders` + `order_stickers` tables, enums, indexes,
   `updated_at` trigger, and Row-Level Security for the sticker shop.
+- `<ts>_add_ship_notes.sql` — adds `orders.ship_notes`.
+- `<ts>_phone_friendly_storage_payment.sql` — splits the contact name
+  (`contact_first_name`/`contact_last_name`), records the friendly S3 folder
+  (`storage_prefix`), adds payment/receipt columns (`payment_reference`,
+  `paid_at`, `receipt_storage_key`, `payment_meta`), and a CHECK requiring
+  `contact_phone` on confirmed orders.
 
 ## One-time setup
 

@@ -54,7 +54,9 @@ export function OrderReceipt({ order, dict, locale }: Props) {
             ? dict.receipt.deliveryTo
             : dict.checkout.methodPickup}
         </h3>
-        <p className="text-ink">{delivery.fullName}</p>
+        <p className="text-ink">
+          {[delivery.firstName, delivery.lastName].filter(Boolean).join(" ")}
+        </p>
         <p>
           <span dir="ltr" className="text-ink">
             {delivery.phone}

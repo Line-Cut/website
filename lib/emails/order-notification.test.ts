@@ -25,7 +25,8 @@ const baseInput: OwnerOrderEmailInput = {
   contactPhone: "+972-50-123-4567",
   delivery: {
     method: "pickup",
-    fullName: "Dana Cohen",
+    firstName: "Dana",
+    lastName: "Cohen",
     phone: "+972-50-123-4567",
     email: "dana@example.com",
   },
@@ -74,7 +75,8 @@ describe("buildOwnerOrderEmail", () => {
       ...baseInput,
       delivery: {
         method: "shipping",
-        fullName: "Dana Cohen",
+        firstName: "Dana",
+        lastName: "Cohen",
         phone: "+972-50-123-4567",
         email: "dana@example.com",
         addressLine1: "123 Herzl St",

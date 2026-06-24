@@ -64,7 +64,8 @@ const dict = {
     methodPickup: "",
     methodShipping: "",
     fields: {
-      fullName: "",
+      firstName: "",
+      lastName: "",
       phone: "",
       email: "",
       addressLine1: "",

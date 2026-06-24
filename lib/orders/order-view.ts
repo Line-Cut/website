@@ -22,6 +22,8 @@ type OrderRow = {
   price_total: number;
   price_currency: string;
   contact_name: string;
+  contact_first_name: string | null;
+  contact_last_name: string | null;
   contact_phone: string | null;
   contact_email: string;
   delivery_method: string;
@@ -72,7 +74,10 @@ function mapRowToOrderView(row: OrderRow, stickerCount: number): OrderView {
     },
     delivery: {
       method: row.delivery_method as "pickup" | "shipping",
-      fullName: row.contact_name,
+      // Prefer the split columns; fall back to the legacy full name for rows
+      // written before the split (whole name lands in firstName).
+      firstName: row.contact_first_name ?? row.contact_name,
+      lastName: row.contact_last_name ?? "",
       phone: row.contact_phone ?? "",
       email: row.contact_email,
       addressLine1: row.ship_address_line1 ?? undefined,

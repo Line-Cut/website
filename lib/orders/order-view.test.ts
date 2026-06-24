@@ -153,7 +153,8 @@ describe("getOrderByGuestToken", () => {
 
     // Delivery
     expect(result!.delivery.method).toBe("pickup");
-    expect(result!.delivery.fullName).toBe("Test User");
+    expect(result!.delivery.firstName).toBe("Test User");
+    expect(result!.delivery.lastName).toBe("");
     expect(result!.delivery.phone).toBe("0501234567");
     expect(result!.delivery.email).toBe("test@example.com");
     expect(result!.delivery.addressLine1).toBeUndefined();

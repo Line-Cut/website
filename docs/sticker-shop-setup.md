@@ -72,19 +72,34 @@ the Supabase SQL editor (paste & run) or the Supabase CLI. Just get me the keys.
 
 ## 3. AWS S3 — file storage (≈15 min)
 
-Stores the uploaded `.webp` stickers, organized **per client, per order**
-(`{clientKey}/{orderId}/{stickerId}.webp`). The bucket stays **private**; the
-browser uploads via short-lived presigned URLs.
+The shop uses **two private buckets**:
 
-### 3a. Create the bucket
+- **Orders bucket** (`S3_STICKERS_BUCKET`) — every order. The browser uploads
+  `.webp` stickers here via short-lived presigned PUT URLs. At checkout the files
+  are re-keyed into a friendly per-order folder
+  `<orderId>-<firstName>-<lastName>-<phone>/`, and a `metadata.pdf` (client
+  details) is written alongside them.
+- **Paid bucket** (`S3_STICKERS_PAID_BUCKET`) — when payment succeeds, the order
+  folder is copied here and a `receipt.pdf` is written into it.
+
+Both stay **private**; access is only ever via presigned URLs generated
+server-side. The browser only ever touches the orders bucket (the paid copy +
+receipt are written server-side), so **only the orders bucket needs CORS.**
+
+### 3a. Create the buckets
 1. AWS Console → **S3 → Create bucket**.
-2. Name it (e.g. `linecut-order-stickers`) → `S3_STICKERS_BUCKET`.
-3. Region: pick one (e.g. `eu-central-1`) → `AWS_REGION`.
-4. **Block Public Access: leave ALL boxes checked (fully private).** Access is
-   only ever via presigned URLs we generate server-side.
+2. Orders bucket: name it (e.g. `linecut-order-stickers`) → `S3_STICKERS_BUCKET`.
+3. Paid bucket: create a second bucket (e.g. `linecut-paid-orders`) →
+   `S3_STICKERS_PAID_BUCKET`.
+4. Region: pick one (e.g. `eu-central-1`) → `AWS_REGION` (use the **same** region
+   for both buckets — copies are cross-bucket within one region).
+5. **Block Public Access: leave ALL boxes checked (fully private)** on both.
+   Access is only ever via presigned URLs we generate server-side.
 
-### 3b. Add a CORS rule (so the browser can PUT directly to the bucket)
-Bucket → **Permissions → Cross-origin resource sharing (CORS)** → paste:
+### 3b. Add a CORS rule (orders bucket only)
+The browser uploads directly only to the **orders** bucket, so only it needs
+CORS. Orders bucket → **Permissions → Cross-origin resource sharing (CORS)** →
+paste:
 
 ```json
 [
@@ -115,18 +130,26 @@ a CORS error.
       "Sid": "LineCutStickerObjects",
       "Effect": "Allow",
       "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
-      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME/*"
+      "Resource": [
+        "arn:aws:s3:::ORDERS_BUCKET_NAME/*",
+        "arn:aws:s3:::PAID_BUCKET_NAME/*"
+      ]
     },
     {
       "Sid": "LineCutStickerList",
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
-      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME"
+      "Resource": [
+        "arn:aws:s3:::ORDERS_BUCKET_NAME",
+        "arn:aws:s3:::PAID_BUCKET_NAME"
+      ]
     }
   ]
 }
 ```
-Replace `YOUR_BUCKET_NAME` with your bucket name (both lines).
+Replace `ORDERS_BUCKET_NAME` / `PAID_BUCKET_NAME` with your bucket names. The app
+copies objects orders→paid, so it needs `GetObject` on the orders bucket and
+`PutObject` on the paid bucket (both covered above).
 3. After creating the user → **Security credentials → Create access key** →
    choose "Application running outside AWS" → copy:
    - `AWS_ACCESS_KEY_ID`
@@ -149,8 +172,8 @@ variables (use your production values). Then:
 - [ ] `RESEND_API_KEY`, `CONTACT_EMAIL`, `CONTACT_FROM`, `OWNER_NOTIFY_EMAIL`
 - [ ] `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - [ ] Supabase: Email + Google providers enabled; Site URL + Redirect URLs set
-- [ ] `AWS_REGION`, `S3_STICKERS_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-- [ ] S3: bucket is private, CORS rule added, IAM user policy scoped to the bucket
+- [ ] `AWS_REGION`, `S3_STICKERS_BUCKET`, `S3_STICKERS_PAID_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- [ ] S3: both buckets private; CORS on the **orders** bucket; IAM policy scoped to **both** buckets
 
 Once these are in `.env.local`, tell me and I'll apply the database migration and
 build + verify the backend end-to-end.
