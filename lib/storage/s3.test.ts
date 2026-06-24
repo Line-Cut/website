@@ -94,6 +94,7 @@ import {
   putObject,
   copyObject,
   copyPrefix,
+  deleteObjects,
 } from "./s3";
 
 // The mock factory creates mockSend as vi.fn() and attaches it as instance.send,
@@ -407,5 +408,25 @@ describe("copyPrefix", () => {
     mockSend.mockResolvedValueOnce({ Contents: [], IsTruncated: false });
     await copyPrefix("missing/", "dest/");
     expect(mockSend).toHaveBeenCalledTimes(1); // only the list
+  });
+});
+
+describe("deleteObjects", () => {
+  test("deletes the given keys in one batch in the orders bucket", async () => {
+    mockSend.mockResolvedValueOnce({ Deleted: [] });
+    await deleteObjects(["a/1.webp", "a/2.webp"]);
+
+    expect(mockSend).toHaveBeenCalledTimes(1);
+    const cmd = mockSend.mock.calls[0][0];
+    expect(cmd).toBeInstanceOf(DeleteObjectsCommand);
+    expect((cmd as InstanceType<typeof DeleteObjectsCommand>).input).toMatchObject({
+      Bucket: "test-stickers-bucket",
+      Delete: { Objects: [{ Key: "a/1.webp" }, { Key: "a/2.webp" }] },
+    });
+  });
+
+  test("is a no-op when given no keys", async () => {
+    await deleteObjects([]);
+    expect(mockSend).not.toHaveBeenCalled();
   });
 });

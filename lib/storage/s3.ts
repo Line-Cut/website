@@ -169,6 +169,21 @@ export async function copyPrefix(
   } while (continuationToken);
 }
 
+/** Delete a specific set of object keys in one batch. No-op on empty input. */
+export async function deleteObjects(
+  keys: string[],
+  opts?: { bucket?: S3Bucket }
+): Promise<void> {
+  if (keys.length === 0) return;
+  const Bucket = resolveBucket(opts?.bucket);
+  await getClient().send(
+    new DeleteObjectsCommand({
+      Bucket,
+      Delete: { Objects: keys.map((Key) => ({ Key })) },
+    })
+  );
+}
+
 export async function deletePrefix(
   prefix: string,
   opts?: { bucket?: S3Bucket }
