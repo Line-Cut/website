@@ -7,6 +7,7 @@ import { getDictionary } from "./dictionaries";
 import { siteConfig } from "@/lib/site-config";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const display = Heebo({
   subsets: ["hebrew", "latin"],
@@ -55,6 +56,11 @@ export default async function RootLayout({
   if (!isLocale(lang)) notFound();
   const dir = lang === "he" ? "rtl" : "ltr";
   const dict = await getDictionary(lang);
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <html
       lang={lang}
@@ -62,7 +68,12 @@ export default async function RootLayout({
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-paper font-sans text-ink">
-        <Header lang={lang} dict={dict.nav} />
+        <Header
+          lang={lang}
+          dict={dict.nav}
+          authDict={dict.auth}
+          user={user ? { email: user.email ?? null } : null}
+        />
         <main className="flex-1">{children}</main>
         <Footer lang={lang} dict={dict.footer} />
       </body>

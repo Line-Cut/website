@@ -54,6 +54,10 @@ const dict = {
   submitting: "Submitting…",
   checkEmail: "Check your email to confirm your account.",
   accountLink: "My account",
+  accountMenu: "Account menu",
+  ordersLink: "Orders",
+  signOut: "Sign out",
+  signedInAs: "Signed in as",
 } as const;
 
 // ---------------------------------------------------------------------------
