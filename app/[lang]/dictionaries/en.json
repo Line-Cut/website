@@ -316,6 +316,15 @@
       "statusLabel": "Status",
       "totalLabel": "Total"
     },
+    "drafts": {
+      "heading": "In-progress orders",
+      "empty": "No saved drafts.",
+      "stickerCount": "{count} stickers · {copies} copies",
+      "continueEditing": "Continue editing",
+      "continueCheckout": "Continue to checkout",
+      "discard": "Discard",
+      "discardConfirm": "Discard this saved draft? This can't be undone."
+    },
     "email": {
       "subjectReceived": "Line Cut — we received your sticker order #{id}",
       "greeting": "Hi {name},",

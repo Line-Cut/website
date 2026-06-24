@@ -128,6 +128,15 @@ const dict = {
     savedToast: "Draft saved",
     loadError: "Couldn't load this draft. Please try again.",
   },
+  drafts: {
+    heading: "",
+    empty: "",
+    stickerCount: "",
+    continueEditing: "",
+    continueCheckout: "",
+    discard: "",
+    discardConfirm: "",
+  },
 };
 
 function makeWebp(name = "a.webp", bytes = 1024) {

@@ -316,6 +316,15 @@
       "statusLabel": "סטטוס",
       "totalLabel": "סה\"כ"
     },
+    "drafts": {
+      "heading": "הזמנות בתהליך",
+      "empty": "אין טיוטות שמורות.",
+      "stickerCount": "{count} מדבקות · {copies} עותקים",
+      "continueEditing": "המשך עריכה",
+      "continueCheckout": "המשך לתשלום",
+      "discard": "מחיקה",
+      "discardConfirm": "למחוק את הטיוטה השמורה? לא ניתן לשחזר."
+    },
     "email": {
       "subjectReceived": "ליין קאט — קיבלנו את הזמנת המדבקות שלכם #{id}",
       "greeting": "שלום {name},",
