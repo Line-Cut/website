@@ -175,8 +175,25 @@ export function StickerTool({ dict, lang, isSignedIn, initialDraft = null }: Pro
       return null;
     }
 
-    // Mark uploaded local stickers as remote now (so a second save doesn't re-add them).
-    setItems((prev) => prev.map((i) => (i.remote ? i : { ...i, status: "ready" as const, remote: true })));
+    // Reconcile each just-saved local sticker to its SERVER row (id + key) and
+    // mark it remote, so a subsequent save sends real DB ids as keepStickerIds
+    // (never the client UUID). uploads[i] aligns 1:1 with newLocal[i].
+    const serverByLocalId = new Map(
+      newLocal.map((s, i) => [
+        s.id,
+        { id: uploads[i].stickerId, key: uploads[i].key },
+      ]),
+    );
+    for (const s of newLocal) filesRef.current.delete(s.id); // file no longer needed
+    setItems((prev) =>
+      prev.map((i) => {
+        if (i.remote) return i;
+        const server = serverByLocalId.get(i.id);
+        return server
+          ? { ...i, status: "ready" as const, remote: true, id: server.id, storageKey: server.key }
+          : { ...i, status: "ready" as const, remote: true };
+      }),
+    );
     return handle;
   }
 
@@ -196,8 +213,13 @@ export function StickerTool({ dict, lang, isSignedIn, initialDraft = null }: Pro
     setSubmitting(true);
     setSubmitError(null);
     const handle = await persistDraft();
-    setSubmitting(false);
-    if (handle) router.push(`/${lang}/account/orders`);
+    if (handle) {
+      // Keep `submitting` set through navigation so a double-click can't fire a
+      // second save (which would re-key the just-saved stickers).
+      router.push(`/${lang}/account/orders`);
+    } else {
+      setSubmitting(false);
+    }
   }
 
   const steps = [
