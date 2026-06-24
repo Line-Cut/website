@@ -10,7 +10,17 @@ import {
   copyPrefix,
   putObject,
   deletePrefix,
+  presignDownload,
+  deleteObjects,
 } from "@/lib/storage/s3";
+import { updateDraft } from "@/lib/orders/update-draft";
+import type { UpdateDraftResult } from "@/lib/orders/update-draft";
+import {
+  getUserDrafts as getUserDraftsCore,
+  getDraftForEdit as getDraftForEditCore,
+} from "@/lib/orders/draft-view";
+import type { DraftListItem, DraftEditData } from "@/lib/orders/draft-view";
+import { discardDraft as discardDraftCore } from "@/lib/orders/discard-draft";
 import { receiptKey } from "@/lib/storage/keys";
 import { getPaymentProvider } from "@/lib/payments/index";
 import { createDraft } from "@/lib/orders/create-draft";
@@ -99,5 +109,63 @@ export async function confirmOrder(input: {
       }),
     sendOwnerEmail,
     ownerFilesUrlFor: (id) => `${siteConfig.url}/he/admin/orders/${id}/files`,
+  });
+}
+
+export async function updateOrderDraft(input: {
+  orderId: string;
+  keepStickerIds: string[];
+  addStickers: unknown[];
+  copies: number;
+}): Promise<UpdateDraftResult> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "not_signed_in" };
+
+  return updateDraft(input, {
+    admin: createAdminSupabaseClient(),
+    presignUpload,
+    deleteObjects: (keys) => deleteObjects(keys),
+    userId: user.id,
+  });
+}
+
+export async function getUserDrafts(): Promise<DraftListItem[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  return getUserDraftsCore({
+    admin: createAdminSupabaseClient(),
+    userId: user.id,
+    presignDownload,
+  });
+}
+
+export async function getDraftForEdit(
+  orderId: string,
+): Promise<DraftEditData | null> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  return getDraftForEditCore(orderId, {
+    admin: createAdminSupabaseClient(),
+    userId: user.id,
+    presignDownload,
+  });
+}
+
+export async function discardDraft(
+  orderId: string,
+): Promise<{ ok: boolean; message?: string }> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, message: "not_signed_in" };
+
+  return discardDraftCore(orderId, {
+    admin: createAdminSupabaseClient(),
+    deletePrefix,
+    userId: user.id,
   });
 }
