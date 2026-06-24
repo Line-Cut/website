@@ -30,15 +30,51 @@ import type { ConfirmOrderResult } from "@/lib/orders/confirm-order";
 import { markOrderPaid as markOrderPaidCore } from "@/lib/orders/mark-paid";
 import { buildOrderMetadataPdf } from "@/lib/pdf/order-metadata-pdf";
 import { buildPlaceholderReceiptPdf } from "@/lib/pdf/receipt-pdf";
+import {
+  isStickerShopUser,
+  isStickerShopRestricted,
+} from "@/lib/auth/sticker-access";
 import { siteConfig } from "@/lib/site-config";
 
-export async function createOrderDraft(
-  input: unknown,
-): Promise<CreateDraftResult> {
+/**
+ * Access check for actions that DO support guests (create/confirm).
+ * Returns the current user (or null for a guest) plus whether access is
+ * allowed. When the shop is public, everyone is allowed; when restricted,
+ * only allow-listed signed-in users are. Gating in the actions is defense in
+ * depth — the pages redirect too, but actions are callable directly.
+ */
+async function checkStickerAccess(): Promise<{
+  allowed: boolean;
+  user: { id: string; email?: string } | null;
+}> {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  if (!isStickerShopRestricted()) return { allowed: true, user };
+  return { allowed: isStickerShopUser(user?.email), user };
+}
+
+/**
+ * Access check for actions that REQUIRE a signed-in user (the draft features
+ * own a `user_id`). Returns the user only when signed in AND — while the shop
+ * is restricted — on the allow-list; otherwise null.
+ */
+async function requireStickerUser() {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  if (isStickerShopRestricted() && !isStickerShopUser(user.email)) return null;
+  return user;
+}
+
+export async function createOrderDraft(
+  input: unknown,
+): Promise<CreateDraftResult> {
+  const { allowed, user } = await checkStickerAccess();
+  if (!allowed) return { ok: false, message: "forbidden" };
 
   return createDraft(input, {
     admin: createAdminSupabaseClient(),
@@ -52,6 +88,10 @@ export async function confirmOrder(input: {
   guestToken: string;
   delivery: unknown;
 }): Promise<ConfirmOrderResult> {
+  if (!(await checkStickerAccess()).allowed) {
+    return { ok: false, message: "forbidden" };
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
   const ownerEmail = process.env.OWNER_NOTIFY_EMAIL;
   const fromEmail = process.env.CONTACT_FROM;
@@ -118,9 +158,8 @@ export async function updateOrderDraft(input: {
   addStickers: unknown[];
   copies: number;
 }): Promise<UpdateDraftResult> {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, message: "not_signed_in" };
+  const user = await requireStickerUser();
+  if (!user) return { ok: false, message: "forbidden" };
 
   return updateDraft(input, {
     admin: createAdminSupabaseClient(),
@@ -131,8 +170,7 @@ export async function updateOrderDraft(input: {
 }
 
 export async function getUserDrafts(): Promise<DraftListItem[]> {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await requireStickerUser();
   if (!user) return [];
 
   return getUserDraftsCore({
@@ -145,8 +183,7 @@ export async function getUserDrafts(): Promise<DraftListItem[]> {
 export async function getDraftForEdit(
   orderId: string,
 ): Promise<DraftEditData | null> {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await requireStickerUser();
   if (!user) return null;
 
   return getDraftForEditCore(orderId, {
@@ -159,9 +196,8 @@ export async function getDraftForEdit(
 export async function discardDraft(
   orderId: string,
 ): Promise<{ ok: boolean; message?: string }> {
-  const supabase = await createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, message: "not_signed_in" };
+  const user = await requireStickerUser();
+  if (!user) return { ok: false, message: "forbidden" };
 
   return discardDraftCore(orderId, {
     admin: createAdminSupabaseClient(),

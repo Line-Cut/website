@@ -1,9 +1,11 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { isLocale } from "@/lib/i18n";
 import { getDictionary } from "../../dictionaries";
 import { StepIndicator } from "@/components/stickers/step-indicator";
 import { CheckoutForm } from "@/components/stickers/checkout-form";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isStickerShopUser, isStickerShopRestricted } from "@/lib/auth/sticker-access";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,13 @@ export default async function CheckoutPage({
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);
+
+  // Same allow-list gate as the builder page (skipped when STICKER_SHOP_PUBLIC).
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (isStickerShopRestricted() && !isStickerShopUser(user?.email)) {
+    redirect(user ? `/${lang}` : `/${lang}/login`);
+  }
 
   const steps = [
     { key: "build", label: dict.stickers.steps.build },

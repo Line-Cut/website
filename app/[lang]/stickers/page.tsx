@@ -1,10 +1,11 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
 import { isLocale } from "@/lib/i18n";
 import { getDictionary } from "../dictionaries";
 import { StickerTool } from "@/components/stickers/sticker-tool";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isStickerShopUser, isStickerShopRestricted } from "@/lib/auth/sticker-access";
 import { getDraftForEdit } from "@/app/actions/stickers";
 
 export async function generateMetadata({
@@ -34,8 +35,16 @@ export default async function StickersPage({
 
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  // While restricted, only allow-listed accounts may access the shop.
+  // Guests are sent to sign in; signed-in-but-not-allowed users go home.
+  // (STICKER_SHOP_PUBLIC opens it to everyone — no redirect.)
+  if (isStickerShopRestricted() && !isStickerShopUser(user?.email)) {
+    redirect(user ? `/${lang}` : `/${lang}/login`);
+  }
+
   const { draft } = await searchParams;
-  const initialDraft = user && draft ? await getDraftForEdit(draft) : null;
+  const initialDraft = draft ? await getDraftForEdit(draft) : null;
 
   return (
     <Container>
