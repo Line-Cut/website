@@ -81,16 +81,16 @@ export const CLIENTS: readonly Client[] = [
   { id: "einHarod", logo: "/clients/ein-harod.png" },
 ] as const;
 
-// Portfolio projects shown in the work grid, in display order. To add a real
-// project: replace `src` with "/work/<file>.jpg" and drop the file in /public/work.
-// Until real photos arrive these point at neutral placeholders.
+// Portfolio projects shown in the work grid, in display order. These are real
+// Line Cut projects; the files live in /public/custom-projects. To reorder,
+// move entries; to add one, drop the file in that folder and add its path here.
 export type Project = { src: string };
 
 export const PROJECTS: readonly Project[] = [
-  { src: "https://images.unsplash.com/photo-1558655146-9f40138edfeb?auto=format&fit=crop&w=900&q=80" },
-  { src: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=900&q=80" },
-  { src: "https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=900&q=80" },
-  { src: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?auto=format&fit=crop&w=900&q=80" },
-  { src: "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?auto=format&fit=crop&w=900&q=80" },
-  { src: "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=900&q=80" },
+  { src: "/custom-projects/airport-bird.png" },
+  { src: "/custom-projects/art-project.png" },
+  { src: "/custom-projects/acustic-wall.png" },
+  { src: "/custom-projects/frontdesk.png" },
+  { src: "/custom-projects/airport-stand.png" },
+  { src: "/custom-projects/valentino.jpeg" },
 ] as const;
