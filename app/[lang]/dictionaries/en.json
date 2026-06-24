@@ -196,6 +196,11 @@
       "details": "Details",
       "confirm": "Confirm"
     },
+    "builder": {
+      "saveDraft": "Save draft",
+      "savedToast": "Draft saved — you can finish it later from your account.",
+      "loadError": "Couldn't load this draft. Please try again."
+    },
     "intro": {
       "heading": "Order stickers",
       "subheading": "Upload your files, choose a quantity, and we'll handle the rest.",

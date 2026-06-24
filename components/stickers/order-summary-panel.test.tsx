@@ -104,6 +104,11 @@ const dict = {
   },
   account: { ordersHeading: "", empty: "", viewOrder: "", statusLabel: "", totalLabel: "" },
   email: { subjectReceived: "", greeting: "", bodyReceived: "", trackCta: "", signoff: "" },
+  builder: {
+    saveDraft: "Save draft",
+    savedToast: "Draft saved",
+    loadError: "Couldn't load this draft. Please try again.",
+  },
 };
 
 describe("OrderSummaryPanel", () => {

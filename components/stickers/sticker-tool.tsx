@@ -11,7 +11,7 @@ import { StickerUploader } from "@/components/stickers/sticker-uploader";
 import { UploadedGrid } from "@/components/stickers/uploaded-grid";
 import { A4Preview } from "@/components/stickers/a4-preview";
 import { OrderSummaryPanel } from "@/components/stickers/order-summary-panel";
-import { createOrderDraft } from "@/app/actions/stickers";
+import { createOrderDraft, updateOrderDraft } from "@/app/actions/stickers";
 import { uploadFiles } from "@/lib/stickers/upload-client";
 import { StepIndicator } from "@/components/stickers/step-indicator";
 
@@ -35,14 +35,31 @@ const SERVER_ERROR_KEY: Record<string, "serverError" | "notFound" | "uploadsInco
 type Props = {
   dict: Dictionary["stickers"];
   lang: "he" | "en";
+  isSignedIn: boolean;
+  initialDraft?: import("@/lib/orders/draft-view").DraftEditData | null;
 };
 
-export function StickerTool({ dict, lang }: Props) {
+export function StickerTool({ dict, lang, isSignedIn, initialDraft = null }: Props) {
   const router = useRouter();
-  const [items, setItems] = useState<LocalSticker[]>([]);
-  const [copies, setCopies] = useState(1);
+  const [items, setItems] = useState<LocalSticker[]>(() =>
+    (initialDraft?.stickers ?? []).map((s) => ({
+      id: s.id,
+      name: s.filename,
+      objectUrl: s.url,
+      bytes: s.bytes,
+      status: "ready" as const,
+      width: s.width ?? 0,
+      height: s.height ?? 0,
+      remote: true,
+      storageKey: s.storageKey,
+    })),
+  );
+  const [copies, setCopies] = useState(initialDraft?.copies ?? 1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Track the draft id (set from initialDraft, or assigned after first create).
+  const draftIdRef = useRef<string | null>(initialDraft?.orderId ?? null);
 
   // Keep a ref that always has the latest items for cleanup on unmount.
   const itemsRef = useRef<LocalSticker[]>(items);
@@ -53,11 +70,11 @@ export function StickerTool({ dict, lang }: Props) {
   // Map from sticker id → File (kept out of LocalSticker to avoid complicating state).
   const filesRef = useRef<Map<string, File>>(new Map());
 
-  // Revoke ALL remaining object URLs on unmount.
+  // Revoke object URLs for LOCAL stickers only on unmount (remote ones are presigned URLs).
   useEffect(() => {
     return () => {
       for (const item of itemsRef.current) {
-        URL.revokeObjectURL(item.objectUrl);
+        if (!item.remote) URL.revokeObjectURL(item.objectUrl);
       }
     };
   }, []);
@@ -99,25 +116,18 @@ export function StickerTool({ dict, lang }: Props) {
   function handleRemove(id: string) {
     setItems((prev) => {
       const item = prev.find((s) => s.id === id);
-      if (item) URL.revokeObjectURL(item.objectUrl);
-      filesRef.current.delete(id);
+      if (item && !item.remote) {
+        URL.revokeObjectURL(item.objectUrl);
+        filesRef.current.delete(id);
+      }
       return prev.filter((s) => s.id !== id);
     });
   }
 
-  async function handleContinue() {
-    if (items.length === 0 || submitting) return;
-
-    setSubmitting(true);
-    setSubmitError(null);
-
-    // 1. Mark all items uploading
-    setItems((prev) =>
-      prev.map((item) => ({ ...item, status: "uploading" as const, progress: 0 })),
-    );
-
-    // 2. Build sticker metadata
-    const stickers: StickerMeta[] = items.map((item) => ({
+  // Returns { orderId, guestToken } on success, or null on failure (sets submitError).
+  async function persistDraft(): Promise<{ orderId: string; guestToken: string } | null> {
+    const newLocal = items.filter((i) => !i.remote);
+    const addStickers: StickerMeta[] = newLocal.map((item) => ({
       filename: item.name,
       bytes: item.bytes,
       contentType: "image/webp",
@@ -125,58 +135,69 @@ export function StickerTool({ dict, lang }: Props) {
       height: item.height ?? 0,
     }));
 
-    // 3. Create the order draft on the server
-    let res: Awaited<ReturnType<typeof createOrderDraft>>;
-    try {
-      res = await createOrderDraft({ stickers, copies });
-    } catch {
-      setItems((prev) => prev.map((item) => ({ ...item, status: "ready" as const })));
-      setSubmitError(dict.errors.uploadFailed || "Upload failed. Please try again.");
-      setSubmitting(false);
-      return;
+    setItems((prev) => prev.map((i) => (i.remote ? i : { ...i, status: "uploading" as const, progress: 0 })));
+
+    let uploads: { stickerId: string; key: string; url: string }[];
+    let handle: { orderId: string; guestToken: string };
+
+    if (draftIdRef.current) {
+      const res = await updateOrderDraft({
+        orderId: draftIdRef.current,
+        keepStickerIds: items.filter((i) => i.remote).map((i) => i.id),
+        addStickers,
+        copies,
+      });
+      if (!res.ok) {
+        setSubmitError(dict.errors[SERVER_ERROR_KEY[res.message ?? ""] ?? "serverError"]);
+        return null;
+      }
+      uploads = res.uploads;
+      handle = { orderId: res.orderId, guestToken: res.guestToken };
+    } else {
+      const res = await createOrderDraft({ stickers: addStickers, copies });
+      if (!res.ok) {
+        setSubmitError(dict.errors[SERVER_ERROR_KEY[res.message ?? ""] ?? "serverError"]);
+        return null;
+      }
+      uploads = res.uploads;
+      handle = { orderId: res.orderId, guestToken: res.guestToken };
+      draftIdRef.current = res.orderId;
     }
 
-    if (!res.ok) {
-      setItems((prev) => prev.map((item) => ({ ...item, status: "ready" as const })));
-      const errKey = SERVER_ERROR_KEY[res.message ?? ""] ?? "serverError";
-      setSubmitError(dict.errors[errKey]);
-      setSubmitting(false);
-      return;
-    }
-
-    // 4. Pair presigned URLs with files and upload
-    const pairs = res.uploads.map((upload, i) => ({
-      url: upload.url,
-      file: filesRef.current.get(items[i].id) ?? new File([], items[i].name),
+    // Upload only the NEW local files, pairing by stickerId order == newLocal order.
+    const pairs = uploads.map((u, i) => ({
+      url: u.url,
+      file: filesRef.current.get(newLocal[i].id) ?? new File([], newLocal[i].name),
     }));
-
-    const uploadResults = await uploadFiles(pairs, {
-      onEach: (i, status) => {
-        setItems((prev) =>
-          prev.map((item, idx) =>
-            idx === i
-              ? { ...item, status: status === "done" ? ("ready" as const) : ("failed" as const) }
-              : item,
-          ),
-        );
-      },
-    });
-
-    const anyFailed = uploadResults.some((r) => !r.ok);
-
-    if (anyFailed) {
-      setSubmitError(dict.errors.uploadFailed || "Some files failed to upload. Please retry.");
-      setSubmitting(false);
-      return;
+    const results = await uploadFiles(pairs, { onEach: () => {} });
+    if (results.some((r) => !r.ok)) {
+      setSubmitError(dict.errors.uploadFailed);
+      return null;
     }
 
-    // 5. All uploads succeeded — persist order handle and navigate
-    sessionStorage.setItem(
-      "linecut_order",
-      JSON.stringify({ orderId: res.orderId, guestToken: res.guestToken }),
-    );
+    // Mark uploaded local stickers as remote now (so a second save doesn't re-add them).
+    setItems((prev) => prev.map((i) => (i.remote ? i : { ...i, status: "ready" as const, remote: true })));
+    return handle;
+  }
+
+  async function handleContinue() {
+    if (items.length === 0 || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    const handle = await persistDraft();
+    if (!handle) { setSubmitting(false); return; }
+    sessionStorage.setItem("linecut_order", JSON.stringify({ orderId: handle.orderId, guestToken: handle.guestToken }));
     router.push(`/${lang}/stickers/checkout`);
     // Note: don't clear submitting here — navigation is in progress
+  }
+
+  async function handleSaveDraft() {
+    if (items.length === 0 || submitting) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    const handle = await persistDraft();
+    setSubmitting(false);
+    if (handle) router.push(`/${lang}/account/orders`);
   }
 
   const steps = [
@@ -224,6 +245,21 @@ export function StickerTool({ dict, lang }: Props) {
             disabled={items.length === 0 || submitting}
           >
             {submitting ? dict.pricing.uploading : dict.pricing.continue}
+          </Button>
+        </div>
+      )}
+
+      {/* Save draft button (signed-in users only) */}
+      {isSignedIn && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={submitting || !hasItems}
+            onClick={handleSaveDraft}
+            className="min-h-[44px]"
+          >
+            {dict.builder.saveDraft}
           </Button>
         </div>
       )}

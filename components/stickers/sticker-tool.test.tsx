@@ -21,8 +21,10 @@ vi.mock("next/image", () => ({
 
 // Mock the server action
 const mockCreateOrderDraft = vi.fn();
+const mockUpdateOrderDraft = vi.fn();
 vi.mock("@/app/actions/stickers", () => ({
   createOrderDraft: (...args: unknown[]) => mockCreateOrderDraft(...args),
+  updateOrderDraft: (...args: unknown[]) => mockUpdateOrderDraft(...args),
   confirmOrder: vi.fn(),
 }));
 
@@ -154,6 +156,11 @@ const dict = {
     trackCta: "",
     signoff: "",
   },
+  builder: {
+    saveDraft: "Save draft",
+    savedToast: "Draft saved",
+    loadError: "Couldn't load this draft. Please try again.",
+  },
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -176,6 +183,7 @@ function getFileInput() {
 beforeEach(() => {
   mockPush.mockClear();
   mockCreateOrderDraft.mockClear();
+  mockUpdateOrderDraft.mockClear();
   mockUploadFiles.mockClear();
   vi.mocked(URL.createObjectURL).mockClear();
   vi.mocked(URL.revokeObjectURL).mockClear();
@@ -205,7 +213,7 @@ beforeEach(() => {
 
 describe("StickerTool", () => {
   it("initial render: uploader visible, no grid/preview, Build step is current", () => {
-    render(<StickerTool dict={dict} lang="en" />);
+    render(<StickerTool dict={dict} lang="en" isSignedIn={false} />);
 
     // Uploader is visible
     expect(screen.getByLabelText(dict.upload.browse)).toBeInTheDocument();
@@ -228,7 +236,7 @@ describe("StickerTool", () => {
   });
 
   it("adding a file shows grid thumbnail, count updates, and preview appears", () => {
-    render(<StickerTool dict={dict} lang="en" />);
+    render(<StickerTool dict={dict} lang="en" isSignedIn={false} />);
 
     const file = makeWebp("my-sticker.webp");
     fireEvent.change(getFileInput(), { target: { files: [file] } });
@@ -248,7 +256,7 @@ describe("StickerTool", () => {
   });
 
   it("removing an item revokes its object URL and returns to empty state", () => {
-    render(<StickerTool dict={dict} lang="en" />);
+    render(<StickerTool dict={dict} lang="en" isSignedIn={false} />);
 
     const file = makeWebp("to-remove.webp");
     fireEvent.change(getFileInput(), { target: { files: [file] } });
@@ -274,7 +282,7 @@ describe("StickerTool", () => {
   // ---------------------------------------------------------------------------
 
   it("Continue with 1 file: calls createOrderDraft, uploadFiles, sets sessionStorage, pushes to checkout", async () => {
-    render(<StickerTool dict={dict} lang="en" />);
+    render(<StickerTool dict={dict} lang="en" isSignedIn={false} />);
 
     // Add a file
     fireEvent.change(getFileInput(), { target: { files: [makeWebp("a.webp")] } });
@@ -325,7 +333,7 @@ describe("StickerTool", () => {
       message: "db_error",
     });
 
-    render(<StickerTool dict={dict} lang="en" />);
+    render(<StickerTool dict={dict} lang="en" isSignedIn={false} />);
     fireEvent.change(getFileInput(), { target: { files: [makeWebp()] } });
 
     const continueBtns = screen
@@ -352,7 +360,7 @@ describe("StickerTool", () => {
   });
 
   it("legacy test: clicking Continue (mocked flow) calls router.push with /{lang}/stickers/checkout", async () => {
-    render(<StickerTool dict={dict} lang="en" />);
+    render(<StickerTool dict={dict} lang="en" isSignedIn={false} />);
 
     // Add a file so Continue is enabled
     fireEvent.change(getFileInput(), { target: { files: [makeWebp()] } });
@@ -368,5 +376,22 @@ describe("StickerTool", () => {
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/en/stickers/checkout");
     });
+  });
+
+  it("signed-in: shows a Save draft button; guest: does not", () => {
+    const { rerender } = render(<StickerTool dict={dict} lang="en" isSignedIn={false} />);
+    expect(screen.queryByRole("button", { name: dict.builder.saveDraft })).toBeNull();
+    rerender(<StickerTool dict={dict} lang="en" isSignedIn={true} />);
+    expect(screen.getByRole("button", { name: dict.builder.saveDraft })).toBeInTheDocument();
+  });
+
+  it("loads an existing draft's stickers into the grid", () => {
+    const initialDraft = {
+      orderId: "o1", copies: 2,
+      stickers: [{ id: "s1", storageKey: "u_u1/o1/s1.webp", filename: "a.webp", width: 64, height: 64, bytes: 100, url: "https://signed/a" }],
+    };
+    render(<StickerTool dict={dict} lang="en" isSignedIn={true} initialDraft={initialDraft} />);
+    // remote thumbnail rendered (mocked next/image → <img>)
+    expect(screen.getByAltText("a.webp")).toBeInTheDocument();
   });
 });

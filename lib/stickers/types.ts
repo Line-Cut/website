@@ -14,6 +14,10 @@ export type LocalSticker = {
   progress?: number;  // 0..1 while uploading
   width?: number;     // natural image width in px (0 if unknown)
   height?: number;    // natural image height in px (0 if unknown)
+  /** True when this sticker is already uploaded (loaded from a saved draft). */
+  remote?: boolean;
+  /** S3 key for a remote sticker (its DB id is `id`). */
+  storageKey?: string;
 };
 
 /** Result of a successful sticker upload; `key` is the S3 object key. */

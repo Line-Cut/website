@@ -123,6 +123,11 @@ const dict = {
     trackCta: "",
     signoff: "",
   },
+  builder: {
+    saveDraft: "Save draft",
+    savedToast: "Draft saved",
+    loadError: "Couldn't load this draft. Please try again.",
+  },
 };
 
 function makeWebp(name = "a.webp", bytes = 1024) {

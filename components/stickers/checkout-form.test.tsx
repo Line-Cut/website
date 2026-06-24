@@ -146,6 +146,11 @@ const dict = {
     trackCta: "",
     signoff: "",
   },
+  builder: {
+    saveDraft: "Save draft",
+    savedToast: "Draft saved",
+    loadError: "Couldn't load this draft. Please try again.",
+  },
 } as const;
 
 // ---------------------------------------------------------------------------
