@@ -25,12 +25,16 @@ export function Header({
   authDict,
   user,
   isOwner = false,
+  canSeeStore = true,
+  canSeeStickers = true,
 }: {
   lang: Locale;
   dict: Dictionary["nav"];
   authDict: Dictionary["auth"];
   user: HeaderUser | null;
   isOwner?: boolean;
+  canSeeStore?: boolean;
+  canSeeStickers?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -101,24 +105,28 @@ export function Header({
 
         <div className="hidden items-center gap-3 lg:flex">
           <LanguageToggle lang={lang} />
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/${lang}/store`}>
-              <ShoppingBag className="size-4" aria-hidden="true" />
-              {dict.store}
-            </Link>
-          </Button>
-          <Button asChild size="sm" variant="outline">
-            <Link href={`/${lang}/stickers`}>
-              <Sticker className="size-4" aria-hidden="true" />
-              {dict.stickers}
-            </Link>
-          </Button>
+          {canSeeStore && (
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/${lang}/store`}>
+                <ShoppingBag className="size-4" aria-hidden="true" />
+                {dict.store}
+              </Link>
+            </Button>
+          )}
+          {canSeeStickers && (
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/${lang}/stickers`}>
+                <Sticker className="size-4" aria-hidden="true" />
+                {dict.stickers}
+              </Link>
+            </Button>
+          )}
           <Button asChild size="sm">
             <a href={whatsappLink(dict.ctaMessage)} target="_blank" rel="noopener noreferrer">
               {dict.cta}
             </a>
           </Button>
-          <CartBadge lang={lang} label={dict.store} />
+          {canSeeStore && <CartBadge lang={lang} label={dict.store} />}
           <div className="ms-1 border-s border-line ps-4">
             {renderAuthNav()}
           </div>
@@ -147,18 +155,22 @@ export function Header({
               </a>
             ))}
           {renderAuthNav()}
-          <Button asChild size="sm" variant="outline" className="w-full">
-            <Link href={`/${lang}/store`} onClick={() => setOpen(false)}>
-              <ShoppingBag className="size-4" aria-hidden="true" />
-              {dict.store}
-            </Link>
-          </Button>
-          <Button asChild size="sm" variant="outline" className="w-full">
-            <Link href={`/${lang}/stickers`} onClick={() => setOpen(false)}>
-              <Sticker className="size-4" aria-hidden="true" />
-              {dict.stickers}
-            </Link>
-          </Button>
+          {canSeeStore && (
+            <Button asChild size="sm" variant="outline" className="w-full">
+              <Link href={`/${lang}/store`} onClick={() => setOpen(false)}>
+                <ShoppingBag className="size-4" aria-hidden="true" />
+                {dict.store}
+              </Link>
+            </Button>
+          )}
+          {canSeeStickers && (
+            <Button asChild size="sm" variant="outline" className="w-full">
+              <Link href={`/${lang}/stickers`} onClick={() => setOpen(false)}>
+                <Sticker className="size-4" aria-hidden="true" />
+                {dict.stickers}
+              </Link>
+            </Button>
+          )}
           <div className="flex items-center justify-between pt-2">
             <LanguageToggle lang={lang} />
             <Button asChild size="sm">

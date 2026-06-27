@@ -10,6 +10,7 @@ import { Footer } from "@/components/layout/footer";
 import { CartProvider } from "@/components/store/cart-provider";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/admin-access";
+import { isFeatureAllowed } from "@/lib/auth/feature-access";
 
 const display = Heebo({
   subsets: ["hebrew", "latin"],
@@ -63,6 +64,13 @@ export default async function RootLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  const slimUser = user ? { id: user.id, email: user.email } : null;
+  const [canSeeStore, canSeeStickers, isOwner] = await Promise.all([
+    isFeatureAllowed("store", slimUser),
+    isFeatureAllowed("stickers", slimUser),
+    isAdmin(slimUser),
+  ]);
+
   return (
     <html
       lang={lang}
@@ -76,7 +84,9 @@ export default async function RootLayout({
             dict={dict.nav}
             authDict={dict.auth}
             user={user ? { email: user.email ?? null } : null}
-            isOwner={await isAdmin(user ? { id: user.id, email: user.email } : null)}
+            isOwner={isOwner}
+            canSeeStore={canSeeStore}
+            canSeeStickers={canSeeStickers}
           />
           <main className="flex-1">{children}</main>
           <Footer lang={lang} dict={dict.footer} />
