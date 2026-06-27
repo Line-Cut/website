@@ -421,7 +421,8 @@
     "nav": {
       "products": "Products",
       "orders": "Orders",
-      "admins": "Admins"
+      "admins": "Admins",
+      "access": "Feature access"
     },
     "products": {
       "heading": "Manage products",
@@ -521,6 +522,35 @@
       "errors": {
         "user_not_found": "No user found with that email — they must sign up first.",
         "invalid_email": "Invalid email",
+        "serverError": "Something went wrong. Please try again."
+      }
+    },
+    "access": {
+      "heading": "Feature access",
+      "description": "Choose whether each feature is open to everyone or limited to specific signed-in users.",
+      "features": {
+        "store": "Store",
+        "stickers": "Sticker shop"
+      },
+      "visibility": {
+        "public": "Public",
+        "restricted": "Restricted"
+      },
+      "publicNote": "Anyone can use this feature.",
+      "restrictedNote": "Only the users below (and admins) can use this feature.",
+      "addByEmail": "Allow a user by email",
+      "emailPlaceholder": "name@example.com",
+      "add": "Allow",
+      "adding": "Adding…",
+      "remove": "Remove",
+      "removeConfirm": "Remove this user's access?",
+      "empty": "No users allowed yet — add one above.",
+      "addedOn": "Added {date}",
+      "errors": {
+        "user_not_found": "No user found with that email — they must sign up first.",
+        "invalid_email": "Invalid email",
+        "invalid_feature": "Unknown feature",
+        "invalid_visibility": "Invalid visibility",
         "serverError": "Something went wrong. Please try again."
       }
     }

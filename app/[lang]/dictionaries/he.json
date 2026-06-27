@@ -421,7 +421,8 @@
     "nav": {
       "products": "מוצרים",
       "orders": "הזמנות",
-      "admins": "מנהלים"
+      "admins": "מנהלים",
+      "access": "גישה לפיצ׳רים"
     },
     "products": {
       "heading": "ניהול מוצרים",
@@ -521,6 +522,35 @@
       "errors": {
         "user_not_found": "לא נמצא משתמש עם אימייל זה — עליו להירשם תחילה.",
         "invalid_email": "אימייל לא תקין",
+        "serverError": "משהו השתבש. נסו שוב."
+      }
+    },
+    "access": {
+      "heading": "גישה לפיצ׳רים",
+      "description": "בחרו אם כל פיצ׳ר פתוח לכולם או מוגבל למשתמשים מחוברים מסוימים.",
+      "features": {
+        "store": "חנות",
+        "stickers": "חנות מדבקות"
+      },
+      "visibility": {
+        "public": "ציבורי",
+        "restricted": "מוגבל"
+      },
+      "publicNote": "כל אחד יכול להשתמש בפיצ׳ר הזה.",
+      "restrictedNote": "רק המשתמשים שלמטה (ומנהלים) יכולים להשתמש בפיצ׳ר הזה.",
+      "addByEmail": "הוספת משתמש מורשה לפי אימייל",
+      "emailPlaceholder": "name@example.com",
+      "add": "הוספה",
+      "adding": "מוסיף…",
+      "remove": "הסרה",
+      "removeConfirm": "להסיר את הגישה של המשתמש הזה?",
+      "empty": "אין עדיין משתמשים מורשים — הוסיפו אחד למעלה.",
+      "addedOn": "נוסף בתאריך {date}",
+      "errors": {
+        "user_not_found": "לא נמצא משתמש עם אימייל זה — עליו להירשם תחילה.",
+        "invalid_email": "אימייל לא תקין",
+        "invalid_feature": "פיצ׳ר לא מוכר",
+        "invalid_visibility": "ערך תצוגה לא תקין",
         "serverError": "משהו השתבש. נסו שוב."
       }
     }
