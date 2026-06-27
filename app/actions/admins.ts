@@ -1,9 +1,9 @@
 "use server";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isCurrentUserAdmin } from "@/lib/auth/admin-access";
+import { findUserByEmail } from "@/lib/auth/find-user";
 
 export type AdminUser = {
   userId: string;
@@ -12,22 +12,6 @@ export type AdminUser = {
 };
 
 type MutationResult = { ok: boolean; message?: string };
-
-/** Find an auth user by email (case-insensitive). Paginates the admin API. */
-async function findUserByEmail(
-  admin: SupabaseClient,
-  email: string,
-): Promise<{ id: string; email?: string } | null> {
-  const perPage = 200;
-  for (let page = 1; page <= 50; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
-    if (error || !data) return null;
-    const match = data.users.find((u) => u.email?.toLowerCase() === email);
-    if (match) return { id: match.id, email: match.email ?? undefined };
-    if (data.users.length < perPage) return null; // last page
-  }
-  return null;
-}
 
 /** DB-managed admins (the env OWNER_NOTIFY_EMAIL owners are not listed here). */
 export async function listAdmins(): Promise<AdminUser[]> {
