@@ -117,6 +117,8 @@
     "faq": "שאלות נפוצות",
     "contact": "צור קשר",
     "stickers": "חנות מדבקות",
+    "store": "חנות",
+    "admin": "ניהול",
     "cta": "התחלת פרויקט",
     "ctaMessage": "שלום, אשמח לקבל הצעת מחיר",
     "openMenu": "פתיחת תפריט",
@@ -195,11 +197,6 @@
       "build": "הכנה",
       "details": "פרטים",
       "confirm": "אישור"
-    },
-    "builder": {
-      "saveDraft": "שמירת טיוטה",
-      "savedToast": "הטיוטה נשמרה — אפשר להשלים אותה מאוחר יותר מהחשבון שלך.",
-      "loadError": "טעינת הטיוטה נכשלה. נסו שוב."
     },
     "intro": {
       "heading": "הזמינו מדבקות",
@@ -302,6 +299,7 @@
     "status": {
       "heading": "סטטוס הזמנה",
       "received": "התקבלה",
+      "seen": "נצפתה",
       "in_production": "בייצור",
       "ready": "מוכנה",
       "shipped": "נשלחה",
@@ -314,16 +312,8 @@
       "empty": "אין לכם הזמנות עדיין.",
       "viewOrder": "צפייה בהזמנה",
       "statusLabel": "סטטוס",
-      "totalLabel": "סה\"כ"
-    },
-    "drafts": {
-      "heading": "הזמנות בתהליך",
-      "empty": "אין טיוטות שמורות.",
-      "stickerCount": "{count} מדבקות · {copies} עותקים",
-      "continueEditing": "המשך עריכה",
-      "continueCheckout": "המשך לתשלום",
-      "discard": "מחיקה",
-      "discardConfirm": "למחוק את הטיוטה השמורה? לא ניתן לשחזר."
+      "totalLabel": "סה\"כ",
+      "itemsLabel": "{n} פריטים"
     },
     "email": {
       "subjectReceived": "ליין קאט — קיבלנו את הזמנת המדבקות שלכם #{id}",
@@ -331,6 +321,208 @@
       "bodyReceived": "תודה! קיבלנו את הזמנתכם של {sheets} גיליונות A4 ({copies} עותקים). נאשר ונסדר את התשלום לפני שמתחילים בהדפסה.",
       "trackCta": "מעקב אחר ההזמנה",
       "signoff": "— ליין קאט"
+    }
+  },
+  "store": {
+    "meta": {
+      "title": "החנות — ליין קאט",
+      "description": "מוצרים מודפסים מוכנים להזמנה מליין קאט."
+    },
+    "heading": "החנות",
+    "intro": "מוצרים מודפסים מוכנים — הוסיפו לעגלה והזמינו.",
+    "empty": "אין מוצרים זמינים כרגע.",
+    "viewProduct": "צפייה במוצר",
+    "addToCart": "הוספה לעגלה",
+    "added": "נוסף לעגלה",
+    "from": "החל מ-",
+    "pricePending": "המחיר יאושר לפני ההזמנה",
+    "backToStore": "חזרה לחנות",
+    "options": {
+      "choose": "בחרו {label}"
+    },
+    "cart": {
+      "heading": "עגלת הקניות",
+      "empty": "העגלה ריקה.",
+      "continueShopping": "המשך קנייה",
+      "remove": "הסרה",
+      "quantity": "כמות",
+      "unitPrice": "מחיר ליחידה",
+      "lineTotal": "סה\"כ שורה",
+      "total": "סה\"כ",
+      "checkout": "מעבר לתשלום",
+      "unavailableNote": "חלק מהפריטים אינם זמינים יותר והוסרו מהעגלה.",
+      "updatingPrices": "מעדכן מחירים…"
+    },
+    "lineItems": {
+      "product": "מוצר",
+      "options": "אפשרויות",
+      "qty": "כמות",
+      "unitPrice": "מחיר ליחידה",
+      "lineTotal": "סה\"כ"
+    },
+    "checkout": {
+      "heading": "פרטי משלוח",
+      "summary": "סיכום הזמנה",
+      "paymentNote": "לא נגבה תשלום בשלב זה — נאשר את ההזמנה ונסדר תשלום.",
+      "methodPickup": "איסוף עצמי מחולון",
+      "methodShipping": "משלוח לכתובת",
+      "emptyCart": "העגלה ריקה.",
+      "fields": {
+        "firstName": "שם פרטי",
+        "lastName": "שם משפחה",
+        "phone": "טלפון",
+        "email": "אימייל",
+        "addressLine1": "כתובת",
+        "addressLine2": "דירה / כניסה",
+        "city": "עיר",
+        "postalCode": "מיקוד",
+        "country": "מדינה",
+        "notes": "הערות"
+      },
+      "submit": "ביצוע הזמנה",
+      "placing": "מבצע…",
+      "back": "חזרה לעגלה"
+    },
+    "fieldErrors": {
+      "required": "שדה חובה",
+      "invalid_email": "אימייל לא תקין",
+      "invalid_phone": "טלפון לא תקין"
+    },
+    "errors": {
+      "serverError": "משהו השתבש. נסו שוב.",
+      "itemsUnavailable": "חלק מהפריטים אינם זמינים יותר. עדכנו את העגלה ונסו שוב.",
+      "paymentFailed": "התשלום נכשל.",
+      "emptyCart": "העגלה ריקה.",
+      "notFound": "ההזמנה לא נמצאה."
+    },
+    "receipt": {
+      "heading": "ההזמנה התקבלה",
+      "orderNumber": "הזמנה #{id}",
+      "placedOn": "בוצעה בתאריך {date}",
+      "noPaymentYet": "לא נגבה תשלום עדיין.",
+      "deliveryTo": "משלוח אל",
+      "itemsHeading": "פריטים",
+      "saveLink": "שמרו קישור זה למעקב אחר ההזמנה.",
+      "notFound": "ההזמנה לא נמצאה."
+    },
+    "status": {
+      "heading": "סטטוס הזמנה",
+      "received": "התקבלה",
+      "seen": "נצפתה",
+      "in_production": "בייצור",
+      "ready": "מוכנה",
+      "shipped": "נשלחה",
+      "delivered": "נמסרה",
+      "cancelled": "בוטלה",
+      "current": "שלב נוכחי"
+    }
+  },
+  "admin": {
+    "nav": {
+      "products": "מוצרים",
+      "orders": "הזמנות",
+      "admins": "מנהלים"
+    },
+    "products": {
+      "heading": "ניהול מוצרים",
+      "new": "מוצר חדש",
+      "edit": "עריכת מוצר",
+      "empty": "אין מוצרים עדיין.",
+      "backToList": "חזרה למוצרים",
+      "titleHe": "כותרת (עברית)",
+      "titleEn": "כותרת (אנגלית)",
+      "descriptionHe": "תיאור (עברית)",
+      "descriptionEn": "תיאור (אנגלית)",
+      "slug": "מזהה כתובת (slug)",
+      "status": "סטטוס",
+      "statusDraft": "טיוטה",
+      "statusActive": "פעיל",
+      "statusArchived": "בארכיון",
+      "price": "מחיר (אגורות)",
+      "currency": "מטבע",
+      "sortIndex": "סדר תצוגה",
+      "image": "תמונה",
+      "uploadImage": "העלאת תמונה",
+      "uploading": "מעלה…",
+      "noImage": "אין תמונה",
+      "options": "אפשרויות",
+      "addOption": "הוספת קבוצת אפשרויות",
+      "optionKey": "מפתח",
+      "optionLabelHe": "תווית (עברית)",
+      "optionLabelEn": "תווית (אנגלית)",
+      "removeOption": "הסרה",
+      "addChoice": "הוספת בחירה",
+      "choiceValue": "ערך",
+      "choiceLabelHe": "תווית (עברית)",
+      "choiceLabelEn": "תווית (אנגלית)",
+      "priceDelta": "תוספת מחיר (אגורות)",
+      "save": "שמירה",
+      "saving": "שומר…",
+      "create": "יצירה",
+      "delete": "מחיקה (לארכיון)",
+      "deleteConfirm": "להעביר את המוצר לארכיון? הוא ייעלם מהחנות.",
+      "errors": {
+        "required": "שדה חובה",
+        "invalid_slug": "מזהה לא תקין (אותיות קטנות, מספרים ומקפים)",
+        "invalid_price": "מחיר לא תקין",
+        "slug_taken": "המזהה כבר בשימוש",
+        "image_required_for_active": "מוצר פעיל חייב תמונה",
+        "duplicate_option_key": "מפתח אפשרות כפול",
+        "invalid_type": "סוג קובץ לא נתמך",
+        "upload_failed": "העלאת התמונה נכשלה",
+        "serverError": "משהו השתבש. נסו שוב."
+      }
+    },
+    "orders": {
+      "heading": "ניהול הזמנות",
+      "empty": "אין הזמנות עדיין.",
+      "backToList": "חזרה להזמנות",
+      "date": "תאריך",
+      "order": "הזמנה",
+      "customer": "לקוח",
+      "kind": "סוג",
+      "kindStickers": "מדבקות",
+      "kindStore": "חנות",
+      "items": "פריטים",
+      "total": "סה\"כ",
+      "status": "סטטוס",
+      "payment": "תשלום",
+      "viewOrder": "צפייה",
+      "filterStatus": "סינון לפי סטטוס",
+      "filterKind": "סינון לפי סוג",
+      "all": "הכול",
+      "contact": "פרטי קשר",
+      "delivery": "משלוח",
+      "updateStatus": "עדכון סטטוס",
+      "updatePayment": "עדכון תשלום",
+      "paymentReference": "אסמכתת תשלום",
+      "paidAt": "שולם בתאריך",
+      "receipt": "קבלה",
+      "viewReceipt": "צפייה בקבלה",
+      "noReceipt": "אין קבלה",
+      "viewFiles": "צפייה בקבצים",
+      "save": "שמירה",
+      "saving": "שומר…",
+      "saved": "נשמר",
+      "referencePlaceholder": "אסמכתה (אופציונלי)"
+    },
+    "admins": {
+      "heading": "מנהלים",
+      "description": "מנהלים יכולים לנהל מוצרים והזמנות.",
+      "bootstrapNote": "בעלים המוגדרים דרך OWNER_NOTIFY_EMAIL הם תמיד מנהלים ואינם מופיעים כאן.",
+      "addByEmail": "הוספת מנהל לפי אימייל",
+      "emailPlaceholder": "name@example.com",
+      "grant": "הוספה",
+      "granting": "מוסיף…",
+      "remove": "הסרה",
+      "removeConfirm": "להסיר את ההרשאה ממנהל זה?",
+      "empty": "אין מנהלים מוגדרים בבסיס הנתונים.",
+      "grantedOn": "נוסף בתאריך {date}",
+      "errors": {
+        "user_not_found": "לא נמצא משתמש עם אימייל זה — עליו להירשם תחילה.",
+        "invalid_email": "אימייל לא תקין",
+        "serverError": "משהו השתבש. נסו שוב."
+      }
     }
   }
 }

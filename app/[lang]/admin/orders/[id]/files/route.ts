@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { presignDownload } from "@/lib/storage/s3";
-import { isOwnerEmail } from "@/lib/auth/is-owner";
+import { isAdmin } from "@/lib/auth/admin-access";
 import { isLocale } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export async function GET(
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!isOwnerEmail(user?.email)) {
+  if (!(await isAdmin(user ? { id: user.id, email: user.email } : null))) {
     // Not an owner — redirect to login
     const { origin } = request.nextUrl;
     return NextResponse.redirect(`${origin}/${locale}/login`);

@@ -3,6 +3,7 @@ vi.mock("server-only", () => ({}));
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getOrderByGuestToken, getOrderByToken } from "@/lib/orders/order-view";
+import type { StickerOrderView } from "@/lib/orders/types";
 
 // ---------------------------------------------------------------------------
 // Fake admin client builder
@@ -87,6 +88,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 const baseOrderRow = {
   id: "order-abc",
   guest_token: "token-xyz",
+  order_kind: "stickers",
   status: "received",
   payment_status: "awaiting_payment",
   confirmed_at: "2026-06-20T10:00:00.000Z",
@@ -128,7 +130,7 @@ describe("getOrderByGuestToken", () => {
   });
 
   it("returns correct OrderView when row + stickers found", async () => {
-    const result = await getOrderByGuestToken("order-abc", "token-xyz");
+    const result = (await getOrderByGuestToken("order-abc", "token-xyz", "en")) as StickerOrderView | null;
 
     expect(result).not.toBeNull();
     expect(result!.orderId).toBe("order-abc");
@@ -162,7 +164,7 @@ describe("getOrderByGuestToken", () => {
   });
 
   it("uses confirmed_at as createdAtISO when available", async () => {
-    const result = await getOrderByGuestToken("order-abc", "token-xyz");
+    const result = (await getOrderByGuestToken("order-abc", "token-xyz", "en")) as StickerOrderView | null;
     expect(result!.createdAtISO).toBe(baseOrderRow.confirmed_at);
   });
 
@@ -174,7 +176,7 @@ describe("getOrderByGuestToken", () => {
       },
       stickersResult: { data: stickersData, error: null },
     });
-    const result = await getOrderByGuestToken("order-abc", "token-xyz");
+    const result = (await getOrderByGuestToken("order-abc", "token-xyz", "en")) as StickerOrderView | null;
     expect(result!.createdAtISO).toBe(baseOrderRow.created_at);
   });
 
@@ -183,7 +185,7 @@ describe("getOrderByGuestToken", () => {
       orderResult: { data: null, error: { message: "not found" } },
       stickersResult: { data: [], error: null },
     });
-    const result = await getOrderByGuestToken("order-abc", "token-xyz");
+    const result = (await getOrderByGuestToken("order-abc", "token-xyz", "en")) as StickerOrderView | null;
     expect(result).toBeNull();
   });
 
@@ -204,7 +206,7 @@ describe("getOrderByGuestToken", () => {
       stickersResult: { data: stickersData, error: null },
     });
 
-    const result = await getOrderByGuestToken("order-abc", "token-xyz");
+    const result = (await getOrderByGuestToken("order-abc", "token-xyz", "en")) as StickerOrderView | null;
     expect(result!.delivery.method).toBe("shipping");
     expect(result!.delivery.addressLine1).toBe("HaSadna 8");
     expect(result!.delivery.addressLine2).toBe("Floor 2");
@@ -225,13 +227,13 @@ describe("getOrderByGuestToken", () => {
       stickersResult: { data: stickersData, error: null },
     });
 
-    const result = await getOrderByGuestToken("order-abc", "token-xyz");
+    const result = (await getOrderByGuestToken("order-abc", "token-xyz", "en")) as StickerOrderView | null;
     expect(result!.delivery.notes).toBe("Please ring the bell");
   });
 
   it("maps null ship_notes to undefined delivery.notes", async () => {
     // baseOrderRow already has ship_notes: null
-    const result = await getOrderByGuestToken("order-abc", "token-xyz");
+    const result = (await getOrderByGuestToken("order-abc", "token-xyz", "en")) as StickerOrderView | null;
     expect(result!.delivery.notes).toBeUndefined();
   });
 });
@@ -249,7 +251,7 @@ describe("getOrderByToken", () => {
   });
 
   it("returns correct OrderView when token matches", async () => {
-    const result = await getOrderByToken("token-xyz");
+    const result = (await getOrderByToken("token-xyz", "en")) as StickerOrderView | null;
 
     expect(result).not.toBeNull();
     expect(result!.orderId).toBe("order-abc");
@@ -262,7 +264,7 @@ describe("getOrderByToken", () => {
       orderResult: { data: null, error: { message: "not found" } },
       stickersResult: { data: [], error: null },
     });
-    const result = await getOrderByToken("bad-token");
+    const result = (await getOrderByToken("bad-token", "en")) as StickerOrderView | null;
     expect(result).toBeNull();
   });
 });

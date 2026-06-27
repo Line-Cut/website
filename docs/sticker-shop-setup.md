@@ -173,7 +173,46 @@ variables (use your production values). Then:
 - [ ] `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - [ ] Supabase: Email + Google providers enabled; Site URL + Redirect URLs set
 - [ ] `AWS_REGION`, `S3_STICKERS_BUCKET`, `S3_STICKERS_PAID_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-- [ ] S3: both buckets private; CORS on the **orders** bucket; IAM policy scoped to **both** buckets
+- [ ] `S3_PRODUCTS_BUCKET` (public-read product images) + optional `S3_PRODUCTS_PUBLIC_URL` (CDN)
+- [ ] S3: sticker buckets private; **products bucket public-read + CORS (PUT/GET)**; CORS on the **orders** bucket; IAM policy scoped to **all three** buckets
 
 Once these are in `.env.local`, tell me and I'll apply the database migration and
 build + verify the backend end-to-end.
+
+## Store catalog + admin (Phase 3)
+
+The public store + owner admin reuse the Supabase/Resend/`OWNER_NOTIFY_EMAIL`
+setup. The only new piece is a **third S3 bucket for product images**.
+
+- [ ] `npm run db:push` — creates the `products` and `order_items` tables, the
+      `order_kind`/`product_status` enums + the `seen` order status.
+- [ ] **Create a public-read product-images bucket** → `S3_PRODUCTS_BUCKET`
+      (separate from the two private sticker buckets):
+      - **Block Public Access: OFF**, and add a bucket policy granting
+        `s3:GetObject` to everyone (so the storefront can serve images):
+        ```json
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Sid": "PublicReadProductImages",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::PRODUCTS_BUCKET_NAME/*"
+          }]
+        }
+        ```
+      - add a **CORS** rule allowing `PUT`/`GET` from the site origin (same JSON
+        as §3b — the owner uploads via presigned PUT from the browser);
+      - extend the **existing IAM user's** policy (§3c) to add
+        `"arn:aws:s3:::PRODUCTS_BUCKET_NAME/*"` to the `s3:PutObject` resources —
+        no new credentials.
+      - (Optional) put CloudFront/a custom domain in front and set
+        `S3_PRODUCTS_PUBLIC_URL` to it; otherwise the direct S3 URL is used.
+- [ ] Storefront `/[lang]/store` is **public** (guests can browse + order).
+- [ ] Admin (`/[lang]/admin/products`, `/[lang]/admin/orders`) is gated by
+      `OWNER_NOTIFY_EMAIL` (bootstrap admin) — the owner adds catalog products
+      (prices in **agorot**) and manages order status + payment status there.
+- [ ] More admins can be granted in-app at `/[lang]/admin/admins` (by email; the
+      person must have signed up first). The `OWNER_NOTIFY_EMAIL` account is always
+      an admin and can't be removed there.

@@ -3,6 +3,21 @@ import type { PriceBreakdown } from "@/lib/stickers/pricing";
 // Re-export PriceBreakdown from pricing for convenience
 export type { PriceBreakdown };
 
+// Shared order types now live in lib/orders/types.ts (generalized for stickers +
+// store orders). Re-exported here for back-compat — existing sticker code keeps
+// importing OrderStatus/PaymentStatus/DeliveryInput/OrderView from this module.
+export type {
+  OrderKind,
+  OrderStatus,
+  PaymentStatus,
+  DeliveryMethod,
+  DeliveryInput,
+  StoreLineItem,
+  StickerOrderView,
+  StoreOrderView,
+  OrderView,
+} from "@/lib/orders/types";
+
 export type LocalStickerStatus = "ready" | "uploading" | "failed";
 
 export type LocalSticker = {
@@ -29,36 +44,6 @@ export type UploadedSticker = {
   bytes: number;
 };
 
-export type OrderStatus =
-  | "received"
-  | "in_production"
-  | "ready"
-  | "shipped"
-  | "delivered"
-  | "cancelled";
-
-export type PaymentStatus =
-  | "awaiting_payment"
-  | "paid"
-  | "refunded"
-  | "waived";
-
-export type DeliveryMethod = "pickup" | "shipping";
-
-export type DeliveryInput = {
-  method: DeliveryMethod;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  email: string;
-  addressLine1?: string;
-  addressLine2?: string;
-  city?: string;
-  postalCode?: string;
-  country?: string;
-  notes?: string;
-};
-
 /** Client → server file descriptor for draft creation. */
 export type StickerMeta = {
   filename: string;
@@ -66,16 +51,4 @@ export type StickerMeta = {
   contentType: string;
   width: number;
   height: number;
-};
-
-/** Shared read-model used by receipt, order history, and tracking pages. */
-export type OrderView = {
-  orderId: string;
-  guestToken?: string;
-  status: OrderStatus;
-  paymentStatus: PaymentStatus;
-  createdAtISO: string;
-  copies: number;
-  breakdown: PriceBreakdown;
-  delivery: DeliveryInput;
 };

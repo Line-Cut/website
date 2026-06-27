@@ -4,9 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, Menu, Package, Sticker, UserRound, X } from "lucide-react";
+import { LogOut, Menu, Package, ShieldCheck, ShoppingBag, Sticker, UserRound, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
+import { CartBadge } from "@/components/store/cart-badge";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { SECTION_IDS } from "@/lib/content";
 import { whatsappLink } from "@/lib/site-config";
@@ -23,11 +24,13 @@ export function Header({
   dict,
   authDict,
   user,
+  isOwner = false,
 }: {
   lang: Locale;
   dict: Dictionary["nav"];
   authDict: Dictionary["auth"];
   user: HeaderUser | null;
+  isOwner?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -59,7 +62,9 @@ export function Header({
       <AuthNav
         lang={lang}
         dict={authDict}
+        navDict={dict}
         user={user}
+        isOwner={isOwner}
         onSignOut={handleSignOut}
         signingOut={signingOut}
       />
@@ -94,8 +99,14 @@ export function Header({
           </nav>
         )}
 
-        <div className="hidden items-center gap-4 lg:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <LanguageToggle lang={lang} />
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/${lang}/store`}>
+              <ShoppingBag className="size-4" aria-hidden="true" />
+              {dict.store}
+            </Link>
+          </Button>
           <Button asChild size="sm" variant="outline">
             <Link href={`/${lang}/stickers`}>
               <Sticker className="size-4" aria-hidden="true" />
@@ -107,6 +118,7 @@ export function Header({
               {dict.cta}
             </a>
           </Button>
+          <CartBadge lang={lang} label={dict.store} />
           <div className="ms-1 border-s border-line ps-4">
             {renderAuthNav()}
           </div>
@@ -136,6 +148,12 @@ export function Header({
             ))}
           {renderAuthNav()}
           <Button asChild size="sm" variant="outline" className="w-full">
+            <Link href={`/${lang}/store`} onClick={() => setOpen(false)}>
+              <ShoppingBag className="size-4" aria-hidden="true" />
+              {dict.store}
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="w-full">
             <Link href={`/${lang}/stickers`} onClick={() => setOpen(false)}>
               <Sticker className="size-4" aria-hidden="true" />
               {dict.stickers}
@@ -158,13 +176,17 @@ export function Header({
 function AuthNav({
   lang,
   dict,
+  navDict,
   user,
+  isOwner,
   onSignOut,
   signingOut,
 }: {
   lang: Locale;
   dict: Dictionary["auth"];
+  navDict: Dictionary["nav"];
   user: HeaderUser | null;
+  isOwner: boolean;
   onSignOut: () => void;
   signingOut: boolean;
 }) {
@@ -246,6 +268,16 @@ function AuthNav({
             <Package className="size-4 text-muted" aria-hidden="true" />
             {dict.ordersLink}
           </Link>
+          {isOwner && (
+            <Link
+              href={`/${lang}/admin/orders`}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-paper-2 hover:text-accent"
+              onClick={() => setMenuOpen(false)}
+            >
+              <ShieldCheck className="size-4 text-muted" aria-hidden="true" />
+              {navDict.admin}
+            </Link>
+          )}
           <button
             type="button"
             onClick={onSignOut}

@@ -21,6 +21,8 @@ const navDict = {
   openMenu: "Open menu",
   closeMenu: "Close menu",
   stickers: "Stickers",
+  store: "Store",
+  admin: "Admin",
 } as const;
 
 const authDict = {

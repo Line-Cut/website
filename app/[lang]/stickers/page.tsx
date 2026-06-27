@@ -6,7 +6,6 @@ import { getDictionary } from "../dictionaries";
 import { StickerTool } from "@/components/stickers/sticker-tool";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isStickerShopUser, isStickerShopRestricted } from "@/lib/auth/sticker-access";
-import { getDraftForEdit } from "@/app/actions/stickers";
 
 export async function generateMetadata({
   params,
@@ -24,10 +23,8 @@ export async function generateMetadata({
 
 export default async function StickersPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ lang: string }>;
-  searchParams: Promise<{ draft?: string }>;
 }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
@@ -43,12 +40,9 @@ export default async function StickersPage({
     redirect(user ? `/${lang}` : `/${lang}/login`);
   }
 
-  const { draft } = await searchParams;
-  const initialDraft = draft ? await getDraftForEdit(draft) : null;
-
   return (
     <Container>
-      <StickerTool dict={dict.stickers} lang={lang} isSignedIn={!!user} initialDraft={initialDraft} />
+      <StickerTool dict={dict.stickers} lang={lang} />
     </Container>
   );
 }

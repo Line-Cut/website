@@ -20,12 +20,15 @@ function getClient(): S3Client {
 }
 
 /**
- * Two buckets:
- *   • "orders" — every order (drafts + confirmed). The browser uploads here.
- *   • "paid"   — orders whose payment succeeded; the order folder is copied
- *                here and the receipt is written into it.
+ * Buckets:
+ *   • "orders"   — every sticker order (drafts + confirmed). Browser uploads here.
+ *   • "paid"     — sticker orders whose payment succeeded; the order folder is
+ *                  copied here and the receipt is written into it.
+ *   • "products" — PUBLIC-READ store product images. The owner uploads here via
+ *                  a presigned PUT (same IAM user); the storefront reads the
+ *                  public object URL directly (see productImagePublicUrl).
  */
-export type S3Bucket = "orders" | "paid";
+export type S3Bucket = "orders" | "paid" | "products";
 
 function getOrdersBucket(): string {
   const bucket = process.env.S3_STICKERS_BUCKET;
@@ -43,8 +46,36 @@ function getPaidBucket(): string {
   return bucket;
 }
 
+function getProductsBucket(): string {
+  const bucket = process.env.S3_PRODUCTS_BUCKET;
+  if (!bucket) {
+    throw new Error("S3_PRODUCTS_BUCKET env var is not set");
+  }
+  return bucket;
+}
+
 function resolveBucket(bucket?: S3Bucket): string {
-  return bucket === "paid" ? getPaidBucket() : getOrdersBucket();
+  if (bucket === "paid") return getPaidBucket();
+  if (bucket === "products") return getProductsBucket();
+  return getOrdersBucket();
+}
+
+/**
+ * Public URL for a product-images object. The bucket is public-read, so the
+ * storefront serves this URL directly (no presign). Prefer S3_PRODUCTS_PUBLIC_URL
+ * (a CloudFront/custom-domain base) when set; otherwise build the S3 URL from the
+ * bucket + region.
+ */
+export function productImagePublicUrl(key: string): string {
+  const encodedKey = key.split("/").map(encodeURIComponent).join("/");
+  const base = process.env.S3_PRODUCTS_PUBLIC_URL;
+  if (base) return `${base.replace(/\/+$/, "")}/${encodedKey}`;
+  const bucket = process.env.S3_PRODUCTS_BUCKET;
+  const region = process.env.AWS_REGION;
+  if (!bucket || !region) {
+    throw new Error("S3_PRODUCTS_BUCKET / AWS_REGION env vars are not set");
+  }
+  return `https://${bucket}.s3.${region}.amazonaws.com/${encodedKey}`;
 }
 
 export async function presignUpload(

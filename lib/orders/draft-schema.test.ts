@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseDraft, parseUpdateDraft } from "@/lib/orders/draft-schema";
+import { parseDraft } from "@/lib/orders/draft-schema";
 import { stickerConfig } from "@/lib/stickers/sticker-config";
 
 const validMeta = {
@@ -118,30 +118,5 @@ describe("parseDraft", () => {
       const keys = Object.keys(result.errors);
       expect(new Set(keys).size).toBe(keys.length);
     }
-  });
-});
-
-const meta = { filename: "a.webp", bytes: 1024, contentType: "image/webp", width: 64, height: 64 };
-
-describe("parseUpdateDraft", () => {
-  it("accepts keep-only", () => {
-    const r = parseUpdateDraft({ orderId: "o1", keepStickerIds: ["s1"], addStickers: [], copies: 1 });
-    expect(r.success).toBe(true);
-  });
-  it("accepts add-only", () => {
-    const r = parseUpdateDraft({ orderId: "o1", keepStickerIds: [], addStickers: [meta], copies: 2 });
-    expect(r.success).toBe(true);
-  });
-  it("rejects an empty final set (no keep, no add)", () => {
-    const r = parseUpdateDraft({ orderId: "o1", keepStickerIds: [], addStickers: [], copies: 1 });
-    expect(r.success).toBe(false);
-  });
-  it("rejects copies < 1", () => {
-    const r = parseUpdateDraft({ orderId: "o1", keepStickerIds: ["s1"], addStickers: [], copies: 0 });
-    expect(r.success).toBe(false);
-  });
-  it("rejects a non-webp added sticker", () => {
-    const r = parseUpdateDraft({ orderId: "o1", keepStickerIds: [], addStickers: [{ ...meta, contentType: "image/png" }], copies: 1 });
-    expect(r.success).toBe(false);
   });
 });

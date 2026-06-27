@@ -125,6 +125,7 @@ const dict = {
   status: {
     heading: "",
     received: "",
+    seen: "",
     in_production: "",
     ready: "",
     shipped: "",
@@ -138,6 +139,7 @@ const dict = {
     viewOrder: "",
     statusLabel: "",
     totalLabel: "",
+    itemsLabel: "",
   },
   email: {
     subjectReceived: "",

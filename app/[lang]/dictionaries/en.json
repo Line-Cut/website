@@ -117,6 +117,8 @@
     "faq": "FAQ",
     "contact": "Contact",
     "stickers": "Sticker shop",
+    "store": "Store",
+    "admin": "Admin",
     "cta": "Start a project",
     "ctaMessage": "Hi, I'd like a quote",
     "openMenu": "Open menu",
@@ -195,11 +197,6 @@
       "build": "Build",
       "details": "Details",
       "confirm": "Confirm"
-    },
-    "builder": {
-      "saveDraft": "Save draft",
-      "savedToast": "Draft saved — you can finish it later from your account.",
-      "loadError": "Couldn't load this draft. Please try again."
     },
     "intro": {
       "heading": "Order stickers",
@@ -302,6 +299,7 @@
     "status": {
       "heading": "Order status",
       "received": "Received",
+      "seen": "Seen",
       "in_production": "In production",
       "ready": "Ready",
       "shipped": "Shipped",
@@ -314,16 +312,8 @@
       "empty": "You have no orders yet.",
       "viewOrder": "View order",
       "statusLabel": "Status",
-      "totalLabel": "Total"
-    },
-    "drafts": {
-      "heading": "In-progress orders",
-      "empty": "No saved drafts.",
-      "stickerCount": "{count} stickers · {copies} copies",
-      "continueEditing": "Continue editing",
-      "continueCheckout": "Continue to checkout",
-      "discard": "Discard",
-      "discardConfirm": "Discard this saved draft? This can't be undone."
+      "totalLabel": "Total",
+      "itemsLabel": "{n} items"
     },
     "email": {
       "subjectReceived": "Line Cut — we received your sticker order #{id}",
@@ -331,6 +321,208 @@
       "bodyReceived": "Thanks! We received your order of {sheets} A4 sheets ({copies} copies). We'll confirm and arrange payment before printing.",
       "trackCta": "Track your order",
       "signoff": "— Line Cut"
+    }
+  },
+  "store": {
+    "meta": {
+      "title": "Store — Line Cut",
+      "description": "Ready-made printed products to order from Line Cut."
+    },
+    "heading": "Store",
+    "intro": "Ready-made printed products — add to cart and order.",
+    "empty": "No products available right now.",
+    "viewProduct": "View product",
+    "addToCart": "Add to cart",
+    "added": "Added to cart",
+    "from": "From",
+    "pricePending": "Price confirmed before ordering",
+    "backToStore": "Back to store",
+    "options": {
+      "choose": "Choose {label}"
+    },
+    "cart": {
+      "heading": "Your cart",
+      "empty": "Your cart is empty.",
+      "continueShopping": "Continue shopping",
+      "remove": "Remove",
+      "quantity": "Quantity",
+      "unitPrice": "Unit price",
+      "lineTotal": "Line total",
+      "total": "Total",
+      "checkout": "Checkout",
+      "unavailableNote": "Some items are no longer available and were removed from your cart.",
+      "updatingPrices": "Updating prices…"
+    },
+    "lineItems": {
+      "product": "Product",
+      "options": "Options",
+      "qty": "Qty",
+      "unitPrice": "Unit price",
+      "lineTotal": "Total"
+    },
+    "checkout": {
+      "heading": "Delivery details",
+      "summary": "Order summary",
+      "paymentNote": "No payment is taken now — we'll confirm your order and arrange payment.",
+      "methodPickup": "Pickup in Holon",
+      "methodShipping": "Ship to address",
+      "emptyCart": "Your cart is empty.",
+      "fields": {
+        "firstName": "First name",
+        "lastName": "Last name",
+        "phone": "Phone",
+        "email": "Email",
+        "addressLine1": "Address",
+        "addressLine2": "Apt / entrance",
+        "city": "City",
+        "postalCode": "Postal code",
+        "country": "Country",
+        "notes": "Notes"
+      },
+      "submit": "Place order",
+      "placing": "Placing…",
+      "back": "Back to cart"
+    },
+    "fieldErrors": {
+      "required": "Required",
+      "invalid_email": "Invalid email",
+      "invalid_phone": "Invalid phone"
+    },
+    "errors": {
+      "serverError": "Something went wrong. Please try again.",
+      "itemsUnavailable": "Some items are no longer available. Update your cart and try again.",
+      "paymentFailed": "Payment could not be processed.",
+      "emptyCart": "Your cart is empty.",
+      "notFound": "Order not found."
+    },
+    "receipt": {
+      "heading": "Order received",
+      "orderNumber": "Order #{id}",
+      "placedOn": "Placed on {date}",
+      "noPaymentYet": "No payment taken yet.",
+      "deliveryTo": "Shipping to",
+      "itemsHeading": "Items",
+      "saveLink": "Save this link to track your order.",
+      "notFound": "Order not found."
+    },
+    "status": {
+      "heading": "Order status",
+      "received": "Received",
+      "seen": "Seen",
+      "in_production": "In production",
+      "ready": "Ready",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled",
+      "current": "Current step"
+    }
+  },
+  "admin": {
+    "nav": {
+      "products": "Products",
+      "orders": "Orders",
+      "admins": "Admins"
+    },
+    "products": {
+      "heading": "Manage products",
+      "new": "New product",
+      "edit": "Edit product",
+      "empty": "No products yet.",
+      "backToList": "Back to products",
+      "titleHe": "Title (Hebrew)",
+      "titleEn": "Title (English)",
+      "descriptionHe": "Description (Hebrew)",
+      "descriptionEn": "Description (English)",
+      "slug": "URL slug",
+      "status": "Status",
+      "statusDraft": "Draft",
+      "statusActive": "Active",
+      "statusArchived": "Archived",
+      "price": "Price (agorot)",
+      "currency": "Currency",
+      "sortIndex": "Sort order",
+      "image": "Image",
+      "uploadImage": "Upload image",
+      "uploading": "Uploading…",
+      "noImage": "No image",
+      "options": "Options",
+      "addOption": "Add option group",
+      "optionKey": "Key",
+      "optionLabelHe": "Label (Hebrew)",
+      "optionLabelEn": "Label (English)",
+      "removeOption": "Remove",
+      "addChoice": "Add choice",
+      "choiceValue": "Value",
+      "choiceLabelHe": "Label (Hebrew)",
+      "choiceLabelEn": "Label (English)",
+      "priceDelta": "Price delta (agorot)",
+      "save": "Save",
+      "saving": "Saving…",
+      "create": "Create",
+      "delete": "Delete (archive)",
+      "deleteConfirm": "Archive this product? It will leave the storefront.",
+      "errors": {
+        "required": "Required",
+        "invalid_slug": "Invalid slug (lowercase letters, numbers, hyphens)",
+        "invalid_price": "Invalid price",
+        "slug_taken": "Slug already in use",
+        "image_required_for_active": "An active product needs an image",
+        "duplicate_option_key": "Duplicate option key",
+        "invalid_type": "Unsupported file type",
+        "upload_failed": "Image upload failed",
+        "serverError": "Something went wrong. Please try again."
+      }
+    },
+    "orders": {
+      "heading": "Manage orders",
+      "empty": "No orders yet.",
+      "backToList": "Back to orders",
+      "date": "Date",
+      "order": "Order",
+      "customer": "Customer",
+      "kind": "Type",
+      "kindStickers": "Stickers",
+      "kindStore": "Store",
+      "items": "Items",
+      "total": "Total",
+      "status": "Status",
+      "payment": "Payment",
+      "viewOrder": "View",
+      "filterStatus": "Filter by status",
+      "filterKind": "Filter by type",
+      "all": "All",
+      "contact": "Contact",
+      "delivery": "Delivery",
+      "updateStatus": "Update status",
+      "updatePayment": "Update payment",
+      "paymentReference": "Payment reference",
+      "paidAt": "Paid on",
+      "receipt": "Receipt",
+      "viewReceipt": "View receipt",
+      "noReceipt": "No receipt",
+      "viewFiles": "View files",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "referencePlaceholder": "Reference (optional)"
+    },
+    "admins": {
+      "heading": "Admins",
+      "description": "Admins can manage products and orders.",
+      "bootstrapNote": "Owners set via OWNER_NOTIFY_EMAIL are always admins and don't appear here.",
+      "addByEmail": "Add an admin by email",
+      "emailPlaceholder": "name@example.com",
+      "grant": "Add",
+      "granting": "Adding…",
+      "remove": "Remove",
+      "removeConfirm": "Remove admin access from this person?",
+      "empty": "No database-managed admins yet.",
+      "grantedOn": "Added {date}",
+      "errors": {
+        "user_not_found": "No user found with that email — they must sign up first.",
+        "invalid_email": "Invalid email",
+        "serverError": "Something went wrong. Please try again."
+      }
     }
   }
 }

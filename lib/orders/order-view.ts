@@ -2,23 +2,35 @@ import "server-only";
 
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { OrderView } from "@/lib/stickers/types";
+import type { Locale } from "@/lib/i18n";
+import type {
+  OrderView,
+  StickerOrderView,
+  StoreOrderView,
+  PriceBreakdown,
+} from "@/lib/orders/types";
+import {
+  ORDER_ITEM_COLUMNS,
+  mapStoreItems,
+  type OrderItemRow,
+} from "@/lib/orders/store-line-items";
 
 // ---------------------------------------------------------------------------
-// Internal helpers
+// Row types
 // ---------------------------------------------------------------------------
 
 type OrderRow = {
   id: string;
   guest_token: string;
+  order_kind: string;
   status: string;
   payment_status: string;
   confirmed_at: string | null;
   created_at: string;
-  copies: number;
-  price_sheets: number;
-  price_rate: number;
-  price_setup: number;
+  copies: number | null;
+  price_sheets: number | null;
+  price_rate: number | null;
+  price_setup: number | null;
   price_total: number;
   price_currency: string;
   contact_name: string;
@@ -35,43 +47,19 @@ type OrderRow = {
   ship_notes: string | null;
 };
 
-type StickerCountRow = {
-  order_id: string;
-};
+// ---------------------------------------------------------------------------
+// Mappers
+// ---------------------------------------------------------------------------
 
-async function countStickers(
-  admin: ReturnType<typeof createAdminSupabaseClient>,
-  orderId: string,
-): Promise<number> {
-  const { data, error } = await admin
-    .from("order_stickers")
-    .select("order_id")
-    .eq("order_id", orderId);
-
-  if (error || !data) return 0;
-  return (data as StickerCountRow[]).length;
-}
-
-function mapRowToOrderView(row: OrderRow, stickerCount: number): OrderView {
+function baseFields(row: OrderRow) {
   return {
     orderId: row.id,
     guestToken: row.guest_token,
     status: row.status as OrderView["status"],
     paymentStatus: row.payment_status as OrderView["paymentStatus"],
     createdAtISO: row.confirmed_at ?? row.created_at,
-    copies: row.copies,
-    breakdown: {
-      perSheet: 0,
-      sheetsPerSet: 0,
-      totalSheets: row.price_sheets,
-      perSheetRate: row.price_rate,
-      setupFee: row.price_setup,
-      sheetsSubtotal: row.price_total - row.price_setup,
-      total: row.price_total,
-      currency: row.price_currency,
-      uniqueCount: stickerCount,
-      copies: row.copies,
-    },
+    total: row.price_total,
+    currency: row.price_currency,
     delivery: {
       method: row.delivery_method as "pickup" | "shipping",
       // Prefer the split columns; fall back to the legacy full name for rows
@@ -87,24 +75,72 @@ function mapRowToOrderView(row: OrderRow, stickerCount: number): OrderView {
       country: row.ship_country ?? undefined,
       notes: row.ship_notes ?? undefined,
     },
+  } as const;
+}
+
+function stickerBreakdown(row: OrderRow, uniqueCount: number): PriceBreakdown {
+  const setupFee = row.price_setup ?? 0;
+  return {
+    perSheet: 0,
+    sheetsPerSet: 0,
+    totalSheets: row.price_sheets ?? 0,
+    perSheetRate: row.price_rate ?? 0,
+    setupFee,
+    sheetsSubtotal: row.price_total - setupFee,
+    total: row.price_total,
+    currency: row.price_currency,
+    uniqueCount,
+    copies: row.copies ?? 0,
   };
 }
 
+function toStickerView(row: OrderRow, uniqueCount: number): StickerOrderView {
+  return {
+    ...baseFields(row),
+    kind: "stickers",
+    copies: row.copies ?? 0,
+    breakdown: stickerBreakdown(row, uniqueCount),
+  };
+}
+
+function toStoreView(row: OrderRow, items: OrderItemRow[], locale: Locale): StoreOrderView {
+  return { ...baseFields(row), kind: "store", items: mapStoreItems(items, locale) };
+}
+
 // ---------------------------------------------------------------------------
-// Public API
+// Admin-client reads (guest token / tracking)
 // ---------------------------------------------------------------------------
+
+async function buildViewWithAdmin(
+  admin: ReturnType<typeof createAdminSupabaseClient>,
+  row: OrderRow,
+  locale: Locale,
+): Promise<OrderView> {
+  if (row.order_kind === "store") {
+    const { data: items } = await admin
+      .from("order_items")
+      .select(ORDER_ITEM_COLUMNS)
+      .eq("order_id", row.id)
+      .order("sort_index", { ascending: true });
+    return toStoreView(row, (items ?? []) as OrderItemRow[], locale);
+  }
+  const { data: stickers } = await admin
+    .from("order_stickers")
+    .select("order_id")
+    .eq("order_id", row.id);
+  return toStickerView(row, stickers?.length ?? 0);
+}
 
 /**
  * Fetch a confirmed order by orderId + guestToken.
- * Drafts (confirmed_at IS NULL) are not viewable.
- * Returns null if not found.
+ * Drafts (confirmed_at IS NULL) are not viewable. Returns null if not found.
  */
 export async function getOrderByGuestToken(
   orderId: string,
   guestToken: string,
+  locale: Locale,
 ): Promise<OrderView | null> {
   const admin = createAdminSupabaseClient();
-
   const { data, error } = await admin
     .from("orders")
     .select("*")
@@ -112,56 +148,57 @@ export async function getOrderByGuestToken(
     .eq("guest_token", guestToken)
     .not("confirmed_at", "is", null)
     .single();
-
   if (error || !data) return null;
-
-  const row = data as OrderRow;
-  const stickerCount = await countStickers(admin, row.id);
-  return mapRowToOrderView(row, stickerCount);
+  return buildViewWithAdmin(admin, data as OrderRow, locale);
 }
 
 /**
  * Fetch a confirmed order by guest_token alone (for the tracking page).
- * Drafts (confirmed_at IS NULL) are not viewable.
- * Returns null if not found.
+ * Drafts (confirmed_at IS NULL) are not viewable. Returns null if not found.
  */
 export async function getOrderByToken(
   token: string,
+  locale: Locale,
 ): Promise<OrderView | null> {
   const admin = createAdminSupabaseClient();
-
   const { data, error } = await admin
     .from("orders")
     .select("*")
     .eq("guest_token", token)
     .not("confirmed_at", "is", null)
     .single();
-
   if (error || !data) return null;
-
-  const row = data as OrderRow;
-  const stickerCount = await countStickers(admin, row.id);
-  return mapRowToOrderView(row, stickerCount);
+  return buildViewWithAdmin(admin, data as OrderRow, locale);
 }
 
-/**
- * Fetch all confirmed orders for a logged-in user.
- * Uses the RLS-scoped server client so only the user's own rows are returned.
- * Drafts (confirmed_at IS NULL) are excluded.
- * Returns an empty array if none found.
- */
-export async function getUserOrders(): Promise<OrderView[]> {
-  const supabase = await createServerSupabaseClient();
+// ---------------------------------------------------------------------------
+// RLS-scoped read (account orders)
+// ---------------------------------------------------------------------------
 
+/**
+ * Fetch all confirmed orders for a logged-in user via the RLS-scoped server
+ * client (only the user's own rows). Drafts are excluded. Embeds both child
+ * relations so sticker and store orders map without extra round-trips.
+ */
+export async function getUserOrders(locale: Locale): Promise<OrderView[]> {
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("orders")
-    .select("*, order_stickers(order_id)")
+    .select(`*, order_stickers(order_id), order_items(${ORDER_ITEM_COLUMNS})`)
     .not("confirmed_at", "is", null)
     .order("created_at", { ascending: false });
-
   if (error || !data) return [];
 
-  return (data as Array<OrderRow & { order_stickers?: StickerCountRow[] }>).map(
-    (row) => mapRowToOrderView(row, row.order_stickers?.length ?? 0),
+  return (
+    data as Array<
+      OrderRow & {
+        order_stickers?: { order_id: string }[];
+        order_items?: OrderItemRow[];
+      }
+    >
+  ).map((row) =>
+    row.order_kind === "store"
+      ? toStoreView(row, row.order_items ?? [], locale)
+      : toStickerView(row, row.order_stickers?.length ?? 0),
   );
 }

@@ -15,6 +15,17 @@ Current migrations:
   (`storage_prefix`), adds payment/receipt columns (`payment_reference`,
   `paid_at`, `receipt_storage_key`, `payment_meta`), and a CHECK requiring
   `contact_phone` on confirmed orders.
+- `<ts>_store_products.sql` — store catalog + generic order line items: adds the
+  `products` table (PUBLIC read of `status='active'` via RLS) and `order_items`
+  (same RLS as `order_stickers`); `product_status` + `order_kind` enums; a `seen`
+  value on `order_status`; relaxes the sticker-only price columns on `orders`
+  (`copies`/`price_sheets`/`price_rate` → nullable) behind a kind-gated CHECK; an
+  `order_kind` discriminator (default `stickers`) + `client_request_id`. (Product
+  images are NOT stored here — they live in a public-read AWS S3 bucket,
+  `S3_PRODUCTS_BUCKET`.)
+- `<ts>_admins.sql` — `admins` table (DB-managed admin grants layered on top of
+  the `OWNER_NOTIFY_EMAIL` env bootstrap). RLS default-deny, no policies
+  (service-role access only behind the admin guard).
 
 ## One-time setup
 
@@ -89,24 +100,28 @@ stays consistent for future migrations.)
 ### 1. RLS policies in place
 ```sql
 select tablename, policyname, cmd, roles
-from pg_policies where tablename in ('orders','order_stickers')
+from pg_policies where tablename in ('orders','order_stickers','order_items','products')
 order by tablename, policyname;
 ```
-Expected: **exactly two rows**, both `SELECT` for `{authenticated}` —
-`orders → own orders read`, `order_stickers → own order stickers read`. No anon
-policies, no write policies.
+Expected: **four rows** —
+`orders → own orders read` (SELECT, `{authenticated}`),
+`order_stickers → own order stickers read` (SELECT, `{authenticated}`),
+`order_items → own order items read` (SELECT, `{authenticated}`), and
+`products → active products are public` (SELECT, `{anon,authenticated}`).
+`products` is deliberately public (catalog, no PII); the three order tables have
+no anon and no write policies.
 
-### 2. RLS is enabled on both tables
+### 2. RLS is enabled on all tables
 ```sql
 select relname, relrowsecurity from pg_class
-where relname in ('orders','order_stickers');
+where relname in ('orders','order_stickers','order_items','products');
 ```
-Both `relrowsecurity` must be `true`.
+All four `relrowsecurity` must be `true`.
 
-### 3. Anon access denied (critical)
-With an **anon-key** client, `select * from orders;` and
-`select * from order_stickers;` must return **0 rows** (not an error). The
-controller verifies this automatically via the REST clients.
+### 3. Anon access denied for orders (critical)
+With an **anon-key** client, `select * from orders;`, `select * from order_stickers;`
+and `select * from order_items;` must return **0 rows** (not an error).
+`select * from products;` returns only `status='active'` rows (the public catalog).
 
 ### 4. updated_at trigger
 ```sql
@@ -123,11 +138,11 @@ required address fields set → succeeds.
 
 ## Security summary
 
-| Role          | orders                     | order_stickers        |
-|---------------|----------------------------|-----------------------|
-| anon          | no access                  | no access             |
-| authenticated | SELECT own rows            | SELECT own order rows |
-| service_role  | full access (bypasses RLS) | full access           |
+| Role          | orders                     | order_stickers / order_items | products                      |
+|---------------|----------------------------|------------------------------|-------------------------------|
+| anon          | no access                  | no access                    | SELECT `status='active'` only |
+| authenticated | SELECT own rows            | SELECT own order rows        | SELECT `status='active'` only |
+| service_role  | full access (bypasses RLS) | full access                  | full access (bypasses RLS)    |
 
 All application writes go through Server Actions using `SUPABASE_SERVICE_ROLE_KEY`
 (admin client, bypasses RLS). Guest-token reads also go through the admin client

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { OrderReceipt } from "@/components/stickers/order-receipt";
-import type { OrderView } from "@/lib/stickers/types";
+import type { StickerOrderView } from "@/lib/orders/types";
 
 vi.mock("next/image", () => ({
   default: (props: Record<string, unknown>) => {
@@ -103,6 +103,7 @@ const dict = {
   status: {
     heading: "Order status",
     received: "Received",
+    seen: "Seen",
     in_production: "In Production",
     ready: "Ready",
     shipped: "Shipped",
@@ -116,6 +117,7 @@ const dict = {
     viewOrder: "View order",
     statusLabel: "Status",
     totalLabel: "Total",
+    itemsLabel: "{n} items",
   },
   email: {
     subjectReceived: "",
@@ -140,12 +142,15 @@ const dict = {
   },
 };
 
-const order: OrderView = {
+const order: StickerOrderView = {
   orderId: "order-abc-123",
   guestToken: "guest-xyz",
+  kind: "stickers",
   status: "received",
   paymentStatus: "awaiting_payment",
   createdAtISO: "2026-06-20T10:00:00.000Z",
+  total: 2500,
+  currency: "ILS",
   copies: 2,
   breakdown: {
     uniqueCount: 3,

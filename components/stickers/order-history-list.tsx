@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatMoney } from "@/lib/stickers/format";
+import { formatMoney, interpolate } from "@/lib/stickers/format";
 import type { OrderView } from "@/lib/stickers/types";
 import type { Dictionary } from "@/lib/dictionary";
 import type { Locale } from "@/lib/i18n";
@@ -20,6 +20,7 @@ type StatusBadgeProps = {
 function OrderStatusBadge({ status, dict }: StatusBadgeProps) {
   const statusStyles: Record<OrderView["status"], string> = {
     received: "bg-accent/10 text-accent",
+    seen: "bg-accent/15 text-accent",
     in_production: "bg-accent/20 text-accent",
     ready: "bg-green-100 text-green-800",
     shipped: "bg-blue-100 text-blue-800",
@@ -55,11 +56,15 @@ export function OrderHistoryList({ orders, dict, locale, lang }: Props) {
         const formattedDate = new Intl.DateTimeFormat(bcp47).format(
           new Date(order.createdAtISO),
         );
-        const formattedTotal = formatMoney(
-          order.breakdown.total,
-          order.breakdown.currency,
-          locale,
-        );
+        const formattedTotal = formatMoney(order.total, order.currency, locale);
+        const summary =
+          order.kind === "stickers"
+            ? `${order.breakdown.uniqueCount} × ${order.breakdown.copies}`
+            : interpolate(dict.account.itemsLabel, { n: order.items.length });
+        const trackHref =
+          order.kind === "store"
+            ? `/${lang}/store/track/${order.guestToken}`
+            : `/${lang}/stickers/track/${order.guestToken}`;
 
         return (
           <li
@@ -74,10 +79,7 @@ export function OrderHistoryList({ orders, dict, locale, lang }: Props) {
                   {order.orderId.slice(0, 8)}…
                 </span>
               </p>
-              <p className="text-sm text-muted">
-                {order.breakdown.uniqueCount} ×{" "}
-                {order.breakdown.copies}
-              </p>
+              <p className="text-sm text-muted">{summary}</p>
             </div>
 
             {/* Middle: status badge + total */}
@@ -104,7 +106,7 @@ export function OrderHistoryList({ orders, dict, locale, lang }: Props) {
             {/* Right: view link via guest token */}
             {order.guestToken && (
               <Link
-                href={`/${lang}/stickers/track/${order.guestToken}`}
+                href={trackHref}
                 className="shrink-0 text-sm font-medium text-accent underline underline-offset-2 hover:text-accent/80"
               >
                 {dict.account.viewOrder}

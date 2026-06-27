@@ -11,7 +11,7 @@ import { StickerUploader } from "@/components/stickers/sticker-uploader";
 import { UploadedGrid } from "@/components/stickers/uploaded-grid";
 import { A4Preview } from "@/components/stickers/a4-preview";
 import { OrderSummaryPanel } from "@/components/stickers/order-summary-panel";
-import { createOrderDraft, updateOrderDraft } from "@/app/actions/stickers";
+import { createOrderDraft } from "@/app/actions/stickers";
 import { uploadFiles } from "@/lib/stickers/upload-client";
 import { StepIndicator } from "@/components/stickers/step-indicator";
 
@@ -35,31 +35,14 @@ const SERVER_ERROR_KEY: Record<string, "serverError" | "notFound" | "uploadsInco
 type Props = {
   dict: Dictionary["stickers"];
   lang: "he" | "en";
-  isSignedIn: boolean;
-  initialDraft?: import("@/lib/orders/draft-view").DraftEditData | null;
 };
 
-export function StickerTool({ dict, lang, isSignedIn, initialDraft = null }: Props) {
+export function StickerTool({ dict, lang }: Props) {
   const router = useRouter();
-  const [items, setItems] = useState<LocalSticker[]>(() =>
-    (initialDraft?.stickers ?? []).map((s) => ({
-      id: s.id,
-      name: s.filename,
-      objectUrl: s.url,
-      bytes: s.bytes,
-      status: "ready" as const,
-      width: s.width ?? 0,
-      height: s.height ?? 0,
-      remote: true,
-      storageKey: s.storageKey,
-    })),
-  );
-  const [copies, setCopies] = useState(initialDraft?.copies ?? 1);
+  const [items, setItems] = useState<LocalSticker[]>([]);
+  const [copies, setCopies] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-
-  // Track the draft id (set from initialDraft, or assigned after first create).
-  const draftIdRef = useRef<string | null>(initialDraft?.orderId ?? null);
 
   // Keep a ref that always has the latest items for cleanup on unmount.
   const itemsRef = useRef<LocalSticker[]>(items);
@@ -124,10 +107,11 @@ export function StickerTool({ dict, lang, isSignedIn, initialDraft = null }: Pro
     });
   }
 
-  // Returns { orderId, guestToken } on success, or null on failure (sets submitError).
-  async function persistDraft(): Promise<{ orderId: string; guestToken: string } | null> {
-    const newLocal = items.filter((i) => !i.remote);
-    const addStickers: StickerMeta[] = newLocal.map((item) => ({
+  // Creates the order (a confirmed_at=NULL row, needed to key the S3 uploads),
+  // then uploads each file to its presigned URL. Returns { orderId, guestToken }
+  // on success, or null on failure (sets submitError).
+  async function persistOrder(): Promise<{ orderId: string; guestToken: string } | null> {
+    const stickers: StickerMeta[] = items.map((item) => ({
       filename: item.name,
       bytes: item.bytes,
       contentType: "image/webp",
@@ -135,39 +119,20 @@ export function StickerTool({ dict, lang, isSignedIn, initialDraft = null }: Pro
       height: item.height ?? 0,
     }));
 
-    setItems((prev) => prev.map((i) => (i.remote ? i : { ...i, status: "uploading" as const, progress: 0 })));
+    setItems((prev) =>
+      prev.map((i) => ({ ...i, status: "uploading" as const, progress: 0 })),
+    );
 
-    let uploads: { stickerId: string; key: string; url: string }[];
-    let handle: { orderId: string; guestToken: string };
-
-    if (draftIdRef.current) {
-      const res = await updateOrderDraft({
-        orderId: draftIdRef.current,
-        keepStickerIds: items.filter((i) => i.remote).map((i) => i.id),
-        addStickers,
-        copies,
-      });
-      if (!res.ok) {
-        setSubmitError(dict.errors[SERVER_ERROR_KEY[res.message ?? ""] ?? "serverError"]);
-        return null;
-      }
-      uploads = res.uploads;
-      handle = { orderId: res.orderId, guestToken: res.guestToken };
-    } else {
-      const res = await createOrderDraft({ stickers: addStickers, copies });
-      if (!res.ok) {
-        setSubmitError(dict.errors[SERVER_ERROR_KEY[res.message ?? ""] ?? "serverError"]);
-        return null;
-      }
-      uploads = res.uploads;
-      handle = { orderId: res.orderId, guestToken: res.guestToken };
-      draftIdRef.current = res.orderId;
+    const res = await createOrderDraft({ stickers, copies });
+    if (!res.ok) {
+      setSubmitError(dict.errors[SERVER_ERROR_KEY[res.message ?? ""] ?? "serverError"]);
+      return null;
     }
 
-    // Upload only the NEW local files, pairing by stickerId order == newLocal order.
-    const pairs = uploads.map((u, i) => ({
+    // Upload each file to its presigned URL (uploads[i] aligns 1:1 with items[i]).
+    const pairs = res.uploads.map((u, i) => ({
       url: u.url,
-      file: filesRef.current.get(newLocal[i].id) ?? new File([], newLocal[i].name),
+      file: filesRef.current.get(items[i].id) ?? new File([], items[i].name),
     }));
     const results = await uploadFiles(pairs, { onEach: () => {} });
     if (results.some((r) => !r.ok)) {
@@ -175,51 +140,18 @@ export function StickerTool({ dict, lang, isSignedIn, initialDraft = null }: Pro
       return null;
     }
 
-    // Reconcile each just-saved local sticker to its SERVER row (id + key) and
-    // mark it remote, so a subsequent save sends real DB ids as keepStickerIds
-    // (never the client UUID). uploads[i] aligns 1:1 with newLocal[i].
-    const serverByLocalId = new Map(
-      newLocal.map((s, i) => [
-        s.id,
-        { id: uploads[i].stickerId, key: uploads[i].key },
-      ]),
-    );
-    for (const s of newLocal) filesRef.current.delete(s.id); // file no longer needed
-    setItems((prev) =>
-      prev.map((i) => {
-        if (i.remote) return i;
-        const server = serverByLocalId.get(i.id);
-        return server
-          ? { ...i, status: "ready" as const, remote: true, id: server.id, storageKey: server.key }
-          : { ...i, status: "ready" as const, remote: true };
-      }),
-    );
-    return handle;
+    return { orderId: res.orderId, guestToken: res.guestToken };
   }
 
   async function handleContinue() {
     if (items.length === 0 || submitting) return;
     setSubmitting(true);
     setSubmitError(null);
-    const handle = await persistDraft();
+    const handle = await persistOrder();
     if (!handle) { setSubmitting(false); return; }
     sessionStorage.setItem("linecut_order", JSON.stringify({ orderId: handle.orderId, guestToken: handle.guestToken }));
     router.push(`/${lang}/stickers/checkout`);
     // Note: don't clear submitting here — navigation is in progress
-  }
-
-  async function handleSaveDraft() {
-    if (items.length === 0 || submitting) return;
-    setSubmitting(true);
-    setSubmitError(null);
-    const handle = await persistDraft();
-    if (handle) {
-      // Keep `submitting` set through navigation so a double-click can't fire a
-      // second save (which would re-key the just-saved stickers).
-      router.push(`/${lang}/account/orders`);
-    } else {
-      setSubmitting(false);
-    }
   }
 
   const steps = [
@@ -267,21 +199,6 @@ export function StickerTool({ dict, lang, isSignedIn, initialDraft = null }: Pro
             disabled={items.length === 0 || submitting}
           >
             {submitting ? dict.pricing.uploading : dict.pricing.continue}
-          </Button>
-        </div>
-      )}
-
-      {/* Save draft button (signed-in users only) */}
-      {isSignedIn && (
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={submitting || !hasItems}
-            onClick={handleSaveDraft}
-            className="min-h-[44px]"
-          >
-            {dict.builder.saveDraft}
           </Button>
         </div>
       )}

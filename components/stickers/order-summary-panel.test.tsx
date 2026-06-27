@@ -95,6 +95,7 @@ const dict = {
   status: {
     heading: "",
     received: "",
+    seen: "",
     in_production: "",
     ready: "",
     shipped: "",
@@ -102,7 +103,7 @@ const dict = {
     cancelled: "",
     current: "",
   },
-  account: { ordersHeading: "", empty: "", viewOrder: "", statusLabel: "", totalLabel: "" },
+  account: { ordersHeading: "", empty: "", viewOrder: "", statusLabel: "", totalLabel: "", itemsLabel: "" },
   email: { subjectReceived: "", greeting: "", bodyReceived: "", trackCta: "", signoff: "" },
   builder: {
     saveDraft: "Save draft",

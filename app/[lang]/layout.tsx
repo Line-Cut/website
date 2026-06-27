@@ -7,7 +7,9 @@ import { getDictionary } from "./dictionaries";
 import { siteConfig } from "@/lib/site-config";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { CartProvider } from "@/components/store/cart-provider";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/auth/admin-access";
 
 const display = Heebo({
   subsets: ["hebrew", "latin"],
@@ -68,14 +70,17 @@ export default async function RootLayout({
       className={`${display.variable} ${sans.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-paper font-sans text-ink">
-        <Header
-          lang={lang}
-          dict={dict.nav}
-          authDict={dict.auth}
-          user={user ? { email: user.email ?? null } : null}
-        />
-        <main className="flex-1">{children}</main>
-        <Footer lang={lang} dict={dict.footer} />
+        <CartProvider>
+          <Header
+            lang={lang}
+            dict={dict.nav}
+            authDict={dict.auth}
+            user={user ? { email: user.email ?? null } : null}
+            isOwner={await isAdmin(user ? { id: user.id, email: user.email } : null)}
+          />
+          <main className="flex-1">{children}</main>
+          <Footer lang={lang} dict={dict.footer} />
+        </CartProvider>
       </body>
     </html>
   );

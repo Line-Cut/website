@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { OrderHistoryList } from "./order-history-list";
-import type { OrderView } from "@/lib/stickers/types";
+import type { StickerOrderView } from "@/lib/orders/types";
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -119,6 +119,7 @@ const dict = {
   status: {
     heading: "",
     received: "Received",
+    seen: "Seen",
     in_production: "In production",
     ready: "Ready",
     shipped: "Shipped",
@@ -132,6 +133,7 @@ const dict = {
     viewOrder: "View order",
     statusLabel: "Status",
     totalLabel: "Total",
+    itemsLabel: "{n} items",
   },
   email: {
     subjectReceived: "",
@@ -160,12 +162,15 @@ const dict = {
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-const makeOrder = (overrides: Partial<OrderView> = {}): OrderView => ({
+const makeOrder = (overrides: Partial<StickerOrderView> = {}): StickerOrderView => ({
   orderId: "order-abc-123",
   guestToken: "token-xyz",
+  kind: "stickers",
   status: "received",
   paymentStatus: "awaiting_payment",
   createdAtISO: "2024-01-15T10:00:00Z",
+  total: 2000,
+  currency: "ILS",
   copies: 2,
   breakdown: {
     perSheet: 15,

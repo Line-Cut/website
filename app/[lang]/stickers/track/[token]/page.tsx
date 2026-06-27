@@ -17,9 +17,10 @@ export default async function TrackPage({
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);
 
-  const order = await getOrderByToken(token);
+  const order = await getOrderByToken(token, lang);
 
-  if (!order) {
+  // This route renders sticker orders; a store order's token tracks at /store/track.
+  if (!order || order.kind !== "stickers") {
     return (
       <Container>
         <div className="py-10">

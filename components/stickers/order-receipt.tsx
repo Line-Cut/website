@@ -1,11 +1,11 @@
 import { interpolate } from "@/lib/stickers/format";
-import type { OrderView } from "@/lib/stickers/types";
+import type { StickerOrderView } from "@/lib/orders/types";
 import type { Dictionary } from "@/lib/dictionary";
 import { PriceBreakdownView } from "@/components/stickers/price-breakdown";
 import { OrderStatusTimeline } from "@/components/stickers/order-status-timeline";
 
 type Props = {
-  order: OrderView;
+  order: StickerOrderView;
   dict: Dictionary["stickers"];
   locale: "he" | "en";
 };

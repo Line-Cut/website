@@ -5,6 +5,7 @@ import { OrderStatusTimeline } from "@/components/stickers/order-status-timeline
 const dict = {
   heading: "Order status",
   received: "Received",
+  seen: "Seen",
   in_production: "In Production",
   ready: "Ready",
   shipped: "Shipped",

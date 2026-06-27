@@ -1,4 +1,4 @@
-import { Check, Clock, Package, Truck, CheckCircle, Ban, Circle } from "lucide-react";
+import { Check, Clock, Eye, Package, Truck, CheckCircle, Ban, Circle } from "lucide-react";
 import type { OrderStatus } from "@/lib/stickers/types";
 import type { Dictionary } from "@/lib/dictionary";
 
@@ -11,6 +11,7 @@ type StepKey = Exclude<OrderStatus, "cancelled">;
 
 const STEP_ORDER: StepKey[] = [
   "received",
+  "seen",
   "in_production",
   "ready",
   "shipped",
@@ -27,6 +28,8 @@ function stepIcon(key: StepKey, state: "done" | "current" | "upcoming") {
     switch (key) {
       case "received":
         return <Clock className={`${baseClass} text-accent`} aria-hidden="true" />;
+      case "seen":
+        return <Eye className={`${baseClass} text-accent`} aria-hidden="true" />;
       case "in_production":
         return <Package className={`${baseClass} text-accent`} aria-hidden="true" />;
       case "ready":
