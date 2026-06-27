@@ -161,7 +161,7 @@ copies objects orders→paid, so it needs `GetObject` on the orders bucket and
 
 The sticker shop and store are gated by **DB-managed feature access** — there are no env vars to set. The system is controlled from **`/<lang>/admin/access`** in the running app (`lib/auth/feature-access.ts`, `feature_access` + `feature_allowlist` tables): per feature choose **Public** (open to everyone, guests included) or **Restricted**, and for restricted features add allowed users by email (they must have signed up first). Admins/owners always have access regardless of the setting.
 
-The first admin is the **`OWNER_NOTIFY_EMAIL`** account (it becomes an admin automatically once that env var is set and the user signs up). Additional admins are granted in-app at `/<lang>/admin/admins`. No checklist item is needed here — this is configured in the running app, not via env vars.
+The first admin is the **`OWNER_NOTIFY_EMAIL`** account (it becomes an admin automatically once that env var is set and the user signs up). Additional admins are granted in-app at `/<lang>/admin/admins`. No env-var setting is needed here — access is configured in the running app.
 
 ---
 

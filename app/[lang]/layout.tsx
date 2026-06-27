@@ -65,10 +65,10 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   const slimUser = user ? { id: user.id, email: user.email } : null;
-  const [canSeeStore, canSeeStickers, isOwner] = await Promise.all([
-    isFeatureAllowed("store", slimUser),
-    isFeatureAllowed("stickers", slimUser),
-    isAdmin(slimUser),
+  const isOwner = await isAdmin(slimUser);
+  const [canSeeStore, canSeeStickers] = await Promise.all([
+    isFeatureAllowed("store", slimUser, { isAdmin: isOwner }),
+    isFeatureAllowed("stickers", slimUser, { isAdmin: isOwner }),
   ]);
 
   return (

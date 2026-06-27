@@ -25,8 +25,7 @@ export function isFeatureKey(value: string): value is FeatureKey {
 
 /** The code-side fallback visibility when no `feature_access` row exists yet. */
 export function featureDefaultVisibility(feature: FeatureKey): FeatureVisibility {
-  const found = FEATURES.find((f) => f.key === feature);
-  return (found?.defaultVisibility ?? "restricted") as FeatureVisibility;
+  return FEATURES.find((f) => f.key === feature)!.defaultVisibility;
 }
 
 /**
@@ -50,11 +49,13 @@ export async function getFeatureVisibility(
   feature: FeatureKey,
 ): Promise<FeatureVisibility> {
   const admin = createAdminSupabaseClient();
-  const { data } = await admin
+  const { data, error } = await admin
     .from("feature_access")
     .select("visibility")
     .eq("feature", feature)
     .maybeSingle();
+  // Fail closed: a real read error must not silently open a restricted feature.
+  if (error) return "restricted";
   const visibility = (data as { visibility?: string } | null)?.visibility;
   return visibility === "public" || visibility === "restricted"
     ? visibility
@@ -69,8 +70,9 @@ export async function getFeatureVisibility(
 export async function isFeatureAllowed(
   feature: FeatureKey,
   user: { id: string; email?: string | null } | null,
+  opts?: { isAdmin?: boolean },
 ): Promise<boolean> {
-  if (await isAdmin(user)) return true;
+  if (opts?.isAdmin ?? (await isAdmin(user))) return true;
 
   const visibility = await getFeatureVisibility(feature);
   if (visibility === "public") return true;

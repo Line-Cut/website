@@ -25,8 +25,8 @@ export function Header({
   authDict,
   user,
   isOwner = false,
-  canSeeStore = true,
-  canSeeStickers = true,
+  canSeeStore = false,
+  canSeeStickers = false,
 }: {
   lang: Locale;
   dict: Dictionary["nav"];
