@@ -26,6 +26,9 @@ Current migrations:
 - `<ts>_admins.sql` — `admins` table (DB-managed admin grants layered on top of
   the `OWNER_NOTIFY_EMAIL` env bootstrap). RLS default-deny, no policies
   (service-role access only behind the admin guard).
+- `<ts>_feature_access.sql` — `feature_access` + `feature_allowlist` tables
+  (DB-managed, admin-controlled access to the sticker shop + store; replaces the
+  `STICKER_SHOP_*` env vars). RLS default-deny, no policies — service-role only.
 
 ## One-time setup
 
