@@ -1,8 +1,8 @@
 "use server";
 
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getPaymentProvider } from "@/lib/payments/index";
+import { getCurrentUserFeatureAccess } from "@/lib/auth/feature-access";
 import { quoteCart } from "@/lib/store/quote-cart";
 import type { QuoteCartResult } from "@/lib/store/quote-cart";
 import { confirmStoreOrder as confirmStoreOrderCore } from "@/lib/store/confirm-store-order";
@@ -20,6 +20,8 @@ export async function quoteStoreCart(
   items: unknown,
   locale: Locale,
 ): Promise<QuoteCartResult> {
+  const { allowed } = await getCurrentUserFeatureAccess("store");
+  if (!allowed) return { ok: false, message: "forbidden" };
   return quoteCart(items, locale, { admin: createAdminSupabaseClient() });
 }
 
@@ -28,10 +30,9 @@ export async function confirmStoreOrder(input: {
   delivery: unknown;
   clientRequestId: string;
 }): Promise<ConfirmStoreOrderResult> {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const access = await getCurrentUserFeatureAccess("store");
+  if (!access.allowed) return { ok: false, message: "forbidden" };
+  const user = access.user;
 
   return confirmStoreOrderCore(input, {
     admin: createAdminSupabaseClient(),

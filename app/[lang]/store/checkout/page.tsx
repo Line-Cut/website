@@ -1,8 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { isLocale } from "@/lib/i18n";
 import { getDictionary } from "../../dictionaries";
 import { StoreCheckout } from "@/components/store/store-checkout";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isFeatureAllowed } from "@/lib/auth/feature-access";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,13 @@ export default async function StoreCheckoutPage({
 }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!(await isFeatureAllowed("store", user ? { id: user.id, email: user.email } : null))) {
+    redirect(user ? `/${lang}` : `/${lang}/login`);
+  }
   const dict = await getDictionary(lang);
 
   return (
