@@ -12,8 +12,10 @@ import { siteConfig } from "@/lib/site-config";
 import type { Locale } from "@/lib/i18n";
 
 /**
- * The store is PUBLIC — guests may quote and order. We still attach the
- * signed-in user's id when present so the order shows up in their account.
+ * Access is gated by the 'store' feature (public vs restricted, managed in
+ * /admin/access). Both actions re-check it (defense in depth — they are
+ * directly callable). When allowed, we still attach the signed-in user's id
+ * (when present) so the order shows up in their account.
  */
 
 export async function quoteStoreCart(
