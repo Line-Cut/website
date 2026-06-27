@@ -10,12 +10,13 @@ export function AdminNav({
 }: {
   lang: Locale;
   dict: Dictionary["admin"]["nav"];
-  current: "products" | "orders" | "admins";
+  current: "products" | "orders" | "admins" | "access";
 }) {
   const links = [
     { key: "products", href: `/${lang}/admin/products`, label: dict.products },
     { key: "orders", href: `/${lang}/admin/orders`, label: dict.orders },
     { key: "admins", href: `/${lang}/admin/admins`, label: dict.admins },
+    { key: "access", href: `/${lang}/admin/access`, label: dict.access },
   ] as const;
 
   return (
