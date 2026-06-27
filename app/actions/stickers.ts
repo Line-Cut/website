@@ -1,7 +1,6 @@
 "use server";
 
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   presignUpload,
   objectExists,
@@ -19,29 +18,21 @@ import type { ConfirmOrderResult } from "@/lib/orders/confirm-order";
 import { markOrderPaid as markOrderPaidCore } from "@/lib/orders/mark-paid";
 import { buildOrderMetadataPdf } from "@/lib/pdf/order-metadata-pdf";
 import { buildPlaceholderReceiptPdf } from "@/lib/pdf/receipt-pdf";
-import {
-  isStickerShopUser,
-  isStickerShopRestricted,
-} from "@/lib/auth/sticker-access";
+import { getCurrentUserFeatureAccess } from "@/lib/auth/feature-access";
 import { sendOwnerEmail } from "@/lib/emails/send";
 import { siteConfig } from "@/lib/site-config";
 
 /**
- * Access check for the sticker order actions (create/confirm — guest-capable).
- * When the shop is public, everyone is allowed; when restricted, only
- * allow-listed signed-in users are. Gating in the actions is defense in depth —
- * the pages redirect too, but actions are callable directly.
+ * Access check for the sticker order actions (create/confirm). Defense in depth
+ * — the pages redirect too, but actions are callable directly. Gated by the
+ * 'stickers' feature (public ⇒ everyone, incl. guests; restricted ⇒ allow-listed
+ * signed-in users; admins always pass).
  */
 async function checkStickerAccess(): Promise<{
   allowed: boolean;
-  user: { id: string; email?: string } | null;
+  user: { id: string; email?: string | null } | null;
 }> {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!isStickerShopRestricted()) return { allowed: true, user };
-  return { allowed: isStickerShopUser(user?.email), user };
+  return getCurrentUserFeatureAccess("stickers");
 }
 
 export async function createOrderDraft(

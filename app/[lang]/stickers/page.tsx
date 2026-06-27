@@ -5,7 +5,7 @@ import { isLocale } from "@/lib/i18n";
 import { getDictionary } from "../dictionaries";
 import { StickerTool } from "@/components/stickers/sticker-tool";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { isStickerShopUser, isStickerShopRestricted } from "@/lib/auth/sticker-access";
+import { isFeatureAllowed } from "@/lib/auth/feature-access";
 
 export async function generateMetadata({
   params,
@@ -33,10 +33,13 @@ export default async function StickersPage({
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // While restricted, only allow-listed accounts may access the shop.
-  // Guests are sent to sign in; signed-in-but-not-allowed users go home.
-  // (STICKER_SHOP_PUBLIC opens it to everyone — no redirect.)
-  if (isStickerShopRestricted() && !isStickerShopUser(user?.email)) {
+  // Gated by the 'stickers' feature: public ⇒ everyone; restricted ⇒ allow-listed
+  // signed-in users (admins always pass). Guests → login, others → home.
+  const allowed = await isFeatureAllowed(
+    "stickers",
+    user ? { id: user.id, email: user.email } : null,
+  );
+  if (!allowed) {
     redirect(user ? `/${lang}` : `/${lang}/login`);
   }
 

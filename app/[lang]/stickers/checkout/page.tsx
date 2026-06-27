@@ -5,7 +5,7 @@ import { getDictionary } from "../../dictionaries";
 import { StepIndicator } from "@/components/stickers/step-indicator";
 import { CheckoutForm } from "@/components/stickers/checkout-form";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { isStickerShopUser, isStickerShopRestricted } from "@/lib/auth/sticker-access";
+import { isFeatureAllowed } from "@/lib/auth/feature-access";
 
 export const dynamic = "force-dynamic";
 
@@ -18,10 +18,15 @@ export default async function CheckoutPage({
   if (!isLocale(lang)) notFound();
   const dict = await getDictionary(lang);
 
-  // Same allow-list gate as the builder page (skipped when STICKER_SHOP_PUBLIC).
+  // Gated by the 'stickers' feature: public ⇒ everyone; restricted ⇒ allow-listed
+  // signed-in users (admins always pass). Guests → login, others → home.
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (isStickerShopRestricted() && !isStickerShopUser(user?.email)) {
+  const allowed = await isFeatureAllowed(
+    "stickers",
+    user ? { id: user.id, email: user.email } : null,
+  );
+  if (!allowed) {
     redirect(user ? `/${lang}` : `/${lang}/login`);
   }
 
