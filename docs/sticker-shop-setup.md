@@ -163,6 +163,8 @@ The sticker shop and store are gated by **DB-managed feature access** — there 
 
 The first admin is the **`OWNER_NOTIFY_EMAIL`** account (it becomes an admin automatically once that env var is set and the user signs up). Additional admins are granted in-app at `/<lang>/admin/admins`. No env-var setting is needed here — access is configured in the running app.
 
+> **Scope of "Restricted" for the store.** Restricting the store gates the **storefront pages and ordering** (non-allowed visitors are redirected and the store actions reject them), but it does **not** make the product *catalog data* secret: the `products` table keeps a public anon read policy for `active` rows, and the sitemap lists `/store` + product slugs. So titles/prices/images remain reachable via the public API/sitemap by design (the catalog is treated as public). If you ever need a genuinely private catalog, that's a follow-up (serve product reads via the service-role client + drop the anon `products` policy, and gate the sitemap on store visibility).
+
 ---
 
 ## 5. Production (Vercel) — when you deploy
