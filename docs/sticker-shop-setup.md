@@ -157,7 +157,15 @@ copies objects orders→paid, so it needs `GetObject` on the orders bucket and
 
 ---
 
-## 4. Production (Vercel) — when you deploy
+## 4. Feature access — sticker shop + store (no env vars)
+
+The sticker shop and store are gated by **DB-managed feature access** — there are no env vars to set. The system is controlled from **`/<lang>/admin/access`** in the running app (`lib/auth/feature-access.ts`, `feature_access` + `feature_allowlist` tables): per feature choose **Public** (open to everyone, guests included) or **Restricted**, and for restricted features add allowed users by email (they must have signed up first). Admins/owners always have access regardless of the setting.
+
+The first admin is the **`OWNER_NOTIFY_EMAIL`** account (it becomes an admin automatically once that env var is set and the user signs up). Additional admins are granted in-app at `/<lang>/admin/admins`. No checklist item is needed here — this is configured in the running app, not via env vars.
+
+---
+
+## 5. Production (Vercel) — when you deploy
 
 In the Vercel project → Settings → Environment Variables, add the **same**
 variables (use your production values). Then:
@@ -175,6 +183,7 @@ variables (use your production values). Then:
 - [ ] `AWS_REGION`, `S3_STICKERS_BUCKET`, `S3_STICKERS_PAID_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 - [ ] `S3_PRODUCTS_BUCKET` (public-read product images) + optional `S3_PRODUCTS_PUBLIC_URL` (CDN)
 - [ ] S3: sticker buckets private; **products bucket public-read + CORS (PUT/GET)**; CORS on the **orders** bucket; IAM policy scoped to **all three** buckets
+- [ ] Feature access: in the running app, go to `/<lang>/admin/access` and set sticker shop + store to **Public** or **Restricted** (add allowed emails for restricted features — users must have signed up first). The `OWNER_NOTIFY_EMAIL` account is the first admin; more can be added at `/<lang>/admin/admins`. (No env vars.)
 
 Once these are in `.env.local`, tell me and I'll apply the database migration and
 build + verify the backend end-to-end.
