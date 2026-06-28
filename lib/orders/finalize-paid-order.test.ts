@@ -1,0 +1,178 @@
+// Mock "server-only" so the module can be imported in tests
+vi.mock("server-only", () => ({}));
+
+import { describe, it, expect, vi } from "vitest";
+import { finalizePaidOrder } from "@/lib/orders/finalize-paid-order";
+
+// ---------------------------------------------------------------------------
+// Fixtures
+// ---------------------------------------------------------------------------
+
+const STORE_ORDER_ROW = {
+  id: "o1",
+  order_kind: "store",
+  contact_name: "Dana Cohen",
+  contact_first_name: "Dana",
+  contact_last_name: "Cohen",
+  contact_email: "dana@example.com",
+  contact_phone: "+972501234567",
+  price_total: 1200,
+  price_currency: "ILS",
+  delivery_method: "pickup",
+  ship_address_line1: null,
+  ship_address_line2: null,
+  ship_city: null,
+  ship_postal_code: null,
+  ship_country: null,
+  ship_notes: null,
+};
+
+const ITEM_ROW = {
+  title_he: "מדבקה",
+  title_en: "Sticker",
+  options: [],
+  quantity: 2,
+  unit_price: 500,
+  line_total: 1000,
+};
+
+// ---------------------------------------------------------------------------
+// Fake admin builder
+// ---------------------------------------------------------------------------
+
+function makeFakeAdmin({
+  updatedRows = [] as unknown[],
+  items = [] as unknown[],
+  updateError = null as { message: string } | null,
+} = {}) {
+  let lastOrderUpdate: unknown = null;
+
+  const admin = {
+    get _lastOrderUpdate() {
+      return lastOrderUpdate;
+    },
+    from(table: string) {
+      if (table === "orders") {
+        return {
+          update(payload: unknown) {
+            lastOrderUpdate = payload;
+            return {
+              eq(_col: string, _val: unknown) {
+                return {
+                  neq(_col: string, _val: unknown) {
+                    return {
+                      select(_cols: string) {
+                        return Promise.resolve({
+                          data: updateError ? null : updatedRows,
+                          error: updateError,
+                        });
+                      },
+                    };
+                  },
+                };
+              },
+            };
+          },
+        };
+      }
+      if (table === "order_items") {
+        return {
+          select(_cols: string) {
+            return {
+              eq(_col: string, _val: unknown) {
+                return Promise.resolve({ data: items, error: null });
+              },
+            };
+          },
+        };
+      }
+      throw new Error(`Unexpected table: ${table}`);
+    },
+  };
+
+  return admin;
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+describe("finalizePaidOrder", () => {
+  it("marks an awaiting order paid, sets receipt fields + confirmed_at, sends owner email once", async () => {
+    const emails: unknown[] = [];
+    const admin = makeFakeAdmin({ updatedRows: [STORE_ORDER_ROW], items: [ITEM_ROW] });
+    const res = await finalizePaidOrder(
+      {
+        orderId: "o1",
+        paidAtISO: "2026-06-28T00:00:00.000Z",
+        provider: "icredit",
+        saleId: "sale-1",
+        reference: "auth-7",
+        receiptDocumentUrl: "https://r/d.pdf",
+        receiptDocumentNumber: "665",
+      },
+      {
+        admin: admin as never,
+        sendOwnerEmail: async (e) => {
+          emails.push(e);
+        },
+        ownerOrderUrlFor: (id) => `https://s/admin/${id}`,
+      },
+    );
+    expect(res).toEqual({ ok: true, alreadyPaid: false });
+    const payload = admin._lastOrderUpdate as Record<string, unknown>;
+    expect(payload.payment_status).toBe("paid");
+    expect(payload.provider_sale_id).toBe("sale-1");
+    expect(payload.receipt_document_url).toBe("https://r/d.pdf");
+    expect(payload.payment_provider).toBe("icredit");
+    expect(emails).toHaveLength(1);
+  });
+
+  it("is a no-op when already paid (0 rows updated) and sends no email", async () => {
+    const emails: unknown[] = [];
+    const admin = makeFakeAdmin({ updatedRows: [] });
+    const res = await finalizePaidOrder(
+      {
+        orderId: "o1",
+        paidAtISO: "t",
+        provider: "icredit",
+        saleId: "s",
+        reference: null,
+        receiptDocumentUrl: null,
+        receiptDocumentNumber: null,
+      },
+      {
+        admin: admin as never,
+        sendOwnerEmail: async (e) => {
+          emails.push(e);
+        },
+        ownerOrderUrlFor: () => "x",
+      },
+    );
+    expect(res).toEqual({ ok: true, alreadyPaid: true });
+    expect(emails).toHaveLength(0);
+  });
+
+  it("never fails the order when the owner email throws", async () => {
+    const admin = makeFakeAdmin({ updatedRows: [STORE_ORDER_ROW], items: [ITEM_ROW] });
+    const res = await finalizePaidOrder(
+      {
+        orderId: "o1",
+        paidAtISO: "t",
+        provider: "icredit",
+        saleId: "s",
+        reference: null,
+        receiptDocumentUrl: null,
+        receiptDocumentNumber: null,
+      },
+      {
+        admin: admin as never,
+        sendOwnerEmail: async () => {
+          throw new Error("smtp down");
+        },
+        ownerOrderUrlFor: () => "x",
+      },
+    );
+    expect(res).toEqual({ ok: true, alreadyPaid: false });
+  });
+});
