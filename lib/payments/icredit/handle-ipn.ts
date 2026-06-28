@@ -1,5 +1,5 @@
 import { parseIpn } from "@/lib/payments/icredit/ipn";
-import { amountMatches } from "@/lib/payments/icredit/money";
+import { amountMatches, agorotToShekels } from "@/lib/payments/icredit/money";
 import type { IcreditConfig } from "@/lib/payments/icredit/config";
 
 export type IpnOrder = { id: string; price_total: number; payment_status: string };
@@ -49,8 +49,8 @@ export async function handleIcreditIpn(
     return { status: 200, body: "already_paid" };
   }
 
-  // 5. Verify sale with gateway
-  const verifyStatus = await deps.verify(ipn.saleId, ipn.transactionAmount);
+  // 5. Verify sale with gateway — use server order total (not IPN-reported amount)
+  const verifyStatus = await deps.verify(ipn.saleId, agorotToShekels(order.price_total));
   if (verifyStatus !== "VERIFIED") {
     return { status: 400, body: "not_verified" };
   }

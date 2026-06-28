@@ -7,13 +7,16 @@ export type Fetcher = (
 
 const defaultFetcher: Fetcher = (url, init) => fetch(url, init);
 
-async function postJson(url: string, body: unknown, fetcher: Fetcher): Promise<unknown> {
-  const res = await fetcher(url, {
+async function postJson(
+  url: string,
+  body: unknown,
+  fetcher: Fetcher,
+): Promise<{ ok: boolean; status: number; json: () => Promise<unknown> }> {
+  return fetcher(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(body),
   });
-  return res.json();
 }
 
 export async function requestPaymentPage(
@@ -21,7 +24,11 @@ export async function requestPaymentPage(
   fetcher: Fetcher = defaultFetcher,
 ): Promise<GetUrlResponse> {
   const url = `${args.host}/API/PaymentPageRequest.svc/GetUrl`;
-  return (await postJson(url, args.body, fetcher)) as GetUrlResponse;
+  const res = await postJson(url, args.body, fetcher);
+  if (!res.ok) {
+    return { Status: -1, DebugMessage: `http_${res.status}` } as GetUrlResponse;
+  }
+  return (await res.json()) as GetUrlResponse;
 }
 
 export async function verifySale(
@@ -29,10 +36,12 @@ export async function verifySale(
   fetcher: Fetcher = defaultFetcher,
 ): Promise<string> {
   const url = `${args.host}/API/PaymentPageRequest.svc/Verify`;
-  const res = (await postJson(
+  const res = await postJson(
     url,
     { GroupPrivateToken: args.token, SaleId: args.saleId, TotalAmount: args.totalAmountShekels },
     fetcher,
-  )) as { Status?: string };
-  return res.Status ?? "ERROR";
+  );
+  if (!res.ok) return "ERROR";
+  const data = (await res.json()) as { Status?: string };
+  return data.Status ?? "ERROR";
 }
