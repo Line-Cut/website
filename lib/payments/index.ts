@@ -1,7 +1,11 @@
 import type { PaymentProvider } from "@/lib/payments/provider";
 import { manualPaymentProvider } from "@/lib/payments/manual-provider";
+import { getIcreditConfig } from "@/lib/payments/icredit/config";
+import { createIcreditProvider } from "@/lib/payments/icredit/provider";
 
-/** Single seam — swap in a real gateway later by changing this one function. */
+/** Single seam — choose the gateway by env. Mock unless ICREDIT_MODE is test/prod. */
 export function getPaymentProvider(): PaymentProvider {
-  return manualPaymentProvider;
+  const config = getIcreditConfig();
+  if (config.mode === "mock") return manualPaymentProvider;
+  return createIcreditProvider({ config });
 }
