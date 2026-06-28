@@ -1,13 +1,13 @@
 ---
 name: rivhit-icredit
-description: Use when working on iCredit/Rivhit payments in this repo — the hosted-page redirect + IPN webhook flow, the createCheckout provider seam, server-side pricing and amount-verify invariants, receipt issuance (primary from iCredit DocumentURL; fallback via Rivhit Document.New), env configuration, test sandbox credentials, or the finalizePaidOrder idempotent finalize path. This is the payment integration for the store cart (not the sticker flow, which still uses the mock provider).
+description: Use when working on iCredit/Rivhit payments in this repo — the hosted-page redirect + IPN webhook flow, the createCheckout provider seam, server-side pricing and amount-verify invariants, receipt issuance (primary from iCredit DocumentURL; fallback via Rivhit Document.New), env configuration, test sandbox credentials, or the finalizePaidOrder idempotent finalize path. Both the store cart and the sticker shop charge via iCredit (mock is still the default when ICREDIT_MODE is unset).
 ---
 
 # Rivhit / iCredit Payment Integration
 
 ## Overview
 
-This integration charges the server-computed store-cart total through the **iCredit hosted payment page** (redirect model). On success, iCredit posts an IPN webhook to our backend; we verify the sale, re-check the amount, and flip the order to paid. The receipt (חשבונית מס קבלה) is captured from the IPN when iCredit auto-issues one; a Rivhit REST fallback can issue it explicitly.
+This integration charges server-computed cart totals — for both the **store cart** and the **sticker shop** — through the **iCredit hosted payment page** (redirect model). On success, iCredit posts an IPN webhook to our backend; we verify the sale, re-check the amount, and flip the order to paid. The receipt (חשבונית מס קבלה) is captured from the IPN when iCredit auto-issues one; a Rivhit REST fallback can issue it explicitly.
 
 **This skill is a sub-area of `linecut-website`, sibling to `sticker-shop`.** For i18n/RTL/dictionary, use `rtl-bilingual-nextjs`; for brand/component conventions, use `linecut-website`; for the sticker order flow and `PaymentProvider` history, use `sticker-shop`. This guide covers only the iCredit/Rivhit integration.
 
@@ -15,7 +15,7 @@ This integration charges the server-computed store-cart total through the **iCre
 
 - Editing the iCredit hosted-page request (GetUrl), the Verify call, or the IPN webhook handler.
 - Changing the `PaymentProvider.createCheckout` seam or the `getPaymentProvider` env switch.
-- Working on `finalizePaidOrder` (the one idempotent finalize path for store orders).
+- Working on `finalizePaidOrder` (the one idempotent finalize path for all order kinds; `onPaid` callback is injected by the caller for store vs sticker side effects).
 - Adding or modifying Rivhit receipt logic (`Document.New` type 2 fallback).
 - Configuring env vars or test sandbox credentials.
 - Wiring a new provider (replace `createIcreditProvider`; conform to `PaymentProvider`).
@@ -27,7 +27,7 @@ This integration charges the server-computed store-cart total through the **iCre
 
 ```
 Store checkout form
-  → confirmStoreOrder (server action)
+  → confirmStoreOrder (server action, app/actions/store.ts)
       → computeStoreTotals (server-priced)
       → PaymentProvider.createCheckout (server-to-server GetUrl)
           → {status:"redirect", url}
@@ -35,24 +35,37 @@ Store checkout form
               → browser: window.location.assign(url)
               → buyer fills iCredit hosted page + pays
 
-iCredit → POST /api/payments/icredit/ipn (form-encoded)
+Sticker checkout form
+  → confirmOrder (server action, app/actions/stickers.ts)
+      → confirmOrderCore (lib/orders/confirm-order.ts)
+          → re-key stickers + write metadata PDF (before payment)
+          → idempotency guard: if payment_status === "paid" → return {ok:true} (no re-charge)
+          → PaymentProvider.createCheckout (server-to-server GetUrl)
+              → {status:"redirect", url}
+                  → return {ok:true, redirectUrl} to browser
+                  → browser (checkout-form.tsx): window.location.assign(url)
+                  → KEEP "linecut_order" in sessionStorage (back-button retry resumes same order)
+                  → buyer fills iCredit hosted page + pays
+                  → iCredit redirects to /{locale}/stickers/track/{guestToken}
+
+iCredit → POST /api/payments/icredit/ipn (form-encoded) — handles BOTH order kinds
   → handleIcreditIpn (DI core) — guard order:
       1. parseIpn (case-insensitive)
       2. confirm GroupPrivateToken === config.token   (else 400 bad_token; also rejects a null/empty config token)
       3. require saleId + orderId + transactionAmount   (else 400 malformed — BEFORE Verify)
-      4. loadOrder by Custom1 (our orderId)            (else 404 order_not_found)
+      4. loadOrder by Custom1 (our orderId), loading order_kind   (else 404 order_not_found)
       5. idempotency: if already paid → 200 already_paid
       6. verifySale → POST Verify → Status === "VERIFIED"   (else 400 not_verified)
       7. amountMatches: TransactionAmount (shekels) === order.price_total (agorot)   (else 400 amount_mismatch)
       8. resolve receipt: IPN DocumentURL (primary) OR issueFallbackReceipt (if RIVHIT_RECEIPT_FALLBACK=on)
-      9. finalizePaidOrder (idempotent DB update + owner email)
+      9. finalizePaidOrder (idempotent DB update + dispatched onPaid by order_kind):
+           order_kind === "stickers" → runStickerPaidSideEffects (paid-bucket copy + receipt + owner email)
+           else                      → runStorePaidSideEffects (owner email)
       10. return 200
 
-Mock path (ICREDIT_MODE unset or "mock"):
+Mock path (ICREDIT_MODE unset or "mock") — same for both carts:
   createCheckout → {status:"paid"} → finalizePaidOrder called inline → return {ok:true}
 ```
-
-The **sticker flow** calls `createCheckout` in `lib/orders/confirm-order.ts` but only ever receives the mock `paid` result — the sticker path does not redirect and is not changed by this integration.
 
 ---
 
@@ -75,14 +88,17 @@ Defined in `lib/payments/provider.ts`. Takes `CreateCheckoutInput` (orderId, amo
 ### `finalizePaidOrder` — the ONE finalize path
 
 `lib/orders/finalize-paid-order.ts`. Called by:
-1. The mock inline `paid` branch inside `confirmStoreOrder`.
-2. The IPN webhook after Verify + amount check.
+1. The mock inline `paid` branch inside the store action (`confirmStoreOrder`) and the sticker action (`confirmOrder` via `confirmOrderCore`).
+2. The IPN webhook after Verify + amount check (dispatches to the correct `onPaid` by `order_kind`).
 
 Responsibilities (idempotent):
-- UPDATE `orders` SET `payment_status="paid"`, `payment_provider`, `provider_sale_id`, `payment_reference`, `receipt_document_url`, `receipt_document_number`, `paid_at`, and `confirmed_at = now` (set **unconditionally** — store orders are inserted with `confirmed_at = null` and only finalized once, so this is effectively a first-write) WHERE `id = orderId AND payment_status <> 'paid'`.
+- UPDATE `orders` SET `payment_status="paid"`, `payment_provider`, `provider_sale_id`, `payment_reference`, `receipt_document_url`, `receipt_document_number`, `paid_at`, and `confirmed_at = now` (set unconditionally — both store and sticker orders have `confirmed_at = null` before finalize) WHERE `id = orderId AND payment_status <> 'paid'`.
 - The `.neq("payment_status","paid")` guard — **not** a COALESCE — is what makes this idempotent: a second call matches 0 rows.
-- If 0 rows updated → already paid → `{ok:true, alreadyPaid:true}` (no email).
-- On a real transition (store orders only): fetch `order_items`, send owner email best-effort (never fails the order).
+- If 0 rows updated → already paid → `{ok:true, alreadyPaid:true}` (no side effects).
+- On a real transition: calls the injected `onPaid(order)` callback (best-effort — errors are caught and logged, never propagated):
+  - **Store orders** (`runStorePaidSideEffects`, `lib/orders/store-paid-side-effects.ts`): fetches `order_items`, builds and sends the owner notification email.
+  - **Sticker orders** (`runStickerPaidSideEffects`, `lib/orders/sticker-paid-side-effects.ts`): (1) copies the order folder to the paid bucket and writes a receipt PDF via `markOrderPaid`; (2) builds and sends the sticker owner notification email. Both steps are independently best-effort.
+- The IPN webhook (`app/api/payments/icredit/ipn/route.ts`) injects `onPaid` that dispatches by `order.order_kind`: `"stickers"` → `runStickerPaidSideEffects`; anything else → `runStorePaidSideEffects`.
 
 Does **not** call Verify or check amounts — the webhook does that before calling it.
 
@@ -125,7 +141,9 @@ If both fail (no IPN doc, fallback off or also fails), `receipt_document_url` is
 | `lib/payments/icredit/handle-ipn.ts` | `handleIcreditIpn(raw, deps)` — all webhook branch logic (DI core) |
 | `lib/payments/rivhit/client.ts` | `rivhitPost(endpoint, body, fetcher?)` — Rivhit envelope POST helper |
 | `lib/payments/rivhit/issue-receipt.ts` | `buildDocumentNewBody`, `issueInvoiceReceipt` — Document.New type 2 fallback |
-| `lib/orders/finalize-paid-order.ts` | `finalizePaidOrder(input, deps)` — the one idempotent store-order finalize |
+| `lib/orders/finalize-paid-order.ts` | `finalizePaidOrder(input, deps)` — the one idempotent finalize path for all order kinds; `deps.onPaid` is the injected side-effect callback |
+| `lib/orders/store-paid-side-effects.ts` | `runStorePaidSideEffects(order, deps)` — fetches `order_items`, builds and sends owner notification email for paid store orders |
+| `lib/orders/sticker-paid-side-effects.ts` | `runStickerPaidSideEffects(order, deps)` — copies order folder to paid bucket + writes receipt PDF via `markOrderPaid` + sends sticker owner notification email |
 | `lib/store/checkout-payload.ts` | `toCheckoutItems(lines, locale)`, `toCheckoutCustomer(delivery)` — pure builders |
 | `lib/store/checkout-navigation.ts` | `nextNavigation(result, lang)` — pure: redirect vs track-page routing |
 | `lib/store/confirm-store-order.ts` | Creates order + items, calls `createCheckout`, dispatches on result |
@@ -231,10 +249,10 @@ iCredit cannot POST the IPN to `localhost`. Webhook testing requires a **public 
 - **Sending agorot to iCredit.** `UnitPrice` and `TotalAmount` must be in **shekels** (use `agorotToShekels`). Sending agorot charges 100× too much (or the gateway rejects it).
 - **Trusting the IPN without `Verify`.** The IPN POST body can be forged. Always call `Verify` first; `Status === "VERIFIED"` is the source of truth.
 - **Marking paid before the amount check.** `amountMatches` must pass before `finalizePaidOrder` is called. A mismatch must return non-2xx so iCredit retries / flags the webhook.
-- **Clearing `REQUEST_KEY` (sessionStorage) before redirect.** `store-checkout.tsx` intentionally keeps `REQUEST_KEY` when navigating to iCredit, so that a back-button or retry resumes the same pending order rather than creating a duplicate. Only clear it after the mock `paid` path completes.
+- **Clearing session storage before redirect.** `store-checkout.tsx` intentionally keeps `REQUEST_KEY` and `checkout-form.tsx` (stickers) intentionally keeps `linecut_order` when navigating to iCredit, so that a back-button or retry resumes the same pending order rather than creating a duplicate. Only clear the session key after the mock `paid` path completes (inline finalize, no redirect).
 - **Forgetting the partial-unique `provider_sale_id` index.** Without `orders_provider_sale_id_key`, a replayed IPN could pay the same order twice (via a race). The DB index is the last-resort guard; the `payment_status <> 'paid'` filter in `finalizePaidOrder` is the first.
-- **Hardcoding the origin in a core.** `redirectUrlFor` and `ipnUrl` are injected by the server action (`app/actions/store.ts`) from `siteConfig.url`. Cores must not import `siteConfig` or `NEXT_PUBLIC_SITE_URL` directly.
-- **Calling `createCheckout` from a client component.** The GetUrl request must be server-to-server. The `confirmStoreOrder` action is the only call site.
+- **Hardcoding the origin in a core.** `redirectUrlFor` and `ipnUrl` are injected by the server actions (`app/actions/store.ts` and `app/actions/stickers.ts`) from `siteConfig.url`. Cores must not import `siteConfig` or `NEXT_PUBLIC_SITE_URL` directly.
+- **Calling `createCheckout` from a client component.** The GetUrl request must be server-to-server. `confirmStoreOrder` (store) and `confirmOrder` (stickers, via `confirmOrderCore`) are the only call sites — both are server actions.
 - **Reusing `handleIcreditIpn` with a null config token.** `handle-ipn.ts` rejects the IPN when `config.token` is falsy (to prevent `null === null` matching). Never call the webhook handler with an unconfigured `ICREDIT_MODE=mock` config.
 
 ---
@@ -247,4 +265,5 @@ This skill is part of the code. Update it (in the same PR) when:
 - New env vars are added or defaults change.
 - The `finalizePaidOrder` behavior or the receipt strategy changes.
 - The schema gains new payment-related columns.
-- The sticker flow is wired to iCredit (currently mock-only).
+- The `onPaid` side-effect pipeline changes (store email, sticker paid-bucket copy, receipt, or sticker owner email).
+- A new order kind is added that needs its own `onPaid` dispatch branch in the IPN route.
