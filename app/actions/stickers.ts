@@ -16,6 +16,8 @@ import type { CreateDraftResult } from "@/lib/orders/create-draft";
 import { confirmOrder as confirmOrderCore } from "@/lib/orders/confirm-order";
 import type { ConfirmOrderResult } from "@/lib/orders/confirm-order";
 import { markOrderPaid as markOrderPaidCore } from "@/lib/orders/mark-paid";
+import { finalizePaidOrder as finalizePaidOrderCore } from "@/lib/orders/finalize-paid-order";
+import { runStickerPaidSideEffects } from "@/lib/orders/sticker-paid-side-effects";
 import { buildOrderMetadataPdf } from "@/lib/pdf/order-metadata-pdf";
 import { buildPlaceholderReceiptPdf } from "@/lib/pdf/receipt-pdf";
 import { getCurrentUserFeatureAccess } from "@/lib/auth/feature-access";
@@ -52,13 +54,16 @@ export async function confirmOrder(input: {
   orderId: string;
   guestToken: string;
   delivery: unknown;
+  locale: import("@/lib/i18n").Locale;
 }): Promise<ConfirmOrderResult> {
   if (!(await checkStickerAccess()).allowed) {
     return { ok: false, message: "forbidden" };
   }
 
+  const admin = createAdminSupabaseClient();
+
   return confirmOrderCore(input, {
-    admin: createAdminSupabaseClient(),
+    admin,
     objectExists,
     // Re-key + metadata operate on the orders bucket (default).
     copyObject: (srcKey, dstKey) => copyObject(srcKey, dstKey),
@@ -66,26 +71,44 @@ export async function confirmOrder(input: {
     deletePrefix: (prefix) => deletePrefix(prefix),
     buildMetadataPdf: buildOrderMetadataPdf,
     paymentProvider: getPaymentProvider(),
-    // Paid pipeline: copy the order folder orders→paid and write the receipt.
-    markOrderPaid: (mp) =>
-      markOrderPaidCore(mp, {
-        admin: createAdminSupabaseClient(),
-        copyOrderFolderToPaid: (prefix) =>
-          copyPrefix(`${prefix}/`, `${prefix}/`, {
-            srcBucket: "orders",
-            dstBucket: "paid",
+    // Finalize: idempotent DB update + sticker-specific side effects.
+    finalizePaidOrder: (fp) =>
+      finalizePaidOrderCore(fp, {
+        admin,
+        onPaid: (order) =>
+          runStickerPaidSideEffects(order, {
+            markOrderPaid: (mp) =>
+              markOrderPaidCore(mp, {
+                admin: createAdminSupabaseClient(),
+                copyOrderFolderToPaid: (prefix) =>
+                  copyPrefix(`${prefix}/`, `${prefix}/`, {
+                    srcBucket: "orders",
+                    dstBucket: "paid",
+                  }),
+                writeReceipt: async (prefix, receipt) => {
+                  const key = receiptKey(prefix);
+                  const bytes = await buildPlaceholderReceiptPdf(receipt);
+                  await putObject(key, bytes, {
+                    contentType: "application/pdf",
+                    bucket: "paid",
+                  });
+                  return key;
+                },
+              }),
+            loadStickerCount: async (orderId) => {
+              const { count } = await admin
+                .from("order_stickers")
+                .select("id", { count: "exact", head: true })
+                .eq("order_id", orderId);
+              return count ?? 0;
+            },
+            sendOwnerEmail,
+            ownerFilesUrlFor: (id) =>
+              `${siteConfig.url}/he/admin/orders/${id}/files`,
           }),
-        writeReceipt: async (prefix, receipt) => {
-          const key = receiptKey(prefix);
-          const bytes = await buildPlaceholderReceiptPdf(receipt);
-          await putObject(key, bytes, {
-            contentType: "application/pdf",
-            bucket: "paid",
-          });
-          return key;
-        },
       }),
-    sendOwnerEmail,
-    ownerFilesUrlFor: (id) => `${siteConfig.url}/he/admin/orders/${id}/files`,
+    redirectUrlFor: (gt, locale) =>
+      `${siteConfig.url}/${locale}/stickers/track/${gt}`,
+    ipnUrl: `${siteConfig.url}/api/payments/icredit/ipn`,
   });
 }

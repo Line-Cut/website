@@ -46,6 +46,7 @@ const DRAFT_ORDER = {
   id: "order-uuid",
   guest_token: "gt_abc",
   confirmed_at: null,
+  payment_status: "awaiting_payment",
   price_total: 1200,
   price_currency: "ILS",
   price_sheets: 2,
@@ -54,8 +55,9 @@ const DRAFT_ORDER = {
   copies: 2,
 };
 
-const CONFIRMED_ORDER = {
+const PAID_ORDER = {
   ...DRAFT_ORDER,
+  payment_status: "paid",
   confirmed_at: "2024-01-01T00:00:00.000Z",
 };
 
@@ -68,7 +70,7 @@ const STICKERS = [
 // Fake admin builder
 // ---------------------------------------------------------------------------
 
-type FakeOrder = typeof DRAFT_ORDER | typeof CONFIRMED_ORDER | null;
+type FakeOrder = typeof DRAFT_ORDER | typeof PAID_ORDER | null;
 type FakeStickers = { id: string; storage_key: string }[];
 
 function makeFakeAdmin({
@@ -160,13 +162,9 @@ function makeDeps(overrides: Partial<ConfirmOrderDeps> = {}): ConfirmOrderDeps {
         reference: "MOCK-ref",
       })),
     },
-    markOrderPaid: vi.fn(async () => ({
-      ok: true,
-      receiptStorageKey: `${FRIENDLY_PREFIX}/receipt.pdf`,
-    })),
-    sendOwnerEmail: vi.fn(async () => {}),
-    ownerFilesUrlFor: (id) =>
-      `https://linecut.example/he/admin/orders/${id}/files`,
+    finalizePaidOrder: vi.fn(async () => ({ ok: true as const, alreadyPaid: false })),
+    redirectUrlFor: (gt, l) => `https://s/${l}/stickers/track/${gt}`,
+    ipnUrl: "https://s/api/payments/icredit/ipn",
     now: () => "2024-06-01T12:00:00.000Z",
   };
   return { ...defaultDeps, ...overrides };
@@ -188,6 +186,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: { method: "pickup" }, // missing names, email, phone
+        locale: "he",
       },
       deps,
     );
@@ -198,7 +197,7 @@ describe("confirmOrder", () => {
     }
     expect(fakeAdmin._updates).toHaveLength(0);
     expect(deps.copyObject).not.toHaveBeenCalled();
-    expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
+    expect(deps.finalizePaidOrder).not.toHaveBeenCalled();
   });
 
   it("returns ok:false not_found when order is not found (admin returns null)", async () => {
@@ -212,6 +211,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
       },
       deps,
     );
@@ -219,8 +219,8 @@ describe("confirmOrder", () => {
     expect(result).toEqual({ ok: false, message: "not_found" });
   });
 
-  it("returns ok:true (idempotent) when order is already confirmed; no payment, email, or re-key", async () => {
-    const fakeAdmin = makeFakeAdmin({ order: CONFIRMED_ORDER });
+  it("returns ok:true (idempotent) when order is already paid; no re-key, no payment, no finalize", async () => {
+    const fakeAdmin = makeFakeAdmin({ order: PAID_ORDER });
     const deps = makeDeps({
       admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
     });
@@ -230,6 +230,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
       },
       deps,
     );
@@ -241,8 +242,7 @@ describe("confirmOrder", () => {
     });
     expect(deps.paymentProvider.createCheckout).not.toHaveBeenCalled();
     expect(deps.copyObject).not.toHaveBeenCalled();
-    expect(deps.markOrderPaid).not.toHaveBeenCalled();
-    expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
+    expect(deps.finalizePaidOrder).not.toHaveBeenCalled();
   });
 
   it("returns ok:false uploads_incomplete when an S3 object is missing; no re-key, no payment", async () => {
@@ -261,6 +261,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
       },
       deps,
     );
@@ -271,7 +272,7 @@ describe("confirmOrder", () => {
     expect(fakeAdmin._updates).toHaveLength(0);
   });
 
-  it("happy path (pickup, paid): re-keys files, writes metadata, sets contact + storage_prefix; runs paid pipeline", async () => {
+  it("happy path (pickup, paid): re-keys files, writes metadata, updates contact + storage_prefix; calls finalizePaidOrder", async () => {
     const fakeAdmin = makeFakeAdmin();
     const deps = makeDeps({
       admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
@@ -282,6 +283,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
       },
       deps,
     );
@@ -312,31 +314,38 @@ describe("confirmOrder", () => {
     );
     expect(deps.deletePrefix).toHaveBeenCalledWith("g_gt_abc/order-uuid/");
 
-    // One order update with contact + storage_prefix; payment paid
+    // One contact + storage_prefix update (no payment fields — those go to finalizePaidOrder)
     expect(fakeAdmin._updates).toHaveLength(1);
     const { payload, filter } = fakeAdmin._updates[0];
     const p = payload as Record<string, unknown>;
     expect(filter).toEqual({ id: "order-uuid" });
-    expect(p.confirmed_at).toBe("2024-06-01T12:00:00.000Z");
     expect(p.contact_name).toBe("Dana Cohen");
     expect(p.contact_first_name).toBe("Dana");
     expect(p.contact_last_name).toBe("Cohen");
     expect(p.contact_email).toBe("dana@example.com");
     expect(p.contact_phone).toBe("+972501234567");
     expect(p.storage_prefix).toBe(FRIENDLY_PREFIX);
-    expect(p.payment_status).toBe("paid");
-    expect(p.payment_reference).toBe("MOCK-ref");
-    expect(p.paid_at).toBe("2024-06-01T12:00:00.000Z");
     expect(p.delivery_method).toBe("pickup");
+    // Payment fields must NOT be in this update
+    expect(p.confirmed_at).toBeUndefined();
+    expect(p.payment_status).toBeUndefined();
+    expect(p.paid_at).toBeUndefined();
+    expect(p.payment_reference).toBeUndefined();
 
-    // Paid → paid pipeline IS run
-    expect(deps.markOrderPaid).toHaveBeenCalledTimes(1);
-
-    // Owner email sent once
-    expect(deps.sendOwnerEmail).toHaveBeenCalledTimes(1);
+    // finalizePaidOrder called for the mock paid path
+    expect(deps.finalizePaidOrder).toHaveBeenCalledTimes(1);
+    expect(deps.finalizePaidOrder).toHaveBeenCalledWith({
+      orderId: "order-uuid",
+      paidAtISO: "2024-06-01T12:00:00.000Z",
+      provider: "mock",
+      saleId: "MOCK-ref",
+      reference: "MOCK-ref",
+      receiptDocumentUrl: null,
+      receiptDocumentNumber: null,
+    });
   });
 
-  it("paid path: records payment ref + paid_at and runs the paid pipeline (copy + receipt)", async () => {
+  it("paid (mock) branch: calls finalizePaidOrder with correct args, returns ok:true without redirectUrl", async () => {
     const fakeAdmin = makeFakeAdmin();
     const deps = makeDeps({
       admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
@@ -353,70 +362,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_PICKUP_DELIVERY,
-      },
-      deps,
-    );
-
-    expect(result.ok).toBe(true);
-
-    const { payload } = fakeAdmin._updates[0];
-    const p = payload as Record<string, unknown>;
-    expect(p.payment_status).toBe("paid");
-    expect(p.payment_reference).toBe("MOCK-order-uuid");
-    expect(p.paid_at).toBe("2024-06-01T12:00:00.000Z");
-
-    // Paid pipeline invoked with the order, friendly prefix and receipt context
-    expect(deps.markOrderPaid).toHaveBeenCalledTimes(1);
-    expect(deps.markOrderPaid).toHaveBeenCalledWith({
-      orderId: "order-uuid",
-      storagePrefix: FRIENDLY_PREFIX,
-      receipt: {
-        orderId: "order-uuid",
-        amount: 1200,
-        currency: "ILS",
-        reference: "MOCK-order-uuid",
-        paidAtISO: "2024-06-01T12:00:00.000Z",
-      },
-    });
-  });
-
-  it("does not fail (ok:true) when the paid pipeline throws", async () => {
-    const deps = makeDeps({
-      paymentProvider: {
-        createCheckout: vi.fn(async () => ({
-          status: "paid" as const,
-          reference: "MOCK-order-uuid",
-        })),
-      },
-      markOrderPaid: vi.fn(async () => {
-        throw new Error("S3 down");
-      }),
-    });
-
-    const result = await confirmOrder(
-      {
-        orderId: "order-uuid",
-        guestToken: "gt_abc",
-        delivery: VALID_PICKUP_DELIVERY,
-      },
-      deps,
-    );
-
-    expect(result.ok).toBe(true);
-  });
-
-  it("does not fail (ok:true) when sendOwnerEmail throws", async () => {
-    const deps = makeDeps({
-      sendOwnerEmail: vi.fn(async () => {
-        throw new Error("Resend down");
-      }),
-    });
-
-    const result = await confirmOrder(
-      {
-        orderId: "order-uuid",
-        guestToken: "gt_abc",
-        delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
       },
       deps,
     );
@@ -426,6 +372,133 @@ describe("confirmOrder", () => {
       orderId: "order-uuid",
       guestToken: "gt_abc",
     });
+    expect((result as { redirectUrl?: string }).redirectUrl).toBeUndefined();
+
+    expect(deps.finalizePaidOrder).toHaveBeenCalledTimes(1);
+    expect(deps.finalizePaidOrder).toHaveBeenCalledWith({
+      orderId: "order-uuid",
+      paidAtISO: "2024-06-01T12:00:00.000Z",
+      provider: "mock",
+      saleId: "MOCK-order-uuid",
+      reference: "MOCK-order-uuid",
+      receiptDocumentUrl: null,
+      receiptDocumentNumber: null,
+    });
+  });
+
+  it("redirect branch: returns redirectUrl, does NOT call finalizePaidOrder, updates payment_provider + payment_reference", async () => {
+    const fakeAdmin = makeFakeAdmin();
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+      paymentProvider: {
+        createCheckout: vi.fn(async () => ({
+          status: "redirect" as const,
+          url: "https://icredit.example/pay/123",
+          reference: "REF-abc",
+        })),
+      },
+    });
+
+    const result = await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
+      },
+      deps,
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      orderId: "order-uuid",
+      guestToken: "gt_abc",
+      redirectUrl: "https://icredit.example/pay/123",
+    });
+
+    // finalizePaidOrder NOT called on redirect path
+    expect(deps.finalizePaidOrder).not.toHaveBeenCalled();
+
+    // Two updates: contact fields update + payment provider/reference update
+    expect(fakeAdmin._updates).toHaveLength(2);
+    const contactPayload = fakeAdmin._updates[0].payload as Record<string, unknown>;
+    expect(contactPayload.contact_name).toBe("Dana Cohen");
+    expect(contactPayload.storage_prefix).toBe(FRIENDLY_PREFIX);
+    expect(contactPayload.payment_provider).toBeUndefined();
+
+    const providerPayload = fakeAdmin._updates[1].payload as Record<string, unknown>;
+    expect(providerPayload.payment_provider).toBe("icredit");
+    expect(providerPayload.payment_reference).toBe("REF-abc");
+  });
+
+  it("createCheckout receives locale, redirectUrlFor result, and ipnUrl", async () => {
+    const deps = makeDeps();
+    await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
+      },
+      deps,
+    );
+    expect(deps.paymentProvider.createCheckout).toHaveBeenCalledWith(
+      expect.objectContaining({
+        locale: "he",
+        redirectUrl: "https://s/he/stickers/track/gt_abc",
+        ipnUrl: "https://s/api/payments/icredit/ipn",
+      }),
+    );
+  });
+
+  it("returns ok:false payment_failed when the provider declines; contact update still happened, no finalizePaidOrder", async () => {
+    const fakeAdmin = makeFakeAdmin();
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+      paymentProvider: {
+        createCheckout: vi.fn(async () => ({
+          status: "failed" as const,
+          reason: "insufficient funds",
+        })),
+      },
+    });
+
+    const result = await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
+      },
+      deps,
+    );
+
+    expect(result).toEqual({ ok: false, message: "payment_failed" });
+    // Contact update happened (no rollback — order is a draft; recoverable)
+    expect(fakeAdmin._updates).toHaveLength(1);
+    expect(deps.finalizePaidOrder).not.toHaveBeenCalled();
+  });
+
+  it("returns ok:false db_error when the order update fails; no finalizePaidOrder", async () => {
+    const fakeAdmin = makeFakeAdmin({
+      updateError: { message: "constraint violation" },
+    });
+    const deps = makeDeps({
+      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
+    });
+
+    const result = await confirmOrder(
+      {
+        orderId: "order-uuid",
+        guestToken: "gt_abc",
+        delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
+      },
+      deps,
+    );
+
+    expect(result).toEqual({ ok: false, message: "db_error" });
+    expect(deps.finalizePaidOrder).not.toHaveBeenCalled();
   });
 
   it("shipping path: update includes ship_* fields", async () => {
@@ -439,6 +512,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_SHIPPING_DELIVERY,
+        locale: "he",
       },
       deps,
     );
@@ -464,6 +538,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
       },
       deps,
     );
@@ -474,54 +549,6 @@ describe("confirmOrder", () => {
     expect(p.ship_address_line1).toBeNull();
     expect(p.ship_city).toBeNull();
     expect(p.ship_postal_code).toBeNull();
-  });
-
-  it("returns ok:false payment_failed when the provider declines; no order update, no email, no paid pipeline", async () => {
-    const fakeAdmin = makeFakeAdmin();
-    const deps = makeDeps({
-      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
-      paymentProvider: {
-        createCheckout: vi.fn(async () => ({
-          status: "failed" as const,
-          reason: "insufficient funds",
-        })),
-      },
-    });
-
-    const result = await confirmOrder(
-      {
-        orderId: "order-uuid",
-        guestToken: "gt_abc",
-        delivery: VALID_PICKUP_DELIVERY,
-      },
-      deps,
-    );
-
-    expect(result).toEqual({ ok: false, message: "payment_failed" });
-    expect(fakeAdmin._updates).toHaveLength(0);
-    expect(deps.markOrderPaid).not.toHaveBeenCalled();
-    expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
-  });
-
-  it("returns ok:false db_error when the order update fails; no email", async () => {
-    const fakeAdmin = makeFakeAdmin({
-      updateError: { message: "constraint violation" },
-    });
-    const deps = makeDeps({
-      admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
-    });
-
-    const result = await confirmOrder(
-      {
-        orderId: "order-uuid",
-        guestToken: "gt_abc",
-        delivery: VALID_PICKUP_DELIVERY,
-      },
-      deps,
-    );
-
-    expect(result).toEqual({ ok: false, message: "db_error" });
-    expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
   });
 
   it("shipping with notes: update payload includes ship_notes with the customer note", async () => {
@@ -535,6 +562,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_SHIPPING_WITH_NOTES,
+        locale: "he",
       },
       deps,
     );
@@ -556,6 +584,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_PICKUP_WITH_NOTES,
+        locale: "he",
       },
       deps,
     );
@@ -577,6 +606,7 @@ describe("confirmOrder", () => {
         orderId: "order-uuid",
         guestToken: "gt_abc",
         delivery: VALID_PICKUP_DELIVERY,
+        locale: "he",
       },
       deps,
     );

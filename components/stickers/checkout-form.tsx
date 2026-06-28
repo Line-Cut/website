@@ -192,6 +192,7 @@ export function CheckoutForm({ dict, lang }: Props) {
         orderId: handle.orderId,
         guestToken: handle.guestToken,
         delivery: parsed.data,
+        locale: lang,
       });
 
       if (result.ok) {
