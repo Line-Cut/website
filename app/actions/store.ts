@@ -7,6 +7,7 @@ import { quoteCart } from "@/lib/store/quote-cart";
 import type { QuoteCartResult } from "@/lib/store/quote-cart";
 import { confirmStoreOrder as confirmStoreOrderCore } from "@/lib/store/confirm-store-order";
 import type { ConfirmStoreOrderResult } from "@/lib/store/confirm-store-order";
+import { finalizePaidOrder as finalizePaidOrderCore } from "@/lib/orders/finalize-paid-order";
 import { sendOwnerEmail } from "@/lib/emails/send";
 import { siteConfig } from "@/lib/site-config";
 import type { Locale } from "@/lib/i18n";
@@ -31,16 +32,28 @@ export async function confirmStoreOrder(input: {
   items: unknown;
   delivery: unknown;
   clientRequestId: string;
+  locale: Locale;
 }): Promise<ConfirmStoreOrderResult> {
   const access = await getCurrentUserFeatureAccess("store");
   if (!access.allowed) return { ok: false, message: "forbidden" };
   const user = access.user;
 
+  const admin = createAdminSupabaseClient();
+  const ownerOrderUrlFor = (id: string) => `${siteConfig.url}/he/admin/orders/${id}`;
+
   return confirmStoreOrderCore(input, {
-    admin: createAdminSupabaseClient(),
+    admin,
     paymentProvider: getPaymentProvider(),
+    finalizePaidOrder: (fpInput) =>
+      finalizePaidOrderCore(fpInput, {
+        admin,
+        sendOwnerEmail,
+        ownerOrderUrlFor,
+      }),
+    redirectUrlFor: (gt, locale) => `${siteConfig.url}/${locale}/store/track/${gt}`,
+    ipnUrl: `${siteConfig.url}/api/payments/icredit/ipn`,
     sendOwnerEmail,
-    ownerOrderUrlFor: (id) => `${siteConfig.url}/he/admin/orders/${id}`,
+    ownerOrderUrlFor,
     userId: user?.id ?? null,
   });
 }

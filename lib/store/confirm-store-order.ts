@@ -10,12 +10,16 @@ import {
   rowToProduct,
   type ProductRow,
 } from "@/lib/store/product-row";
-import { buildOwnerStoreEmail } from "@/lib/emails/store-order-notification";
-import type { Product } from "@/lib/store/types";
+import type { Product, SelectedOptionSnapshot } from "@/lib/store/types";
+import { toCheckoutItems, toCheckoutCustomer } from "@/lib/store/checkout-payload";
+import type { FinalizePaidOrderInput } from "@/lib/orders/finalize-paid-order";
 
 export type ConfirmStoreOrderDeps = {
   admin: SupabaseClient;
   paymentProvider: import("@/lib/payments/provider").PaymentProvider;
+  finalizePaidOrder: (input: FinalizePaidOrderInput) => Promise<{ ok: boolean; alreadyPaid?: boolean }>;
+  redirectUrlFor: (guestToken: string, locale: "he" | "en") => string;
+  ipnUrl: string;
   sendOwnerEmail: (email: {
     subject: string;
     text: string;
@@ -32,10 +36,11 @@ export type ConfirmStoreOrderInput = {
   items: unknown;
   delivery: unknown;
   clientRequestId: string;
+  locale: "he" | "en";
 };
 
 export type ConfirmStoreOrderResult =
-  | { ok: true; orderId: string; guestToken: string }
+  | { ok: true; orderId: string; guestToken: string; redirectUrl?: string }
   | {
       ok: false;
       message: string;
@@ -46,8 +51,9 @@ export type ConfirmStoreOrderResult =
 /**
  * Create-at-confirm store order. No draft row (the cart lives client-side and
  * there are no files to pre-stage). Idempotent via a client-minted
- * clientRequestId backed by a partial-unique index. Reuses the delivery schema,
- * payment provider, and owner email; skips ALL sticker S3/packing/PDF steps.
+ * clientRequestId backed by a partial-unique index. Delegates payment to the
+ * PaymentProvider's hosted checkout — returns a redirectUrl for the iCredit
+ * gateway, or ok:true immediately for the mock paid result.
  */
 export async function confirmStoreOrder(
   input: ConfirmStoreOrderInput,
@@ -63,11 +69,18 @@ export async function confirmStoreOrder(
   // 1. Idempotency: a prior submit with this key returns the same order
   const { data: existing } = await deps.admin
     .from("orders")
-    .select("id, guest_token")
+    .select(
+      "id, guest_token, payment_status, price_total, price_currency, delivery_method, contact_first_name, contact_last_name, contact_email, contact_phone, ship_address_line1, ship_city, ship_postal_code",
+    )
     .eq("client_request_id", clientRequestId)
     .maybeSingle();
+
   if (existing) {
-    return { ok: true, orderId: existing.id, guestToken: existing.guest_token };
+    if (existing.payment_status === "paid") {
+      return { ok: true, orderId: existing.id, guestToken: existing.guest_token };
+    }
+    // Re-issue checkout so a retry resumes payment instead of duplicating the order
+    return reissueCheckout(existing, input.locale, deps, nowIso);
   }
 
   // 2. Validate delivery + cart
@@ -166,54 +179,135 @@ export async function confirmStoreOrder(
     return { ok: false, message: "db_error" };
   }
 
-  // 7. Payment (mock returns paid today). On failure roll the order back so the
-  //    buyer can retry — cascade removes the line items.
-  const payResult = await deps.paymentProvider.createCharge({
+  // 7. Hosted checkout — provider decides whether to redirect or to charge inline
+  return runCheckout({
+    orderId,
+    guestToken,
+    total,
+    currency,
+    locale: input.locale,
+    lines,
+    delivery,
+    deps,
+    nowIso,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Run createCheckout and dispatch on the result. Used for both fresh and re-issued orders. */
+async function runCheckout({
+  orderId,
+  guestToken,
+  total,
+  currency,
+  locale,
+  lines,
+  delivery,
+  deps,
+  nowIso,
+}: {
+  orderId: string;
+  guestToken: string;
+  total: number;
+  currency: string;
+  locale: "he" | "en";
+  lines: import("@/lib/store/types").PricedLine[];
+  delivery: CheckoutInput;
+  deps: ConfirmStoreOrderDeps;
+  nowIso: () => string;
+}): Promise<ConfirmStoreOrderResult> {
+  const checkoutResult = await deps.paymentProvider.createCheckout({
     orderId,
     amount: total,
     currency,
+    locale,
+    items: toCheckoutItems(lines, locale),
+    customer: toCheckoutCustomer(delivery),
+    redirectUrl: deps.redirectUrlFor(guestToken, locale),
+    ipnUrl: deps.ipnUrl,
   });
-  if (payResult.status === "failed") {
+
+  if (checkoutResult.status === "failed") {
     await deps.admin.from("orders").delete().eq("id", orderId);
     return { ok: false, message: "payment_failed" };
   }
 
-  const paid = payResult.status === "paid";
-  const paymentStatus = paid ? "paid" : "awaiting_payment";
-  const paymentReference =
-    "reference" in payResult ? (payResult.reference ?? null) : null;
-  const paidAtIso = paid ? nowIso() : null;
-
-  // 8. Finalize — confirmed_at is set last so a failed earlier step re-runs cleanly
-  const { error: updateErr } = await deps.admin
-    .from("orders")
-    .update({
-      payment_status: paymentStatus,
-      payment_reference: paymentReference,
-      paid_at: paidAtIso,
-      confirmed_at: nowIso(),
-    })
-    .eq("id", orderId);
-  if (updateErr) return { ok: false, message: "db_error" };
-
-  // 9. Owner email (best-effort — failure must NOT fail the order)
-  try {
-    const email = buildOwnerStoreEmail({
-      orderId,
-      ownerOrderUrl: deps.ownerOrderUrlFor(orderId),
-      contactName: fullName,
-      contactEmail: delivery.email,
-      contactPhone: delivery.phone,
-      delivery,
-      lines,
-      total,
-      currency,
-      locale: "en",
-    });
-    await deps.sendOwnerEmail(email);
-  } catch (err) {
-    console.error("[confirmStoreOrder] owner email failed:", err);
+  if (checkoutResult.status === "redirect") {
+    // Record the provider token so the IPN can match inbound callbacks
+    await deps.admin
+      .from("orders")
+      .update({
+        payment_provider: "icredit",
+        payment_reference: checkoutResult.reference,
+      })
+      .eq("id", orderId);
+    return { ok: true, orderId, guestToken, redirectUrl: checkoutResult.url };
   }
 
+  // status === "paid" (mock provider)
+  await deps.finalizePaidOrder({
+    orderId,
+    paidAtISO: nowIso(),
+    provider: "mock",
+    saleId: checkoutResult.reference,
+    reference: checkoutResult.reference,
+    receiptDocumentUrl: null,
+    receiptDocumentNumber: null,
+  });
   return { ok: true, orderId, guestToken };
+}
+
+/** Re-issue a checkout for an existing unpaid order (idempotency retry path). */
+async function reissueCheckout(
+  existing: Record<string, unknown>,
+  locale: "he" | "en",
+  deps: ConfirmStoreOrderDeps,
+  nowIso: () => string,
+): Promise<ConfirmStoreOrderResult> {
+  const orderId = existing.id as string;
+  const guestToken = existing.guest_token as string;
+
+  const { data: itemRows } = await deps.admin
+    .from("order_items")
+    .select("product_id, title_he, title_en, image_url, options, quantity, unit_price, line_total")
+    .eq("order_id", orderId);
+
+  const pricedLines: import("@/lib/store/types").PricedLine[] = (itemRows ?? []).map(
+    (r: Record<string, unknown>) => ({
+      productId: r.product_id as string,
+      titleHe: r.title_he as string,
+      titleEn: r.title_en as string,
+      imageUrl: r.image_url as string | null,
+      options: (r.options as SelectedOptionSnapshot[]) ?? [],
+      quantity: r.quantity as number,
+      unitPrice: r.unit_price as number,
+      lineTotal: r.line_total as number,
+    }),
+  );
+
+  const reissueDelivery: CheckoutInput = {
+    method: existing.delivery_method as "pickup" | "shipping",
+    firstName: existing.contact_first_name as string,
+    lastName: existing.contact_last_name as string,
+    email: existing.contact_email as string,
+    phone: existing.contact_phone as string,
+    addressLine1: (existing.ship_address_line1 as string | null) ?? undefined,
+    city: (existing.ship_city as string | null) ?? undefined,
+    postalCode: (existing.ship_postal_code as string | null) ?? undefined,
+  };
+
+  return runCheckout({
+    orderId,
+    guestToken,
+    total: existing.price_total as number,
+    currency: existing.price_currency as string,
+    locale,
+    lines: pricedLines,
+    delivery: reissueDelivery,
+    deps,
+    nowIso,
+  });
 }

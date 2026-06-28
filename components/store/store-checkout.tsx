@@ -137,6 +137,7 @@ export function StoreCheckout({ dict, lang }: { dict: Dictionary["store"]; lang:
         items: toServerItems(items),
         delivery: parsed.data,
         clientRequestId: getClientRequestId(),
+        locale: lang,
       });
 
       if (result.ok) {
@@ -145,6 +146,10 @@ export function StoreCheckout({ dict, lang }: { dict: Dictionary["store"]; lang:
           sessionStorage.removeItem(REQUEST_KEY);
         } catch {
           /* ignore */
+        }
+        if (result.redirectUrl) {
+          window.location.href = result.redirectUrl;
+          return;
         }
         router.push(`/${lang}/store/track/${result.guestToken}`);
         return;
