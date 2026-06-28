@@ -1,8 +1,5 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { buildOwnerStoreEmail } from "@/lib/emails/store-order-notification";
-import type { CheckoutInput } from "@/lib/stickers/checkout-schema";
-import type { PricedLine, SelectedOptionSnapshot } from "@/lib/store/types";
 
 export type FinalizePaidOrderInput = {
   orderId: string;
@@ -16,8 +13,7 @@ export type FinalizePaidOrderInput = {
 
 export type FinalizePaidOrderDeps = {
   admin: SupabaseClient;
-  sendOwnerEmail: (e: { subject: string; text: string; replyTo: string }) => Promise<void>;
-  ownerOrderUrlFor: (id: string) => string;
+  onPaid?: (order: Record<string, unknown>) => Promise<void>;
   now?: () => string;
 };
 
@@ -52,60 +48,11 @@ export async function finalizePaidOrder(
 
   const order = rows[0] as Record<string, unknown>;
 
-  if (order.order_kind === "store") {
-    try {
-      const { data: items } = await deps.admin
-        .from("order_items")
-        .select("title_he, title_en, options, quantity, unit_price, line_total")
-        .eq("order_id", input.orderId);
-
-      const lines: PricedLine[] = (items ?? []).map(
-        (r: Record<string, unknown>) => ({
-          productId: "",
-          titleHe: r.title_he as string,
-          titleEn: r.title_en as string,
-          imageUrl: null,
-          options: (r.options as SelectedOptionSnapshot[]) ?? [],
-          quantity: r.quantity as number,
-          unitPrice: r.unit_price as number,
-          lineTotal: r.line_total as number,
-        }),
-      );
-
-      const email = buildOwnerStoreEmail({
-        orderId: input.orderId,
-        ownerOrderUrl: deps.ownerOrderUrlFor(input.orderId),
-        contactName: order.contact_name as string,
-        contactEmail: order.contact_email as string,
-        contactPhone: order.contact_phone as string | null,
-        delivery: deliveryFromOrder(order),
-        lines,
-        total: order.price_total as number,
-        currency: order.price_currency as string,
-        locale: "en",
-      });
-      await deps.sendOwnerEmail(email);
-    } catch (err) {
-      console.error("[finalizePaidOrder] owner email failed:", err);
-    }
+  try {
+    await deps.onPaid?.(order);
+  } catch (err) {
+    console.error("[finalizePaidOrder] onPaid failed:", err);
   }
 
   return { ok: true, alreadyPaid: false };
-}
-
-/** Reconstruct a CheckoutInput-shaped delivery from an order row. */
-function deliveryFromOrder(order: Record<string, unknown>): CheckoutInput {
-  return {
-    method: order.delivery_method as "pickup" | "shipping",
-    firstName: order.contact_first_name as string,
-    lastName: order.contact_last_name as string,
-    phone: order.contact_phone as string,
-    email: order.contact_email as string,
-    addressLine1: (order.ship_address_line1 as string | null) ?? undefined,
-    addressLine2: (order.ship_address_line2 as string | null) ?? undefined,
-    city: (order.ship_city as string | null) ?? undefined,
-    postalCode: (order.ship_postal_code as string | null) ?? undefined,
-    country: (order.ship_country as string | null) ?? undefined,
-    notes: (order.ship_notes as string | null) ?? undefined,
-  };
 }

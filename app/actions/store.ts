@@ -8,6 +8,7 @@ import type { QuoteCartResult } from "@/lib/store/quote-cart";
 import { confirmStoreOrder as confirmStoreOrderCore } from "@/lib/store/confirm-store-order";
 import type { ConfirmStoreOrderResult } from "@/lib/store/confirm-store-order";
 import { finalizePaidOrder as finalizePaidOrderCore } from "@/lib/orders/finalize-paid-order";
+import { runStorePaidSideEffects } from "@/lib/orders/store-paid-side-effects";
 import { sendOwnerEmail } from "@/lib/emails/send";
 import { siteConfig } from "@/lib/site-config";
 import type { Locale } from "@/lib/i18n";
@@ -47,8 +48,8 @@ export async function confirmStoreOrder(input: {
     finalizePaidOrder: (fpInput) =>
       finalizePaidOrderCore(fpInput, {
         admin,
-        sendOwnerEmail,
-        ownerOrderUrlFor,
+        onPaid: (order) =>
+          runStorePaidSideEffects(order, { admin, sendOwnerEmail, ownerOrderUrlFor }),
       }),
     redirectUrlFor: (gt, locale) => `${siteConfig.url}/${locale}/store/track/${gt}`,
     ipnUrl: `${siteConfig.url}/api/payments/icredit/ipn`,

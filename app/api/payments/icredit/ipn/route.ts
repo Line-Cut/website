@@ -4,6 +4,7 @@ import { getIcreditConfig } from "@/lib/payments/icredit/config";
 import { verifySale } from "@/lib/payments/icredit/client";
 import { handleIcreditIpn } from "@/lib/payments/icredit/handle-ipn";
 import { finalizePaidOrder } from "@/lib/orders/finalize-paid-order";
+import { runStorePaidSideEffects } from "@/lib/orders/store-paid-side-effects";
 import { issueInvoiceReceipt } from "@/lib/payments/rivhit/issue-receipt";
 import { sendOwnerEmail } from "@/lib/emails/send";
 import { siteConfig } from "@/lib/site-config";
@@ -44,8 +45,12 @@ export async function POST(req: NextRequest) {
         },
         {
           admin,
-          sendOwnerEmail,
-          ownerOrderUrlFor: (id) => `${siteConfig.url}/he/admin/orders/${id}`,
+          onPaid: (order) =>
+            runStorePaidSideEffects(order, {
+              admin,
+              sendOwnerEmail,
+              ownerOrderUrlFor: (id) => `${siteConfig.url}/he/admin/orders/${id}`,
+            }),
         },
       ),
     issueFallbackReceipt: fallbackOn

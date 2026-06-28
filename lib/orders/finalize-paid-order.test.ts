@@ -27,22 +27,12 @@ const STORE_ORDER_ROW = {
   ship_notes: null,
 };
 
-const ITEM_ROW = {
-  title_he: "מדבקה",
-  title_en: "Sticker",
-  options: [],
-  quantity: 2,
-  unit_price: 500,
-  line_total: 1000,
-};
-
 // ---------------------------------------------------------------------------
 // Fake admin builder
 // ---------------------------------------------------------------------------
 
 function makeFakeAdmin({
   updatedRows = [] as unknown[],
-  items = [] as unknown[],
   updateError = null as { message: string } | null,
 } = {}) {
   let lastOrderUpdate: unknown = null;
@@ -75,17 +65,6 @@ function makeFakeAdmin({
           },
         };
       }
-      if (table === "order_items") {
-        return {
-          select(_cols: string) {
-            return {
-              eq(_col: string, _val: unknown) {
-                return Promise.resolve({ data: items, error: null });
-              },
-            };
-          },
-        };
-      }
       throw new Error(`Unexpected table: ${table}`);
     },
   };
@@ -98,9 +77,9 @@ function makeFakeAdmin({
 // ---------------------------------------------------------------------------
 
 describe("finalizePaidOrder", () => {
-  it("marks an awaiting order paid, sets receipt fields + confirmed_at, sends owner email once", async () => {
-    const emails: unknown[] = [];
-    const admin = makeFakeAdmin({ updatedRows: [STORE_ORDER_ROW], items: [ITEM_ROW] });
+  it("marks an awaiting order paid, sets receipt fields + confirmed_at, calls onPaid once with the order", async () => {
+    const onPaid = vi.fn().mockResolvedValue(undefined);
+    const admin = makeFakeAdmin({ updatedRows: [STORE_ORDER_ROW] });
     const res = await finalizePaidOrder(
       {
         orderId: "o1",
@@ -113,10 +92,7 @@ describe("finalizePaidOrder", () => {
       },
       {
         admin: admin as never,
-        sendOwnerEmail: async (e) => {
-          emails.push(e);
-        },
-        ownerOrderUrlFor: (id) => `https://s/admin/${id}`,
+        onPaid,
         now: () => "2026-06-28T12:00:00.000Z",
       },
     );
@@ -130,11 +106,12 @@ describe("finalizePaidOrder", () => {
     expect(payload.receipt_document_number).toBe("665");
     expect(payload.paid_at).toBe("2026-06-28T00:00:00.000Z");
     expect(payload.confirmed_at).toBe("2026-06-28T12:00:00.000Z");
-    expect(emails).toHaveLength(1);
+    expect(onPaid).toHaveBeenCalledOnce();
+    expect(onPaid).toHaveBeenCalledWith(STORE_ORDER_ROW);
   });
 
-  it("is a no-op when already paid (0 rows updated) and sends no email", async () => {
-    const emails: unknown[] = [];
+  it("is a no-op when already paid (0 rows updated) and does not call onPaid", async () => {
+    const onPaid = vi.fn();
     const admin = makeFakeAdmin({ updatedRows: [] });
     const res = await finalizePaidOrder(
       {
@@ -148,18 +125,15 @@ describe("finalizePaidOrder", () => {
       },
       {
         admin: admin as never,
-        sendOwnerEmail: async (e) => {
-          emails.push(e);
-        },
-        ownerOrderUrlFor: () => "x",
+        onPaid,
       },
     );
     expect(res).toEqual({ ok: true, alreadyPaid: true });
-    expect(emails).toHaveLength(0);
+    expect(onPaid).not.toHaveBeenCalled();
   });
 
-  it("never fails the order when the owner email throws", async () => {
-    const admin = makeFakeAdmin({ updatedRows: [STORE_ORDER_ROW], items: [ITEM_ROW] });
+  it("never fails the order when onPaid throws", async () => {
+    const admin = makeFakeAdmin({ updatedRows: [STORE_ORDER_ROW] });
     const res = await finalizePaidOrder(
       {
         orderId: "o1",
@@ -172,10 +146,9 @@ describe("finalizePaidOrder", () => {
       },
       {
         admin: admin as never,
-        sendOwnerEmail: async () => {
+        onPaid: async () => {
           throw new Error("smtp down");
         },
-        ownerOrderUrlFor: () => "x",
       },
     );
     expect(res).toEqual({ ok: true, alreadyPaid: false });
@@ -195,8 +168,6 @@ describe("finalizePaidOrder", () => {
       },
       {
         admin: admin as never,
-        sendOwnerEmail: async () => {},
-        ownerOrderUrlFor: () => "x",
       },
     );
     expect(res).toEqual({ ok: false, message: "db_error" });
