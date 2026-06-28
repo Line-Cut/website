@@ -49,7 +49,7 @@ The sticker shop lets a customer upload WhatsApp `.webp` stickers, see a live **
 | PDF builders | `lib/pdf/order-metadata-pdf.ts`, `lib/pdf/receipt-pdf.ts` | metadata (Hebrew via DejaVuSans + bidi-js) / receipt seam; font in `lib/pdf/fonts/` (traced in `next.config.ts`) |
 | Storage | `lib/storage/keys.ts`, `lib/storage/s3.ts` | key scheme + friendly prefix + presign/exists/delete + `putObject`/`copyObject`/`copyPrefix`; two buckets |
 | Supabase | `lib/supabase/{client,server,admin,proxy}.ts` | browser / RLS / admin / session refresh |
-| Payments | `lib/payments/{provider,manual-provider,index}.ts` | swap seam = `getPaymentProvider()`; mock returns `paid` |
+| Payments | `lib/payments/{provider,manual-provider,index}.ts` + full iCredit/Rivhit layer | swap seam = `getPaymentProvider()`; mock returns `paid` (sticker flow); **store cart uses iCredit redirect + IPN webhook + `finalizePaidOrder`** — see skill `rivhit-icredit` |
 | Owner email | `lib/emails/order-notification.ts` | pure builder; sent via Resend in `confirmOrder` |
 | Owner gate | `lib/auth/is-owner.ts` | `OWNER_NOTIFY_EMAIL` allow-list (order notifications + file downloads) |
 | Shop access gate | `lib/auth/feature-access.ts` | `getCurrentUserFeatureAccess("stickers")` — DB-backed per-feature access (`feature_access` + `feature_allowlist` tables); Public or Restricted per feature; managed at `/admin/access`; admins bypass |
@@ -108,7 +108,7 @@ The order system was generalized to also serve a **public catalog store** (`/[la
 
 ## Roadmap seams (architected, not built)
 
-Real payment gateway (behind `PaymentProvider`; drive `markOrderPaid` from its webhook — set payment status/ref, then copy + receipt) and a **real receipt** (today `lib/pdf/receipt-pdf.ts` writes a placeholder); orphaned in-progress order cleanup (sweep abandoned `confirmed_at IS NULL` rows + their S3 temp prefixes — there are no intentional/resumable drafts anymore); custom-upload (sticker-like) store products with bespoke pages; a real store-order receipt PDF; customer status-change emails. Keep new data/IO behind `lib/` + Server Actions. (Built: the store catalog + admin order dashboard — see "Store orders" above.)
+**Real payment gateway for the store cart: built** — see skill `rivhit-icredit`. The iCredit hosted-page redirect + IPN webhook + `finalizePaidOrder` are wired to the store cart via `getPaymentProvider()` (`ICREDIT_MODE=test|prod`). The sticker flow still uses the mock provider (inline `paid`, no redirect). Remaining seams: a **real receipt** for sticker orders (today `lib/pdf/receipt-pdf.ts` writes a placeholder); orphaned in-progress order cleanup (sweep abandoned `confirmed_at IS NULL` rows + their S3 temp prefixes — there are no intentional/resumable drafts anymore); custom-upload (sticker-like) store products with bespoke pages; a real store-order receipt PDF (the iCredit `DocumentURL` is already stored on the order via `receipt_document_url`); customer status-change emails. Keep new data/IO behind `lib/` + Server Actions. (Built: the store catalog + admin order dashboard — see "Store orders" above.)
 
 ## Maintenance
 
