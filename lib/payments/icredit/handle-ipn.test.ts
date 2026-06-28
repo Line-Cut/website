@@ -7,7 +7,7 @@ const PAID_IPN = { GroupPrivateToken: "TOK", SaleId: "sale-1", Custom1: "o1",
 const ORDER = { id: "o1", price_total: 12345, payment_status: "awaiting_payment" };
 
 function deps(over = {}) {
-  return { config: CONFIG, loadOrder: async () => ORDER, verify: async () => "VERIFIED",
+  return { config: CONFIG, loadOrder: async () => ORDER, verify: vi.fn(async () => "VERIFIED"),
     finalize: vi.fn(async () => ({ ok: true })), now: () => "t", ...over };
 }
 
@@ -16,8 +16,10 @@ describe("handleIcreditIpn", () => {
     const d = deps();
     const res = await handleIcreditIpn(PAID_IPN, d);
     expect(res.status).toBe(200);
+    expect(d.verify).toHaveBeenCalledWith("sale-1", 123.45);
     expect(d.finalize).toHaveBeenCalledWith(expect.objectContaining({
-      orderId: "o1", saleId: "sale-1", receiptDocumentUrl: "https://r/d.pdf", receiptDocumentNumber: "665" }));
+      orderId: "o1", saleId: "sale-1", reference: "auth",
+      receiptDocumentUrl: "https://r/d.pdf", receiptDocumentNumber: "665" }));
   });
   it("rejects a wrong token (400) and never finalizes", async () => {
     const d = deps();
@@ -25,14 +27,30 @@ describe("handleIcreditIpn", () => {
     expect(res.status).toBe(400);
     expect(d.finalize).not.toHaveBeenCalled();
   });
+  it("rejects a malformed IPN missing SaleId (400), no verify/finalize", async () => {
+    const d = deps();
+    const noSale = { ...PAID_IPN }; delete (noSale as Record<string, unknown>).SaleId;
+    const res = await handleIcreditIpn(noSale, d);
+    expect(res.status).toBe(400);
+    expect(d.verify).not.toHaveBeenCalled();
+    expect(d.finalize).not.toHaveBeenCalled();
+  });
+  it("returns 404 when the order is not found, no verify/finalize", async () => {
+    const d = deps({ loadOrder: async () => null });
+    const res = await handleIcreditIpn(PAID_IPN, d);
+    expect(res.status).toBe(404);
+    expect(d.verify).not.toHaveBeenCalled();
+    expect(d.finalize).not.toHaveBeenCalled();
+  });
   it("rejects NOTVERIFIED (400)", async () => {
-    const d = deps({ verify: async () => "NOTVERIFIED" });
+    const d = deps({ verify: vi.fn(async () => "NOTVERIFIED") });
     expect((await handleIcreditIpn(PAID_IPN, d)).status).toBe(400);
     expect(d.finalize).not.toHaveBeenCalled();
   });
-  it("rejects an amount mismatch (400)", async () => {
+  it("rejects an amount mismatch (400), no finalize", async () => {
     const d = deps({ loadOrder: async () => ({ ...ORDER, price_total: 99999 }) });
     expect((await handleIcreditIpn(PAID_IPN, d)).status).toBe(400);
+    expect(d.finalize).not.toHaveBeenCalled();
   });
   it("is idempotent for an already-paid order (200, no finalize)", async () => {
     const d = deps({ loadOrder: async () => ({ ...ORDER, payment_status: "paid" }) });

@@ -26,9 +26,10 @@ export async function handleIcreditIpn(
 ): Promise<{ status: number; body: string }> {
   const now = deps.now ?? (() => new Date().toISOString());
 
-  // 1. Parse and check token
+  // 1. Parse and check token. Reject when the configured token is missing/empty
+  // (mock or misconfigured mode) so a token-less IPN cannot satisfy null === null.
   const ipn = parseIpn(raw);
-  if (ipn.groupPrivateToken !== deps.config.token) {
+  if (!deps.config.token || ipn.groupPrivateToken !== deps.config.token) {
     return { status: 400, body: "bad_token" };
   }
 
