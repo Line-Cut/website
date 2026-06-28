@@ -155,8 +155,9 @@ function makeDeps(overrides: Partial<ConfirmOrderDeps> = {}): ConfirmOrderDeps {
     deletePrefix: vi.fn(async () => {}),
     buildMetadataPdf: vi.fn(async () => new Uint8Array([0x25, 0x50, 0x44, 0x46])),
     paymentProvider: {
-      createCharge: vi.fn(async () => ({
-        status: "awaiting_payment" as const,
+      createCheckout: vi.fn(async () => ({
+        status: "paid" as const,
+        reference: "MOCK-ref",
       })),
     },
     markOrderPaid: vi.fn(async () => ({
@@ -238,7 +239,7 @@ describe("confirmOrder", () => {
       orderId: "order-uuid",
       guestToken: "gt_abc",
     });
-    expect(deps.paymentProvider.createCharge).not.toHaveBeenCalled();
+    expect(deps.paymentProvider.createCheckout).not.toHaveBeenCalled();
     expect(deps.copyObject).not.toHaveBeenCalled();
     expect(deps.markOrderPaid).not.toHaveBeenCalled();
     expect(deps.sendOwnerEmail).not.toHaveBeenCalled();
@@ -266,11 +267,11 @@ describe("confirmOrder", () => {
 
     expect(result).toEqual({ ok: false, message: "uploads_incomplete" });
     expect(deps.copyObject).not.toHaveBeenCalled();
-    expect(deps.paymentProvider.createCharge).not.toHaveBeenCalled();
+    expect(deps.paymentProvider.createCheckout).not.toHaveBeenCalled();
     expect(fakeAdmin._updates).toHaveLength(0);
   });
 
-  it("happy path (pickup, awaiting_payment): re-keys files, writes metadata, sets contact + storage_prefix; no paid pipeline", async () => {
+  it("happy path (pickup, paid): re-keys files, writes metadata, sets contact + storage_prefix; runs paid pipeline", async () => {
     const fakeAdmin = makeFakeAdmin();
     const deps = makeDeps({
       admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
@@ -311,7 +312,7 @@ describe("confirmOrder", () => {
     );
     expect(deps.deletePrefix).toHaveBeenCalledWith("g_gt_abc/order-uuid/");
 
-    // One order update with contact + storage_prefix; payment awaiting
+    // One order update with contact + storage_prefix; payment paid
     expect(fakeAdmin._updates).toHaveLength(1);
     const { payload, filter } = fakeAdmin._updates[0];
     const p = payload as Record<string, unknown>;
@@ -323,13 +324,13 @@ describe("confirmOrder", () => {
     expect(p.contact_email).toBe("dana@example.com");
     expect(p.contact_phone).toBe("+972501234567");
     expect(p.storage_prefix).toBe(FRIENDLY_PREFIX);
-    expect(p.payment_status).toBe("awaiting_payment");
-    expect(p.payment_reference).toBeNull();
-    expect(p.paid_at).toBeNull();
+    expect(p.payment_status).toBe("paid");
+    expect(p.payment_reference).toBe("MOCK-ref");
+    expect(p.paid_at).toBe("2024-06-01T12:00:00.000Z");
     expect(p.delivery_method).toBe("pickup");
 
-    // Awaiting payment → paid pipeline not run
-    expect(deps.markOrderPaid).not.toHaveBeenCalled();
+    // Paid → paid pipeline IS run
+    expect(deps.markOrderPaid).toHaveBeenCalledTimes(1);
 
     // Owner email sent once
     expect(deps.sendOwnerEmail).toHaveBeenCalledTimes(1);
@@ -340,7 +341,7 @@ describe("confirmOrder", () => {
     const deps = makeDeps({
       admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
       paymentProvider: {
-        createCharge: vi.fn(async () => ({
+        createCheckout: vi.fn(async () => ({
           status: "paid" as const,
           reference: "MOCK-order-uuid",
         })),
@@ -382,7 +383,7 @@ describe("confirmOrder", () => {
   it("does not fail (ok:true) when the paid pipeline throws", async () => {
     const deps = makeDeps({
       paymentProvider: {
-        createCharge: vi.fn(async () => ({
+        createCheckout: vi.fn(async () => ({
           status: "paid" as const,
           reference: "MOCK-order-uuid",
         })),
@@ -480,7 +481,7 @@ describe("confirmOrder", () => {
     const deps = makeDeps({
       admin: fakeAdmin as unknown as ConfirmOrderDeps["admin"],
       paymentProvider: {
-        createCharge: vi.fn(async () => ({
+        createCheckout: vi.fn(async () => ({
           status: "failed" as const,
           reason: "insufficient funds",
         })),

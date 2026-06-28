@@ -157,21 +157,23 @@ export async function confirmOrder(
     }
   }
 
-  // 5. Payment
-  const payResult = await deps.paymentProvider.createCharge({
+  // 5. Payment (mock hosted-checkout → paid; stickers don't redirect today)
+  const payResult = await deps.paymentProvider.createCheckout({
     orderId: input.orderId,
     amount: order.price_total as number,
     currency: order.price_currency as string,
+    locale: "he",
+    items: [{ description: "Stickers order", catalogNumber: input.orderId,
+              unitPrice: order.price_total as number, quantity: 1 }],
+    customer: { firstName: delivery.firstName, lastName: delivery.lastName,
+                email: delivery.email, phone: delivery.phone },
+    redirectUrl: "", ipnUrl: "",
   });
-
-  if (payResult.status === "failed") {
-    return { ok: false, message: "payment_failed" };
-  }
-
+  if (payResult.status === "failed") return { ok: false, message: "payment_failed" };
+  if (payResult.status === "redirect") return { ok: false, message: "payment_redirect_unsupported" };
   const paid = payResult.status === "paid";
   const paymentStatus = paid ? "paid" : "awaiting_payment";
-  const paymentReference =
-    "reference" in payResult ? (payResult.reference ?? null) : null;
+  const paymentReference = payResult.reference ?? null;
   const paidAtIso = paid ? nowIso() : null;
 
   const fullName = [delivery.firstName, delivery.lastName]
