@@ -24,10 +24,8 @@ export const stickerConfig: StickerConfig = {
     heightMm: 297,
     marginMm: 8,
   },
-  // TODO(client): set real rate (agorot)
-  perSheetRate: 0,
-  // TODO(client): set real rate (agorot)
-  setupFee: 0,
+  perSheetRate: 2500,
+  setupFee: 1000,
   currency: "ILS",
   maxStickers: 200,
   maxFileBytes: 5 * 1024 * 1024,
