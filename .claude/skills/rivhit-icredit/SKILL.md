@@ -36,16 +36,17 @@ Store checkout form
               → buyer fills iCredit hosted page + pays
 
 iCredit → POST /api/payments/icredit/ipn (form-encoded)
-  → handleIcreditIpn (DI core)
+  → handleIcreditIpn (DI core) — guard order:
       1. parseIpn (case-insensitive)
-      2. confirm GroupPrivateToken === config.token
-      3. loadOrder by Custom1 (our orderId)
-      4. idempotency: if already paid → 200
-      5. verifySale → POST Verify → Status === "VERIFIED"
-      6. amountMatches: TransactionAmount (shekels) === order.price_total (agorot)
-      7. resolve receipt: IPN DocumentURL (primary) OR issueFallbackReceipt (if RIVHIT_RECEIPT_FALLBACK=on)
-      8. finalizePaidOrder (idempotent DB update + owner email)
-      9. return 200
+      2. confirm GroupPrivateToken === config.token   (else 400 bad_token; also rejects a null/empty config token)
+      3. require saleId + orderId + transactionAmount   (else 400 malformed — BEFORE Verify)
+      4. loadOrder by Custom1 (our orderId)            (else 404 order_not_found)
+      5. idempotency: if already paid → 200 already_paid
+      6. verifySale → POST Verify → Status === "VERIFIED"   (else 400 not_verified)
+      7. amountMatches: TransactionAmount (shekels) === order.price_total (agorot)   (else 400 amount_mismatch)
+      8. resolve receipt: IPN DocumentURL (primary) OR issueFallbackReceipt (if RIVHIT_RECEIPT_FALLBACK=on)
+      9. finalizePaidOrder (idempotent DB update + owner email)
+      10. return 200
 
 Mock path (ICREDIT_MODE unset or "mock"):
   createCheckout → {status:"paid"} → finalizePaidOrder called inline → return {ok:true}
@@ -78,7 +79,8 @@ Defined in `lib/payments/provider.ts`. Takes `CreateCheckoutInput` (orderId, amo
 2. The IPN webhook after Verify + amount check.
 
 Responsibilities (idempotent):
-- UPDATE `orders` SET `payment_status="paid"`, `payment_provider`, `provider_sale_id`, `payment_reference`, `receipt_document_url`, `receipt_document_number`, `paid_at`, `confirmed_at = COALESCE(confirmed_at, now)` WHERE `id = orderId AND payment_status <> 'paid'`.
+- UPDATE `orders` SET `payment_status="paid"`, `payment_provider`, `provider_sale_id`, `payment_reference`, `receipt_document_url`, `receipt_document_number`, `paid_at`, and `confirmed_at = now` (set **unconditionally** — store orders are inserted with `confirmed_at = null` and only finalized once, so this is effectively a first-write) WHERE `id = orderId AND payment_status <> 'paid'`.
+- The `.neq("payment_status","paid")` guard — **not** a COALESCE — is what makes this idempotent: a second call matches 0 rows.
 - If 0 rows updated → already paid → `{ok:true, alreadyPaid:true}` (no email).
 - On a real transition (store orders only): fetch `order_items`, send owner email best-effort (never fails the order).
 
@@ -88,7 +90,7 @@ Does **not** call Verify or check amounts — the webhook does that before calli
 
 ## Security Invariants — do not break these
 
-1. **Cart re-priced server-side.** `computeStoreTotals` in `lib/store/confirm-store-order.ts` runs on the server; client-sent prices are ignored.
+1. **Cart re-priced server-side.** `computeStoreTotals` (`lib/store/pricing.ts`), called from `lib/store/confirm-store-order.ts`, re-prices the cart on the server; client-sent prices are ignored.
 2. **GetUrl is server-to-server.** The browser never sees prices; it only receives the resulting hosted-page URL.
 3. **IPN `TransactionAmount` is re-verified.** After `Verify` succeeds, `amountMatches(transactionAmountShekels, order.price_total)` must be true. A mismatch returns non-2xx — the order is **not** marked paid.
 4. **`Verify` is the source of truth.** The IPN body is not trusted for payment truth. `Status === "VERIFIED"` is required.
@@ -187,7 +189,7 @@ Confirmed response: `{"Status":"VERIFIED"}` on a real paid sale; `{"Status":"NOT
 
 ### IPN (iCredit → `IPNURL`)
 
-HTTP POST, **form-encoded**. Key fields: `SaleId`, `GroupPrivateToken`, `TransactionAmount` (shekels), `Custom1` (our orderId), `TransactionAuthNum`, and (when auto-issued) `DocumentURL`, `DocumentNum`, `DocumentType`. Field casing from a live IPN is unverified — `parseIpn` looks up keys **case-insensitively**.
+HTTP POST, **form-encoded**. Key fields: `SaleId`, `GroupPrivateToken`, `TransactionAmount` (shekels), `Custom1` (our orderId), `TransactionAuthNum`, and (when auto-issued) `DocumentURL`, `DocumentNum`, `DocumentType`. Field casing from a live IPN is unverified — `parseIpn` looks up keys **case-insensitively**. The stored `payment_reference` is `ipn.authNum ?? ipn.saleId` — it falls back to `SaleId` when `TransactionAuthNum` is null.
 
 ### Rivhit Document.New (fallback)
 

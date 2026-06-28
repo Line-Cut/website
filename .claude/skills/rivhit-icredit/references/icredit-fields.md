@@ -94,7 +94,7 @@ IPN key casing from a live call is unverified — always look up case-insensitiv
 | `GroupPrivateToken` | Must match our configured token |
 | `TransactionAmount` | Amount charged in **shekels** |
 | `Custom1` | Our orderId (from GetUrl `Custom1`) |
-| `TransactionAuthNum` | Authorization number — stored as `payment_reference` |
+| `TransactionAuthNum` | Authorization number — stored as `payment_reference` (`reference: ipn.authNum ?? ipn.saleId`, so it falls back to `SaleId` when null) |
 | `DocumentURL` | Receipt PDF URL (when auto-issued) → `receipt_document_url` |
 | `DocumentNum` | Receipt document number → `receipt_document_number` |
 | `DocumentType` | `"2"` = חשבונית מס קבלה |
