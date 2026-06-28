@@ -10,7 +10,7 @@ const INPUT: CreateCheckoutInput = {
   redirectUrl: "https://site/he/store/track/gt", ipnUrl: "https://site/api/payments/icredit/ipn",
 };
 
-function fakeFetcher(captured: { url?: string; body?: any }, response: unknown) {
+function fakeFetcher(captured: { url?: string; body: Record<string, unknown> }, response: unknown) {
   return async (url: string, init: RequestInit) => {
     captured.url = url;
     captured.body = JSON.parse(String(init.body));
@@ -20,7 +20,7 @@ function fakeFetcher(captured: { url?: string; body?: any }, response: unknown) 
 
 describe("createIcreditProvider.createCheckout", () => {
   it("posts a server-priced GetUrl request and returns the redirect URL", async () => {
-    const captured: { url?: string; body?: any } = {};
+    const captured: { url?: string; body: Record<string, unknown> } = { body: {} };
     const provider = createIcreditProvider({
       config: { mode: "test", host: "https://testicredit.rivhit.co.il", token: "TOKEN" },
       fetcher: fakeFetcher(captured, {
