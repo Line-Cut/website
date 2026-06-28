@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { parseCheckout } from "@/lib/stickers/checkout-schema";
 import { confirmStoreOrder, quoteStoreCart } from "@/app/actions/store";
 import { useCart, toServerItems } from "@/components/store/cart-provider";
+import { nextNavigation } from "@/lib/store/checkout-navigation";
 import {
   DeliveryFields,
   emptyDelivery,
@@ -141,17 +142,17 @@ export function StoreCheckout({ dict, lang }: { dict: Dictionary["store"]; lang:
       });
 
       if (result.ok) {
-        clear();
-        try {
-          sessionStorage.removeItem(REQUEST_KEY);
-        } catch {
-          /* ignore */
-        }
-        if (result.redirectUrl) {
-          window.location.href = result.redirectUrl;
+        const nav = nextNavigation(result, lang);
+        if (nav.kind === "redirect") {
+          // Going to iCredit — clear the local cart (the order holds the snapshot) but
+          // keep the request id so a back-button retry resumes the same pending order.
+          clear();
+          window.location.assign(nav.url);
           return;
         }
-        router.push(`/${lang}/store/track/${result.guestToken}`);
+        clear();
+        try { sessionStorage.removeItem(REQUEST_KEY); } catch { /* ignore */ }
+        router.push(nav.href);
         return;
       }
       if (result.errors) {
