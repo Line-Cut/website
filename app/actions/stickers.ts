@@ -79,7 +79,7 @@ export async function confirmOrder(input: {
           runStickerPaidSideEffects(order, {
             markOrderPaid: (mp) =>
               markOrderPaidCore(mp, {
-                admin: createAdminSupabaseClient(),
+                admin,
                 copyOrderFolderToPaid: (prefix) =>
                   copyPrefix(`${prefix}/`, `${prefix}/`, {
                     srcBucket: "orders",

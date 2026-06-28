@@ -196,8 +196,16 @@ export function CheckoutForm({ dict, lang }: Props) {
       });
 
       if (result.ok) {
+        if (result.redirectUrl) {
+          // Going to iCredit's hosted page. KEEP "linecut_order" in sessionStorage so a
+          // back-button retry resumes the SAME pending order (confirmOrder is idempotent
+          // on payment_status, re-issuing a fresh payment URL) instead of orphaning it.
+          window.location.assign(result.redirectUrl);
+          return;
+        }
         sessionStorage.removeItem("linecut_order");
         router.push(`/${lang}/stickers/track/${result.guestToken}`);
+        return;
       } else if (result.errors) {
         setFieldErrors(result.errors);
         focusFirstInvalid(result.errors);

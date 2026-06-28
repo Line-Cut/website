@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { CheckoutForm } from "@/components/stickers/checkout-form";
 
@@ -197,10 +197,20 @@ function fillPickupForm() {
 // Setup / teardown
 // ---------------------------------------------------------------------------
 
+// Stub window.location.assign — jsdom's location.assign is non-configurable so we
+// can't spyOn it directly; replace the whole location object via vi.stubGlobal.
+const mockAssign = vi.fn();
+
 beforeEach(() => {
   mockPush.mockClear();
   mockConfirmOrder.mockClear();
+  mockAssign.mockClear();
   sessionStorage.clear();
+  vi.stubGlobal("location", { assign: mockAssign });
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 // ---------------------------------------------------------------------------
@@ -352,6 +362,39 @@ describe("CheckoutForm", () => {
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/en/stickers/track/gt-1");
     });
+  });
+
+  it("valid pickup submit: ok:true with redirectUrl → window.location.assign called; linecut_order KEPT; router.push NOT called", async () => {
+    setOrderHandle(VALID_HANDLE);
+
+    mockConfirmOrder.mockResolvedValueOnce({
+      ok: true,
+      orderId: "order-1",
+      guestToken: "gt-1",
+      redirectUrl: "https://icredit.example.com/pay/abc",
+    });
+
+    render(<CheckoutForm dict={dict} lang="en" />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText(dict.checkout.fields.firstName),
+      ).toBeInTheDocument();
+    });
+
+    fillPickupForm();
+
+    fireEvent.submit(screen.getByRole("button", { name: dict.checkout.submit }).closest("form")!);
+
+    await waitFor(() => {
+      expect(mockAssign).toHaveBeenCalledWith("https://icredit.example.com/pay/abc");
+    });
+
+    // linecut_order MUST be kept (so a back-button retry resumes the same pending order)
+    expect(sessionStorage.getItem("linecut_order")).not.toBeNull();
+
+    // router.push must NOT be called
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("server ok:false with message 'not_found' → shows localized notFound text, NOT the raw code", async () => {
