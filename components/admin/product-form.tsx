@@ -206,8 +206,12 @@ export function ProductForm(props: Props) {
           : await createProduct(input);
 
       if (result.ok) {
+        // Navigate to the list. Do NOT also call router.refresh() here: after a
+        // Server Action, refresh() right after push() inside the transition
+        // deadlocks the navigation — it never commits, so isPending stays true
+        // and the button is stuck on "saving" forever (the write still lands).
+        // The list is force-dynamic, so push() already loads fresh data.
         router.push(`/${lang}/admin/products`);
-        router.refresh();
       } else if (result.errors) {
         setFieldErrors(result.errors);
       } else {
@@ -223,8 +227,9 @@ export function ProductForm(props: Props) {
     startTransition(async () => {
       const result = await deleteProduct(product!.id);
       if (result.ok) {
+        // See handleSubmit: push() only — a trailing refresh() deadlocks the
+        // post-action navigation and hangs the button.
         router.push(`/${lang}/admin/products`);
-        router.refresh();
       } else {
         setGenericError(dict.errors.serverError);
       }
