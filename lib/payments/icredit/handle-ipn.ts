@@ -2,7 +2,7 @@ import { parseIpn } from "@/lib/payments/icredit/ipn";
 import { amountMatches, agorotToShekels } from "@/lib/payments/icredit/money";
 import type { IcreditConfig } from "@/lib/payments/icredit/config";
 
-export type IpnOrder = { id: string; price_total: number; payment_status: string };
+export type IpnOrder = { id: string; price_total: number; payment_status: string; order_kind?: string };
 
 export type HandleIpnDeps = {
   config: IcreditConfig;
