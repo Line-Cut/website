@@ -1,13 +1,12 @@
 import type { PaymentProvider } from "@/lib/payments/provider";
 
 /**
- * Mock provider — payment is simulated as SUCCESSFUL so the full post-payment
- * pipeline (copy to the paid bucket + receipt) runs end-to-end while the real
- * (non-standard) payment solution is still pending. No real charge happens.
- * Swap this out in `lib/payments/index.ts` when the real gateway is ready.
+ * Mock provider — payment is simulated as SUCCESSFUL (no redirect) so the
+ * sticker flow and store-mock path finalize inline end-to-end. No real charge.
+ * Swap to iCredit by setting ICREDIT_MODE in lib/payments/index.ts.
  */
 export const manualPaymentProvider: PaymentProvider = {
-  async createCharge(intent) {
-    return { status: "paid", reference: `MOCK-${intent.orderId}` };
+  async createCheckout(input) {
+    return { status: "paid", reference: `MOCK-${input.orderId}` };
   },
 };

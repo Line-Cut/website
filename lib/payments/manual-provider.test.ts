@@ -1,31 +1,25 @@
 import { describe, it, expect } from "vitest";
 import { manualPaymentProvider } from "@/lib/payments/manual-provider";
 import { getPaymentProvider } from "@/lib/payments/index";
+import type { CreateCheckoutInput } from "@/lib/payments/provider";
+
+const INPUT: CreateCheckoutInput = {
+  orderId: "o1", amount: 5000, currency: "ILS", locale: "he",
+  items: [{ description: "X", catalogNumber: null, unitPrice: 5000, quantity: 1 }],
+  customer: { firstName: "A", lastName: "B", email: "a@b.c", phone: "0500000000" },
+  redirectUrl: "https://site/thanks", ipnUrl: "https://site/ipn",
+};
 
 describe("manualPaymentProvider", () => {
-  it("createCharge simulates a successful payment (status paid)", async () => {
-    const result = await manualPaymentProvider.createCharge({
-      orderId: "o1",
-      amount: 5000,
-      currency: "ILS",
+  it("createCheckout returns paid with a mock reference", async () => {
+    expect(await manualPaymentProvider.createCheckout(INPUT)).toEqual({
+      status: "paid", reference: "MOCK-o1",
     });
-    expect(result).toEqual({ status: "paid", reference: "MOCK-o1" });
-  });
-
-  it("createCharge returns a mock reference derived from the order id", async () => {
-    const result = await manualPaymentProvider.createCharge({
-      orderId: "o2",
-      amount: 0,
-      currency: "ILS",
-    });
-    expect(result.status).toBe("paid");
-    expect((result as { reference?: string }).reference).toBe("MOCK-o2");
   });
 });
 
 describe("getPaymentProvider", () => {
-  it("returns an object with a createCharge function", () => {
-    const provider = getPaymentProvider();
-    expect(typeof provider.createCharge).toBe("function");
+  it("returns a provider exposing createCheckout", () => {
+    expect(typeof getPaymentProvider().createCheckout).toBe("function");
   });
 });
