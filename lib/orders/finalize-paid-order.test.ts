@@ -117,14 +117,19 @@ describe("finalizePaidOrder", () => {
           emails.push(e);
         },
         ownerOrderUrlFor: (id) => `https://s/admin/${id}`,
+        now: () => "2026-06-28T12:00:00.000Z",
       },
     );
     expect(res).toEqual({ ok: true, alreadyPaid: false });
     const payload = admin._lastOrderUpdate as Record<string, unknown>;
     expect(payload.payment_status).toBe("paid");
-    expect(payload.provider_sale_id).toBe("sale-1");
-    expect(payload.receipt_document_url).toBe("https://r/d.pdf");
     expect(payload.payment_provider).toBe("icredit");
+    expect(payload.provider_sale_id).toBe("sale-1");
+    expect(payload.payment_reference).toBe("auth-7");
+    expect(payload.receipt_document_url).toBe("https://r/d.pdf");
+    expect(payload.receipt_document_number).toBe("665");
+    expect(payload.paid_at).toBe("2026-06-28T00:00:00.000Z");
+    expect(payload.confirmed_at).toBe("2026-06-28T12:00:00.000Z");
     expect(emails).toHaveLength(1);
   });
 
@@ -174,5 +179,26 @@ describe("finalizePaidOrder", () => {
       },
     );
     expect(res).toEqual({ ok: true, alreadyPaid: false });
+  });
+
+  it("returns ok:false when the DB update errors", async () => {
+    const admin = makeFakeAdmin({ updateError: { message: "db down" } });
+    const res = await finalizePaidOrder(
+      {
+        orderId: "o1",
+        paidAtISO: "t",
+        provider: "p",
+        saleId: null,
+        reference: null,
+        receiptDocumentUrl: null,
+        receiptDocumentNumber: null,
+      },
+      {
+        admin: admin as never,
+        sendOwnerEmail: async () => {},
+        ownerOrderUrlFor: () => "x",
+      },
+    );
+    expect(res).toEqual({ ok: false, message: "db_error" });
   });
 });
